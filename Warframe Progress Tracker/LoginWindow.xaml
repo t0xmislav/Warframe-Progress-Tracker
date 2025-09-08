@@ -1,0 +1,29 @@
+﻿<Window x:Class="Warframe_Progress_Tracker.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Warframe_Progress_Tracker"
+        mc:Ignorable="d"
+        Title="Warframe Tracker - Login" Height="250" Width="400"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Username" Grid.Row="0"/>
+        <TextBox x:Name="UsernameBox" Grid.Row="0" Margin="100,0,0,0" Width="200"/>
+
+        <TextBlock Text="Password" Grid.Row="1" Margin="0,10,0,0"/>
+        <PasswordBox x:Name="PasswordBox" Grid.Row="1" Margin="100,10,0,0" Width="200"/>
+
+        <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="0,20,0,0" HorizontalAlignment="Center">
+            <Button Content="Login" Width="100" Margin="5" Click="Login_Click"/>
+            <Button Content="Register" Width="100" Margin="5" Click="Register_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

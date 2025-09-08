@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34622.214
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Warframe Progress Tracker", "Warframe Progress Tracker\Warframe Progress Tracker.csproj", "{ED5C0A20-72BF-4F03-9884-60DFBDADD62B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ED5C0A20-72BF-4F03-9884-60DFBDADD62B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED5C0A20-72BF-4F03-9884-60DFBDADD62B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED5C0A20-72BF-4F03-9884-60DFBDADD62B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED5C0A20-72BF-4F03-9884-60DFBDADD62B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3AFD8EFB-B5B5-4990-AE24-15C787EE4B49}
+	EndGlobalSection
+EndGlobal

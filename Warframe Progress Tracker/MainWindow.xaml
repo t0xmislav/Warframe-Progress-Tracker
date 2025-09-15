@@ -5,8 +5,22 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Warframe_Progress_Tracker"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="MainWindow" Height="600" Width="900">
+    <DockPanel>
+        <Menu DockPanel.Dock="Top" Padding="3">
+            <MenuItem Header="_File">
+                <MenuItem Header="Logout" Click="Logout_Click"/>
+                <Separator/>
+                <MenuItem Header="Exit" Click="Exit_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Account">
+                <MenuItem Header="Account Settings" Click="OpenAccountSettings_Click"/>
 
-    </Grid>
+            </MenuItem>
+        </Menu>
+        <Grid>
+
+        </Grid>
+    </DockPanel>
+
 </Window>

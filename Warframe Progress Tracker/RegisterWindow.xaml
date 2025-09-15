@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:Warframe_Progress_Tracker"
         mc:Ignorable="d"
         Title="Warframe Tracker - Register" Height="250" Width="400"
+        ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen">
 
     <Grid Margin="20">

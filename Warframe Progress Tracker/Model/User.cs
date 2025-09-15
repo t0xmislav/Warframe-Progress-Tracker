@@ -13,6 +13,7 @@ namespace Warframe_Progress_Tracker.Model
         public string PasswordHash { get; set; }
         public string WarframeDisplayName { get; set; }
         public string WarframeAccountId { get; set; }
+        public string Platform {  get; set; }
 
     }
 }

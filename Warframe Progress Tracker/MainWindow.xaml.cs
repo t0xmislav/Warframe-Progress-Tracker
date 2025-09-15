@@ -32,6 +32,35 @@ namespace Warframe_Progress_Tracker
 
             MessageBox.Show($"Added {masteryItems.Count} mastery items!");
         }
+        private void Logout_Click(object sender, RoutedEventArgs e)
+        {
+            var loginWindow = new LoginWindow();
+            loginWindow.Show();
+            this.Close();
+        }
+        private void Exit_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
+        private void OpenAccountSettings_Click(object sender, RoutedEventArgs e)
+        {
+            var accountWindow = new AccountSettingsWindow(_currentUser);
+            accountWindow.Show();
+        }
+        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (DbService.IsItemsTableEmpty())
+            {
+                var items = await ApiService.FetchItemsAsync();
+                int newItems = 0;
+
+                foreach (var item in items)
+                {
+                    if (DbService.AddItem(item)) newItems++;
+                }
+                MessageBox.Show($"{newItems} items added to database");
+            }
+        }
         public MainWindow(Model.User user)
         {
             InitializeComponent();

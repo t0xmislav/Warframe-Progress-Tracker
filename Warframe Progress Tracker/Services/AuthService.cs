@@ -66,5 +66,23 @@ namespace Warframe_Progress_Tracker.Services
             }
             return null;
         }
+        public static void LinkWarframeAccount(int userId, string displayName, string platform)
+        {
+            using var connection = new SqliteConnection($"Data Source={DbService.GetDbPath()}");
+            connection.Open();
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                UPDATE Users
+                SET WarframeDisplayName = $displayName,
+                    Platform = $platform
+                WHERE Id = $id;
+            ";
+            cmd.Parameters.AddWithValue("$displayName", displayName);
+            cmd.Parameters.AddWithValue("$platform", platform);
+            cmd.Parameters.AddWithValue("$id", userId);
+
+            cmd.ExecuteNonQuery();
+        }
     }
 }

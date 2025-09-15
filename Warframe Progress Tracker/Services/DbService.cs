@@ -40,7 +40,8 @@ namespace Warframe_Progress_Tracker.Services
                     Username VARCHAR(30) UNIQUE NOT NULL,
                     PasswordHash TEXT NOT NULL,
                     WarframeDisplayName VARCHAR(30),
-                    WarframeAccountId TEXT
+                    WarframeAccountId TEXT,
+                    Platform VARCHAR(15)
                 );
                 CREATE TABLE IF NOT EXISTS UserProgress(
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -85,7 +86,7 @@ namespace Warframe_Progress_Tracker.Services
             return Convert.ToInt32(newId);
             
         }
-        public static void AddItem(Item item)
+        public static bool AddItem(Item item)
         {
             using var connection = new SqliteConnection($"Data source={dbPath}");
             connection.Open();
@@ -102,8 +103,9 @@ namespace Warframe_Progress_Tracker.Services
             command.Parameters.AddWithValue("$categoryId", categoryId);
             command.Parameters.AddWithValue("$imageUrl", item.ImageUrl);
 
-            command.ExecuteNonQuery();
+            int rowsAffected = command.ExecuteNonQuery();
             Console.WriteLine("Item Added");
+            return rowsAffected > 0;
         }
         public static List<(Item item, UserProgress progress)> GetItemsWithProgress()
         {
@@ -157,6 +159,18 @@ namespace Warframe_Progress_Tracker.Services
             command.Parameters.AddWithValue("$owned", owned ? 1 : 0);
             command.Parameters.AddWithValue("$mastered", mastered ? 1 : 0);
             command.ExecuteNonQuery();
+        }
+
+        public static bool IsItemsTableEmpty()
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = "SELECT COUNT(*) FROM Items;";
+
+            var count = Convert.ToInt32(cmd.ExecuteScalar());
+            return count == 0;
         }
     }
 }

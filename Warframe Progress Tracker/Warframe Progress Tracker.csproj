@@ -12,8 +12,6 @@
   <ItemGroup>
     <Folder Include="Utils\" />
     <Folder Include="Resources\" />
-    <Folder Include="ViewModel\" />
-    <Folder Include="View\" />
   </ItemGroup>
 
   <ItemGroup>

@@ -12,12 +12,12 @@ namespace Warframe_Progress_Tracker.Services
     {
         private static readonly HttpClient httpClient = new HttpClient();
 
-        public static async Task<List<Models.Item>> FetchItemsAsync()
+        public static async Task<List<Model.Item>> FetchItemsAsync()
         {
             var response = await httpClient.GetStringAsync("https://api.warframestat.us/items");
             var jsonArray = JArray.Parse(response);
 
-            var items = new List<Models.Item>();
+            var items = new List<Model.Item>();
             foreach (var item in jsonArray)
             {
                 var masteryReq = item["masteryReq"]?.ToObject<int?>() ?? -1;
@@ -26,11 +26,11 @@ namespace Warframe_Progress_Tracker.Services
 
                 if (masteryReq < 0 || category == null || excludeFromCodex) continue;
 
-                items.Add(new Models.Item
+                items.Add(new Model.Item
                 {
                     Name = (String)item["name"],
                     UniqueName = (String)item["uniqueName"],
-                    Category = new Models.Category {DisplayName = category},
+                    Category = new Model.Category {DisplayName = category},
                     ImageUrl = "https://cdn.warframestat.us/img/" + (String)item["imageName"]
                 });
      

@@ -1,0 +1,61 @@
+﻿<UserControl x:Class="Warframe_Progress_Tracker.View.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="10">
+            <TextBlock Text="Category:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" />
+            
+            <TextBlock Text="Name:" VerticalAlignment="Center" Margin="20,0,5,0"/>
+            <TextBox Text="{Binding NameFilter, UpdateSourceTrigger=PropertyChanged}" />
+        </StackPanel>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding FilteredItems}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Width="150" Height="200" Margin="5"
+                                Background="Black" BorderBrush="Gray" BorderThickness="1" CornerRadius="5">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <!-- Item image -->
+                                <Image Source="{Binding Item.ImageUrl}" Stretch="UniformToFill"/>
+
+                                <!-- Info panel -->
+                                <StackPanel Grid.Row="1" Background="#AA000000" Margin="5">
+                                    <TextBlock Text="{Binding Item.Name}" Foreground="White" 
+                                               FontWeight="Bold" TextAlignment="Center" TextWrapping="Wrap"/>
+                                    <CheckBox Content="Owned" IsChecked="{Binding UserProgress.Owned, Mode=TwoWay, TargetNullValue=False}" IsEnabled="False" Foreground="White"/>
+                                    <CheckBox Content="Mastered" IsChecked="{Binding UserProgress.Mastered, Mode=TwoWay, TargetNullValue=False}" IsEnabled="False" Foreground="White"/>
+                                    <TextBlock Foreground="LightGray" FontSize="10" TextAlignment="Center">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0}{1}">
+                                                <Binding Path="UserProgress.DateOwned" StringFormat='Owned: {0:d}' TargetNullValue="Owned: N/A"/>
+                                                <Binding Path="UserProgress.DateMastered" StringFormat='Mastered: {0:d}' TargetNullValue="Mastered: N/A"/>
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

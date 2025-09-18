@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Warframe_Progress_Tracker.Models
+namespace Warframe_Progress_Tracker.Model
 {
     class Category
     {

@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Warframe_Progress_Tracker.Model;
-using Warframe_Progress_Tracker.Models;
 
 namespace Warframe_Progress_Tracker.Services
 {
@@ -107,7 +106,33 @@ namespace Warframe_Progress_Tracker.Services
             Console.WriteLine("Item Added");
             return rowsAffected > 0;
         }
-        public static List<(Item item, UserProgress progress)> GetItemsWithProgress()
+        public static async Task<int> PopulateItemsFromApi()
+        {
+            int newCount = 0;
+
+            var items = await ApiService.FetchItemsAsync();
+
+            using var connection = new SqliteConnection($"Data source={dbPath}");
+            connection.Open();
+
+            foreach (var item in items)
+            {
+                var checkCmd = connection.CreateCommand();
+                checkCmd.CommandText = "SELECT COUNT(*) FROM Items WHERE UniqueName = $name";
+                checkCmd.Parameters.AddWithValue("$name", item.UniqueName);
+
+                long exists = (long)checkCmd.ExecuteScalar();
+
+                if (exists == 0)
+                {
+                    AddItem(item);
+                    newCount++;
+                }
+            }
+            return newCount;
+        }
+
+        public static List<(Item item, UserProgress progress)> GetItemsWithProgress(int userId)
         {
             var list = new List<(Item, UserProgress)>();
 
@@ -116,9 +141,11 @@ namespace Warframe_Progress_Tracker.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                SELECT i.id, i.UniqueName, i.Name, i.CategoryId, i.ImageUrl,
+                SELECT i.id, i.UniqueName, i.Name, i.CategoryId, i.ImageUrl, up.UserId,
                     IFNULL(up.owned, 0), IFNULL(up.mastered, 0)
-                FROM Items i LEFT JOIN UserProgress up ON i.Id = up.ItemId;";
+                FROM Items i LEFT JOIN UserProgress up ON i.Id = up.ItemId AND up.UserId = $id";
+
+            command.Parameters.AddWithValue("$id", userId);
 
             using var reader = command.ExecuteReader();
             while (reader.Read())
@@ -133,8 +160,8 @@ namespace Warframe_Progress_Tracker.Services
                 var progress = new UserProgress
                 {
                     ItemId = reader.GetInt32(0),
-                    Owned = reader.GetInt32(5) == 1,
-                    Mastered = reader.GetInt32(6) == 1
+                    Owned = reader.GetInt32(6) == 1,
+                    Mastered = reader.GetInt32(7) == 1
                 };
 
                 list.Add((item, progress));
@@ -142,25 +169,69 @@ namespace Warframe_Progress_Tracker.Services
             return list;
         
         }
-        public static void UpdateProgress(int itemId, bool owned, bool mastered)
+        public static List<Item> GetAllItems()
         {
+            var list = new List<Item>();
+
             using var connection = new SqliteConnection($"Data Source={dbPath}");
             connection.Open();
 
             var command = connection.CreateCommand();
-
             command.CommandText = @"
-                INSERT INTO UserProgress (ItemId, Owned, Mastered)
-                VALUES ($itemId, $owned, $mastered)
-                ON CONFLICT(ItemId)
-                DO UPDATE SET Owned=$owned, Mastered=$mastered;";
-
-            command.Parameters.AddWithValue("$itemId", itemId);
-            command.Parameters.AddWithValue("$owned", owned ? 1 : 0);
-            command.Parameters.AddWithValue("$mastered", mastered ? 1 : 0);
-            command.ExecuteNonQuery();
+                SELECT i.UniqueName, i.Name, i.CategoryId, i.ImageUrl FROM items i;
+            ";
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                var item = new Item
+                {
+                    UniqueName = reader.GetString(0),
+                    Name = reader.GetString(1),
+                    Category = new Category { Id = reader.GetInt32(2) },
+                    ImageUrl = reader.GetString(3)
+                };
+                list.Add(item); 
+            }
+            return list;
         }
+        public static void SetOwned(int userId, int itemId, bool owned)
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
 
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                INSERT INTO UserProgress (UserId, ItemId, Owned, DateOwned)
+                VALUES ($userId, $itemId, $owned, $date)
+                ON CONFLICT(UserId, ItemId) DO UPDATE SET
+                    Owned = $owned,
+                    DateOwned = CASE WHEN $owned=1 THEN $date ELSE NULL END
+                ";
+            cmd.Parameters.AddWithValue("$userId", userId);
+            cmd.Parameters.AddWithValue("$itemId", itemId);
+            cmd.Parameters.AddWithValue("$owned", owned ? 1 : 0);
+            cmd.Parameters.AddWithValue("$date", owned ? DateTime.UtcNow.ToString("o") : (object)DBNull.Value);
+            cmd.ExecuteNonQuery();
+        }
+        public static void SetMastered(int userId, int itemId, bool mastered)
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                INSERT INTO UserProgress (UserId, ItemId, Mastered, DateMastered)
+                VALUES ($userId, $itemId, $mastered, $date)
+                ON CONFLICT(UserId, ItemId) DO UPDATE SET
+                    Mastered = $mastered,
+                    DateMastered = CASE WHEN $mastered=1 THEN $date ELSE NULL END
+            ";
+            cmd.Parameters.AddWithValue("$userId", userId);
+            cmd.Parameters.AddWithValue("$itemId", itemId);
+            cmd.Parameters.AddWithValue("$mastered", mastered ? 1 : 0);
+            cmd.Parameters.AddWithValue("$date", mastered ? DateTime.UtcNow.ToString("o") : (object)DBNull.Value);
+            cmd.ExecuteNonQuery();
+        }
         public static bool IsItemsTableEmpty()
         {
             using var connection = new SqliteConnection($"Data Source={dbPath}");

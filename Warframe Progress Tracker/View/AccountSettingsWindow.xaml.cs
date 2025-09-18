@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Warframe_Progress_Tracker.Services;
 
-namespace Warframe_Progress_Tracker
+namespace Warframe_Progress_Tracker.View
 {
     /// <summary>
     /// Interaction logic for AccountSettingsWindow.xaml

@@ -10,7 +10,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Warframe_Progress_Tracker.Services;
 
-namespace Warframe_Progress_Tracker
+namespace Warframe_Progress_Tracker.View
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -18,20 +18,7 @@ namespace Warframe_Progress_Tracker
     public partial class MainWindow : Window
     {
         private readonly Model.User _currentUser;
-        private async void LoadData()
-        {
-            DbService.InitializeDatabase();
-
-            var masteryItems = await ApiService.FetchItemsAsync();
-
-            foreach (var item in masteryItems)
-            {
-                DbService.AddItem(item);
-                
-            }
-
-            MessageBox.Show($"Added {masteryItems.Count} mastery items!");
-        }
+        
         private void Logout_Click(object sender, RoutedEventArgs e)
         {
             var loginWindow = new LoginWindow();
@@ -61,11 +48,20 @@ namespace Warframe_Progress_Tracker
                 MessageBox.Show($"{newItems} items added to database");
             }
         }
+        private void OpenDashboard_Click(object sender, RoutedEventArgs e)
+        {
+            MainContent.Content = new DashboardView(_currentUser);
+        }
+        private async void PopulateDb_Click(object sender, RoutedEventArgs e)
+        {
+            int added = await DbService.PopulateItemsFromApi();
+            MessageBox.Show($"{added} new items added", "Database Update");
+
+        }
         public MainWindow(Model.User user)
         {
             InitializeComponent();
             _currentUser = user;
-            LoadData();
             Title = $"Warframe Tracker - {_currentUser.Name}";
         }
     }

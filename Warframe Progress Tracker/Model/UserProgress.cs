@@ -9,9 +9,10 @@ namespace Warframe_Progress_Tracker.Model
     class UserProgress
     {
         public int ItemId { get; set; }
+        public int UserId { get; set; }
         public bool Owned { get; set; }
         public bool Mastered { get; set; }
-        public DateTime DateOwned { get; set; }
-        public DateTime DateMastered { get; set; }
+        public DateTime? DateOwned { get; set; }
+        public DateTime? DateMastered { get; set; }
     }
 }

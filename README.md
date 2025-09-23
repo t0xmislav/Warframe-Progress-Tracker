@@ -2,6 +2,7 @@
 - Completion progress
 - Loading/Buffering
 - Roles
+- Language support
 
 ## Potential Features
 - AI guide

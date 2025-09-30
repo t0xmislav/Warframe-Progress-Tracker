@@ -8,6 +8,7 @@ namespace Warframe_Progress_Tracker.Model
 {
     class Item
     {
+        public int Id { get; set; }
         public string UniqueName { get; set; }
         public string Name { get; set; }
         public Category Category { get; set; }

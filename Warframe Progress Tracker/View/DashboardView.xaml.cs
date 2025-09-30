@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Warframe_Progress_Tracker.Services;
+using Warframe_Progress_Tracker.ViewModel;
 
 namespace Warframe_Progress_Tracker.View
 {
@@ -21,11 +23,42 @@ namespace Warframe_Progress_Tracker.View
     /// </summary>
     public partial class DashboardView : UserControl
     {
+        private readonly DashboardViewModel _vm;
+
         public DashboardView(Model.User currentUser)
         {
-            
             InitializeComponent();
-            DataContext = new ViewModel.DashboardViewModel(currentUser);
+            _vm = new ViewModel.DashboardViewModel(currentUser);
+            DataContext = _vm;
+            Loaded += async (s, e) =>
+            {
+                await _vm.LoadNextBatchAsync();
+            };
+        }
+
+
+        private async void ItemsList_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            var sv = e.OriginalSource as ScrollViewer;
+            Debug.WriteLine($"Offset={sv?.VerticalOffset} Viewport={sv?.ViewportHeight} Extent={sv?.ExtentHeight} Scrollable={sv?.ScrollableHeight}");
+
+            if (sv == null) {
+                Debug.WriteLine("SV IS NULL!!!!");
+
+                return; 
+            }
+
+            System.Diagnostics.Debug.WriteLine($"Offset={sv.VerticalOffset}, Viewport={sv.ViewportHeight}, Extent={sv.ExtentHeight}, Scrollable={sv.ScrollableHeight}");
+
+            const double threshold = 250.0;
+            if (sv.VerticalOffset + sv.ViewportHeight >= sv.ExtentHeight - threshold) 
+            {
+                System.Diagnostics.Debug.WriteLine("[Scroll] Near bottom → requesting next batch");
+
+                await _vm.LoadNextBatchAsync();
+                
+                   
+            }
         }
 
         

@@ -54,7 +54,9 @@ namespace Warframe_Progress_Tracker.Services
                     FOREIGN KEY(UserId) REFERENCES Users(Id),
                     UNIQUE(UserId, ItemId)
                 );
-                CREATE UNIQUE INDEX IF NOT EXISTS idx_userprogress_itemid ON UserProgress(ItemId);";
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_userprogress_itemid ON UserProgress(ItemId);
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_userprogress_userid ON UserProgress(UserId);
+                CREATE UNIQUE INDEX IF NOT EXISTS id_userprogress_user_item ON UserProgress(UserId, ItemId);";
             command.ExecuteNonQuery();
 
             
@@ -131,44 +133,6 @@ namespace Warframe_Progress_Tracker.Services
             }
             return newCount;
         }
-
-        public static List<(Item item, UserProgress progress)> GetItemsWithProgress(int userId)
-        {
-            var list = new List<(Item, UserProgress)>();
-
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
-
-            var command = connection.CreateCommand();
-            command.CommandText = @"
-                SELECT i.id, i.UniqueName, i.Name, i.CategoryId, i.ImageUrl, up.UserId,
-                    IFNULL(up.owned, 0), IFNULL(up.mastered, 0)
-                FROM Items i LEFT JOIN UserProgress up ON i.Id = up.ItemId AND up.UserId = $id";
-
-            command.Parameters.AddWithValue("$id", userId);
-
-            using var reader = command.ExecuteReader();
-            while (reader.Read())
-            {
-                var item = new Item
-                {
-                    UniqueName = reader.GetString(1),
-                    Name = reader.GetString(2),
-                    Category = new Category { Id = reader.GetInt32(3) },
-                    ImageUrl = reader.GetString(4)
-                };
-                var progress = new UserProgress
-                {
-                    ItemId = reader.GetInt32(0),
-                    Owned = reader.GetInt32(6) == 1,
-                    Mastered = reader.GetInt32(7) == 1
-                };
-
-                list.Add((item, progress));
-            }
-            return list;
-        
-        }
         public static List<Item> GetAllItems()
         {
             var list = new List<Item>();
@@ -178,19 +142,66 @@ namespace Warframe_Progress_Tracker.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                SELECT i.UniqueName, i.Name, i.CategoryId, i.ImageUrl FROM items i;
+                SELECT i.Id, i.UniqueName, i.Name, i.CategoryId, c.DisplayName, i.ImageUrl FROM items i
+                LEFT JOIN Categories c ON i.CategoryId = c.Id;
             ";
             using var reader = command.ExecuteReader();
             while (reader.Read())
             {
                 var item = new Item
                 {
-                    UniqueName = reader.GetString(0),
-                    Name = reader.GetString(1),
-                    Category = new Category { Id = reader.GetInt32(2) },
-                    ImageUrl = reader.GetString(3)
+                    Id = reader.GetInt32(0),
+                    UniqueName = reader.GetString(1),
+                    Name = reader.GetString(2),
+                    Category = new Category { Id = reader.GetInt32(3), DisplayName = reader.GetString(4) },
+                    ImageUrl = reader.GetString(5)
                 };
                 list.Add(item); 
+            }
+            return list;
+        }
+        public static UserProgress GetProgressForItem(int userId, int itemId) {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                SELECT Owned, Mastered, DateOwned, DateMastered
+                FROM UserProgress
+                WHERE UserId = $userId AND ItemId = $itemId;
+            ";
+            cmd.Parameters.AddWithValue("$userId", userId);
+            cmd.Parameters.AddWithValue("$itemId", itemId);
+
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                return new UserProgress
+                {
+                    ItemId = itemId,
+                    Owned = reader.GetInt32(0) == 1,
+                    Mastered = reader.GetInt32(1) == 1,
+                    DateOwned = reader.IsDBNull(2) ? null : DateTime.Parse(reader.GetString(2)),
+                    DateMastered = reader.IsDBNull(3) ? null : DateTime.Parse(reader.GetString(3))
+                };
+            }
+            return new UserProgress { ItemId = itemId };
+        }
+        public static List<Category> GetCategories()
+        {
+            var list = new List<Category>();
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                SELECT c.Id, c.DisplayName FROM Categories c;
+            ";
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                var category = new Category { Id = reader.GetInt32(0), DisplayName = reader.GetString(1) };
+                list.Add(category);
             }
             return list;
         }
@@ -230,6 +241,30 @@ namespace Warframe_Progress_Tracker.Services
             cmd.Parameters.AddWithValue("$itemId", itemId);
             cmd.Parameters.AddWithValue("$mastered", mastered ? 1 : 0);
             cmd.Parameters.AddWithValue("$date", mastered ? DateTime.UtcNow.ToString("o") : (object)DBNull.Value);
+            cmd.ExecuteNonQuery();
+        }
+        public static void SaveProgress(ItemWithProgress vm, User user)
+        {
+            if (vm == null) return;
+
+            using var connection = new SqliteConnection($"Data Source={DbService.GetDbPath}");
+            connection.Open();
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                INSERT INTO UserProgress (UserId, ItemId, Owned, Mastered, DateOwned, DateMastered)
+                VALUES ($userId, $itemId, $owned, $mastered, $ownedDate, $masteredDate)
+                ON CONFLICT(UserId, ItemId) DO UPDATE SET
+                    Owned=$owned, Mastered=$mastered,
+                    DateOwned=$ownedDate, DateMastered=$masteredDate;
+                ";
+            cmd.Parameters.AddWithValue("$userId", user.Id);
+            cmd.Parameters.AddWithValue("$itemId", vm.Item.Id);
+            cmd.Parameters.AddWithValue("$owned", vm.Owned ? 1 : 0);
+            cmd.Parameters.AddWithValue("$mastered", vm.Mastered ? 1 : 0);
+            cmd.Parameters.AddWithValue("$ownedDate", vm.Owned ? vm.DateOwned?.ToString("o") : (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("$masteredDate", vm.Mastered ? vm.DateMastered?.ToString("o") : (object)DBNull.Value);
+
             cmd.ExecuteNonQuery();
         }
         public static bool IsItemsTableEmpty()

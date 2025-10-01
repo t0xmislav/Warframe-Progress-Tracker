@@ -15,9 +15,43 @@
             <Image Source="{Binding Item.ImageUrl}" Stretch="UniformToFill"/>
             <StackPanel Grid.Row="1" Background="#AA000000" Margin="5">
                 <TextBlock Text="{Binding Item.Name}" Foreground="White" TextWrapping="Wrap" FontWeight="Bold" FontSize="12" HorizontalAlignment="Center"/>
-                <CheckBox IsChecked="{Binding Owned, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Owned" Foreground="White" Margin="0,5,0,0"/>
-                <CheckBox IsChecked="{Binding Mastered, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Mastered" Foreground="White"/>
-                <TextBlock Text="{Binding DateMastered, StringFormat='Mastered on {0:dd-MM-yyyy}'}" Foreground="LightGray" FontSize="10" TextAlignment="Center"/>
+                <CheckBox IsChecked="{Binding Owned, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Owned" Foreground="White" Margin="0,5,0,0">
+                    <CheckBox.Style>
+                        <Style TargetType="CheckBox">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Item.Category.DisplayName}" Value="Node">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </CheckBox.Style>
+                </CheckBox>
+                <CheckBox IsChecked="{Binding Mastered, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Mastered" Foreground="White">
+                    <CheckBox.Style>
+                        <Style TargetType="CheckBox">
+                            <Setter Property="Content" Value="Matered"/>
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Item.Category.DisplayName}" Value="Node">
+                                    <Setter Property="Content" Value="Cleared"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </CheckBox.Style>
+                </CheckBox>
+                <TextBlock Text="{Binding DateMastered, StringFormat='Mastered on {0:dd-MM-yyyy}'}" Foreground="LightGray" FontSize="10" TextAlignment="Center">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Mastered}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
             </StackPanel>
         </Grid>
     </Border>

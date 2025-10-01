@@ -48,9 +48,9 @@ namespace Warframe_Progress_Tracker.View
                 MessageBox.Show($"{newItems} items added to database");
             }
         }
-        private void OpenDashboard_Click(object sender, RoutedEventArgs e)
+        private void OpenCodex_Click(object sender, RoutedEventArgs e)
         {
-            MainContent.Content = new DashboardView(_currentUser);
+            MainContent.Content = new CodexView(_currentUser);
         }
         private async void PopulateDb_Click(object sender, RoutedEventArgs e)
         {

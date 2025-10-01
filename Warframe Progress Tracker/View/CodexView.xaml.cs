@@ -19,16 +19,16 @@ using Warframe_Progress_Tracker.ViewModel;
 namespace Warframe_Progress_Tracker.View
 {
     /// <summary>
-    /// Interaction logic for DashboardView.xaml
+    /// Interaction logic for CodexView.xaml
     /// </summary>
-    public partial class DashboardView : UserControl
+    public partial class CodexView : UserControl
     {
-        private readonly DashboardViewModel _vm;
+        private readonly CodexViewModel _vm;
 
-        public DashboardView(Model.User currentUser)
+        public CodexView(Model.User currentUser)
         {
             InitializeComponent();
-            _vm = new ViewModel.DashboardViewModel(currentUser);
+            _vm = new ViewModel.CodexViewModel(currentUser);
             DataContext = _vm;
             Loaded += async (s, e) =>
             {

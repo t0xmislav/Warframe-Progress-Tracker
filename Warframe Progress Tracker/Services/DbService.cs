@@ -21,7 +21,7 @@ namespace Warframe_Progress_Tracker.Services
             connection.Open();
 
             var command = connection.CreateCommand();
-            command.CommandText =@"
+            command.CommandText = @"
                 CREATE TABLE IF NOT EXISTS Categories(
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     DisplayName VARCHAR(255) UNIQUE
@@ -43,20 +43,17 @@ namespace Warframe_Progress_Tracker.Services
                     Platform VARCHAR(15)
                 );
                 CREATE TABLE IF NOT EXISTS UserProgress(
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     ItemId INTEGER NOT NULL,
                     UserId INTEGER NOT NULL,
                     Owned INTEGER NOT NULL DEFAULT 0,
                     Mastered INTEGER NOT NULL DEFAULT 0,
                     DateOwned TEXT,
                     DateMastered TEXT,
+                    PRIMARY KEY(UserId, ItemId),
                     FOREIGN KEY(ItemId) REFERENCES Items(Id),
-                    FOREIGN KEY(UserId) REFERENCES Users(Id),
-                    UNIQUE(UserId, ItemId)
-                );
-                CREATE UNIQUE INDEX IF NOT EXISTS idx_userprogress_itemid ON UserProgress(ItemId);
-                CREATE UNIQUE INDEX IF NOT EXISTS idx_userprogress_userid ON UserProgress(UserId);
-                CREATE UNIQUE INDEX IF NOT EXISTS id_userprogress_user_item ON UserProgress(UserId, ItemId);";
+                    FOREIGN KEY(UserId) REFERENCES Users(Id)
+
+                );";
             command.ExecuteNonQuery();
 
             
@@ -178,6 +175,7 @@ namespace Warframe_Progress_Tracker.Services
             {
                 return new UserProgress
                 {
+                    UserId = userId,
                     ItemId = itemId,
                     Owned = reader.GetInt32(0) == 1,
                     Mastered = reader.GetInt32(1) == 1,
@@ -185,7 +183,7 @@ namespace Warframe_Progress_Tracker.Services
                     DateMastered = reader.IsDBNull(3) ? null : DateTime.Parse(reader.GetString(3))
                 };
             }
-            return new UserProgress { ItemId = itemId };
+            return new UserProgress { ItemId = itemId, UserId = userId };
         }
         public static List<Category> GetCategories()
         {
@@ -224,23 +222,27 @@ namespace Warframe_Progress_Tracker.Services
             cmd.Parameters.AddWithValue("$date", owned ? DateTime.UtcNow.ToString("o") : (object)DBNull.Value);
             cmd.ExecuteNonQuery();
         }
-        public static void SetMastered(int userId, int itemId, bool mastered)
+        public static void UpdateProgress(int userId, int itemId, bool mastered, bool owned)
         {
             using var connection = new SqliteConnection($"Data Source={dbPath}");
             connection.Open();
 
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"
-                INSERT INTO UserProgress (UserId, ItemId, Mastered, DateMastered)
-                VALUES ($userId, $itemId, $mastered, $date)
+                INSERT INTO UserProgress (UserId, ItemId, Owned, Mastered, DateOwned, DateMastered)
+                VALUES ($userId, $itemId, $owned, $mastered, $ownedDate, $masteredDate)
                 ON CONFLICT(UserId, ItemId) DO UPDATE SET
+                    Owned = $owned,
                     Mastered = $mastered,
-                    DateMastered = CASE WHEN $mastered=1 THEN $date ELSE NULL END
-            ";
+                    DateOwned = $ownedDate,
+                    DateMastered = $masteredDate;
+                ";
             cmd.Parameters.AddWithValue("$userId", userId);
             cmd.Parameters.AddWithValue("$itemId", itemId);
+            cmd.Parameters.AddWithValue("$owned", owned ? 1 : 0);
             cmd.Parameters.AddWithValue("$mastered", mastered ? 1 : 0);
-            cmd.Parameters.AddWithValue("$date", mastered ? DateTime.UtcNow.ToString("o") : (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("$ownedDate", owned ? DateTime.UtcNow.ToString("o") : (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("$masteredDate", mastered ? DateTime.UtcNow.ToString("o") : (object)DBNull.Value);
             cmd.ExecuteNonQuery();
         }
         public static void SaveProgress(ItemWithProgress vm, User user)

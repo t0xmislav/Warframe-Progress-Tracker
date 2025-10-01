@@ -16,7 +16,7 @@ using Warframe_Progress_Tracker.Services;
 
 namespace Warframe_Progress_Tracker.ViewModel
 {
-    class DashboardViewModel : INotifyPropertyChanged
+    class CodexViewModel : INotifyPropertyChanged
     {
         public ObservableCollection<Model.ItemWithProgress> FilteredItems { get; } = new();
         public ObservableCollection<string> Categories { get; } = new();
@@ -87,7 +87,7 @@ namespace Warframe_Progress_Tracker.ViewModel
         private List<Model.Item> _filteredSummaries = new();
         private List<Model.ItemWithProgress> _allItemsProgress = new();
         private User _currentUser;
-        public DashboardViewModel(Model.User currentUser)
+        public CodexViewModel(Model.User currentUser)
         {
             _currentUser = currentUser;
             _allItemsSummaries = DbService.GetAllItems();
@@ -117,16 +117,7 @@ namespace Warframe_Progress_Tracker.ViewModel
                         var vm = new ItemWithProgress { Item = summary, UserProgress = progress };
                         vm.PropertyChanged += (s, e) =>
                         {
-                            if (e.PropertyName == nameof(ItemWithProgress.Owned))
-                            {
-                                Debug.WriteLine("SAVING Owned");
-                                DbService.SetOwned(_currentUser.Id, summary.Id, vm.Owned);
-                            }
-                            if (e.PropertyName == nameof(ItemWithProgress.Mastered))
-                            {
-                                Debug.WriteLine("SAVING MASTERED");
-                                DbService.SetMastered(_currentUser.Id, progress.ItemId, vm.Mastered);
-                            }
+                            DbService.UpdateProgress(_currentUser.Id, progress.ItemId, vm.Mastered, vm.Owned);
                         };
                         return vm;
                     }).ToList();

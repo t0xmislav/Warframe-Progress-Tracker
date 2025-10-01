@@ -13,15 +13,16 @@
                 <Separator/>
                 <MenuItem Header="Exit" Click="Exit_Click"/>
             </MenuItem>
+            <MenuItem Header="_Codex">
+                <MenuItem Header="Open Codex" Click="OpenCodex_Click"/>
+            </MenuItem>
             <MenuItem Header="_Account">
                 <MenuItem Header="Account Settings" Click="OpenAccountSettings_Click"/>
             </MenuItem>
             <MenuItem Header="_Tools">
                 <MenuItem Header="Populate Items Database" Click="PopulateDb_Click"/>
             </MenuItem>
-            <MenuItem Header="_Dashboard">
-                <MenuItem Header="Open Dashboard" Click="OpenDashboard_Click"/>
-            </MenuItem>
+            
         </Menu>
         <ContentControl x:Name="MainContent"/>
     </DockPanel>

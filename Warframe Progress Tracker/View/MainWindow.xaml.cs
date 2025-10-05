@@ -54,9 +54,14 @@ namespace Warframe_Progress_Tracker.View
         }
         private async void PopulateDb_Click(object sender, RoutedEventArgs e)
         {
+            System.Diagnostics.Debug.WriteLine("Adding...");
             int added = await DbService.PopulateItemsFromApi();
             MessageBox.Show($"{added} new items added", "Database Update");
 
+        }
+        private async void PopulateNodes_Click(object sender, RoutedEventArgs e)
+        {
+            await WikiScraperService.ScrapeNodesAsync();
         }
         public MainWindow(Model.User user)
         {

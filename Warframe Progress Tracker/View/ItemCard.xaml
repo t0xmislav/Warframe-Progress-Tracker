@@ -12,7 +12,7 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <Image Source="{Binding Item.ImageUrl}" Stretch="UniformToFill"/>
+            <Image Source="{Binding Item.ImageBitmap}" Stretch="UniformToFill"/>
             <StackPanel Grid.Row="1" Background="#AA000000" Margin="5">
                 <TextBlock Text="{Binding Item.Name}" Foreground="White" TextWrapping="Wrap" FontWeight="Bold" FontSize="12" HorizontalAlignment="Center"/>
                 <CheckBox IsChecked="{Binding Owned, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Owned" Foreground="White" Margin="0,5,0,0">

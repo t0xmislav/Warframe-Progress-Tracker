@@ -31,8 +31,16 @@ namespace Warframe_Progress_Tracker.Services
                     UniqueName VARCHAR(255) Unique,
                     Name VARCHAR(255),
                     CategoryId Integer,
-                    ImageUrl VARCHAR(255),
+                    Image BLOB,
+                    MasteryPoints INTEGER NOT NULL DEFAULT 0,
                     FOREIGN KEY(CategoryId) REFERENCES Categories(Id)
+                );
+                CREATE TABLE IF NOT EXISTS Nodes (
+                    Id Integer PRIMARY KEY AUTOINCREMENT,
+                    UniqueName TEXT NOT NULL,
+                    Name TEXT NOT NULL,
+                    CategoryId Integer,
+                    MasteryPoints INTEGER DEFAULT 0
                 );
                 CREATE TABLE IF NOT EXISTS Users(
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,11 +60,17 @@ namespace Warframe_Progress_Tracker.Services
                     PRIMARY KEY(UserId, ItemId),
                     FOREIGN KEY(ItemId) REFERENCES Items(Id),
                     FOREIGN KEY(UserId) REFERENCES Users(Id)
-
+                );
+                CREATE TABLE IF NOT EXISTS NodeProgress(
+                    NodeId INTEGER NOT NULL,
+                    UserId INTEGER NOT NULL,
+                    Cleared INTEGER NOT NULL DEFAULT 0,
+                    ClearedSteelPath INTEGER NOT NULL DEFAULT 0,
+                    PRIMARY KEY(UserId, NodeId),
+                    FOREIGN KEY(UserId) REFERENCES Users(Id),
+                    FOREIGN KEY(NodeId) REFERENCES Nodes(Id)
                 );";
             command.ExecuteNonQuery();
-
-            
         }
 
         public static int AddCategory(String categoryName)
@@ -94,15 +108,29 @@ namespace Warframe_Progress_Tracker.Services
             var command = connection.CreateCommand();
             command.CommandText =
                 @"
-                    INSERT OR IGNORE INTO Items (UniqueName, Name, CategoryId, ImageUrl)
-                    VALUES ($uniqueName, $name, $categoryId, $imageUrl)";
+                    INSERT OR IGNORE INTO Items (UniqueName, Name, CategoryId, Image, MasteryPoints)
+                    VALUES ($uniqueName, $name, $categoryId, $imag, $masteryPoints)";
             command.Parameters.AddWithValue("$uniqueName", item.UniqueName);
             command.Parameters.AddWithValue("$name", item.Name);
             command.Parameters.AddWithValue("$categoryId", categoryId);
-            command.Parameters.AddWithValue("$imageUrl", item.ImageUrl);
-
-            int rowsAffected = command.ExecuteNonQuery();
-            Console.WriteLine("Item Added");
+            command.Parameters.AddWithValue("$image", item.Image ?? (object)DBNull.Value);
+            if(item.Name.Contains("Kuva") || item.Name.Contains("Tenet") || item.Name.Contains("Coda") || item.Name.Contains("Paracesis"))
+            {
+                command.Parameters.AddWithValue("$masteryPoints", 4000);
+            }
+            else if (item.UniqueName.Contains("Necra"))
+            {
+                command.Parameters.AddWithValue("$masteryPoints", 8000);
+            }
+            else if(item.Category.DisplayName.Contains("Warframe") || item.Category.DisplayName.Contains("Pets") || item.Category.DisplayName.Contains("Archwing") || item.Category.DisplayName.Contains("Sentinel"))
+            {
+                command.Parameters.AddWithValue("$masteryPoints", 6000);
+            }
+            else
+            {
+                command.Parameters.AddWithValue("$masteryPoints", 3000);
+            }
+                int rowsAffected = command.ExecuteNonQuery();
             return rowsAffected > 0;
         }
         public static async Task<int> PopulateItemsFromApi()
@@ -139,7 +167,7 @@ namespace Warframe_Progress_Tracker.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                SELECT i.Id, i.UniqueName, i.Name, i.CategoryId, c.DisplayName, i.ImageUrl FROM items i
+                SELECT i.Id, i.UniqueName, i.Name, i.CategoryId, c.DisplayName, i.Image FROM items i
                 LEFT JOIN Categories c ON i.CategoryId = c.Id;
             ";
             using var reader = command.ExecuteReader();
@@ -151,7 +179,7 @@ namespace Warframe_Progress_Tracker.Services
                     UniqueName = reader.GetString(1),
                     Name = reader.GetString(2),
                     Category = new Category { Id = reader.GetInt32(3), DisplayName = reader.GetString(4) },
-                    ImageUrl = reader.GetString(5)
+                    Image = reader.IsDBNull(5) ? null : (byte[])reader["Image"]
                 };
                 list.Add(item); 
             }

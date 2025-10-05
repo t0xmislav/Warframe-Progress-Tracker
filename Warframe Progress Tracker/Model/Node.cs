@@ -4,18 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
-using Warframe_Progress_Tracker.Services;
 using Warframe_Progress_Tracker.Utils;
 
 namespace Warframe_Progress_Tracker.Model
 {
-    class Item
+    internal class Node
     {
         public int Id { get; set; }
-        public string UniqueName { get; set; }
         public string Name { get; set; }
-        public int MasteryPoint { get; set; }
-        public Category Category { get; set; }
+        public int MasteryPoints { get; set; }
         public byte[] Image { get; set; }
         public BitmapImage ImageBitmap => ImageUtil.BytesToImage(Image);
     }

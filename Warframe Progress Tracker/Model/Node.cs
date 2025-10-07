@@ -12,6 +12,7 @@ namespace Warframe_Progress_Tracker.Model
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public string Planet { get; set; }
         public int MasteryPoints { get; set; }
         public byte[] Image { get; set; }
         public BitmapImage ImageBitmap => ImageUtil.BytesToImage(Image);

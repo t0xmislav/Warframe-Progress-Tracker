@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Warframe.Tracker.Filters;
 using Warframe_Progress_Tracker.Model;
 
 namespace Warframe_Progress_Tracker.Services
@@ -37,9 +38,9 @@ namespace Warframe_Progress_Tracker.Services
                 );
                 CREATE TABLE IF NOT EXISTS Nodes (
                     Id Integer PRIMARY KEY AUTOINCREMENT,
-                    UniqueName TEXT NOT NULL,
                     Name TEXT NOT NULL,
-                    CategoryId Integer,
+                    Planet TEXT NOT NULL,
+                    Image BLOB,
                     MasteryPoints INTEGER DEFAULT 0
                 );
                 CREATE TABLE IF NOT EXISTS Users(
@@ -109,28 +110,14 @@ namespace Warframe_Progress_Tracker.Services
             command.CommandText =
                 @"
                     INSERT OR IGNORE INTO Items (UniqueName, Name, CategoryId, Image, MasteryPoints)
-                    VALUES ($uniqueName, $name, $categoryId, $imag, $masteryPoints)";
+                    VALUES ($uniqueName, $name, $categoryId, $image, $masteryPoints)";
             command.Parameters.AddWithValue("$uniqueName", item.UniqueName);
             command.Parameters.AddWithValue("$name", item.Name);
             command.Parameters.AddWithValue("$categoryId", categoryId);
             command.Parameters.AddWithValue("$image", item.Image ?? (object)DBNull.Value);
-            if(item.Name.Contains("Kuva") || item.Name.Contains("Tenet") || item.Name.Contains("Coda") || item.Name.Contains("Paracesis"))
-            {
-                command.Parameters.AddWithValue("$masteryPoints", 4000);
-            }
-            else if (item.UniqueName.Contains("Necra"))
-            {
-                command.Parameters.AddWithValue("$masteryPoints", 8000);
-            }
-            else if(item.Category.DisplayName.Contains("Warframe") || item.Category.DisplayName.Contains("Pets") || item.Category.DisplayName.Contains("Archwing") || item.Category.DisplayName.Contains("Sentinel"))
-            {
-                command.Parameters.AddWithValue("$masteryPoints", 6000);
-            }
-            else
-            {
-                command.Parameters.AddWithValue("$masteryPoints", 3000);
-            }
-                int rowsAffected = command.ExecuteNonQuery();
+            command.Parameters.AddWithValue("$masteryPoints", MasteryCalculator.GetMasteryPoints(item.Category.DisplayName, item.UniqueName));
+
+            int rowsAffected = command.ExecuteNonQuery();
             return rowsAffected > 0;
         }
         public static async Task<int> PopulateItemsFromApi()
@@ -157,6 +144,50 @@ namespace Warframe_Progress_Tracker.Services
                 }
             }
             return newCount;
+        }
+        public static bool AddNode(Model.Node node)
+        {
+            
+            using var connection = new SqliteConnection($"Data source={dbPath}");
+            connection.Open();
+
+
+            var command = connection.CreateCommand();
+            command.CommandText =
+                @"
+                    INSERT OR IGNORE INTO Nodes (Name, Planet, Image, MasteryPoints)
+                    VALUES ($name, $planet, $image, $masteryPoints)";
+            command.Parameters.AddWithValue("$name", node.Name);
+            command.Parameters.AddWithValue("$planet", node.Planet);
+            command.Parameters.AddWithValue("$image", node.Image ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("$masteryPoints", node.MasteryPoints);
+            int rowsAffected = command.ExecuteNonQuery();
+            return rowsAffected > 0;
+        }
+        public static async Task<int> PopulateNodesFromWiki()
+        {
+            AddCategory("Node");
+            int newCount = 0;
+            var nodes = await WikiScraperService.ScrapeNodesAsync();
+
+            using var connection = new SqliteConnection($"Data source={dbPath}");
+            connection.Open();
+
+            foreach (var node in nodes)
+            {
+                var checkCmd = connection.CreateCommand();
+                checkCmd.CommandText = "SELECT COUNT(*) FROM Nodes WHERE Name = $name";
+                checkCmd.Parameters.AddWithValue("$name", node.Name);
+
+                long exists = (long)checkCmd.ExecuteScalar();
+                if (exists == 0)
+                {
+                    AddNode(node);
+                    newCount++;
+                }
+            }
+            return newCount;
+
         }
         public static List<Item> GetAllItems()
         {

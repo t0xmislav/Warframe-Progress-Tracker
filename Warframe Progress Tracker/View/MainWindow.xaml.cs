@@ -61,7 +61,7 @@ namespace Warframe_Progress_Tracker.View
         }
         private async void PopulateNodes_Click(object sender, RoutedEventArgs e)
         {
-            await WikiScraperService.ScrapeNodesAsync();
+            await DbService.PopulateNodesFromWiki();
         }
         public MainWindow(Model.User user)
         {

@@ -16,6 +16,7 @@
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
     <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Playwright" Version="1.55.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.1" />
     <PackageReference Include="VirtualizingWrapPanel" Version="2.3.1" />

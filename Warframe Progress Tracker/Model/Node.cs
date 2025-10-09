@@ -8,12 +8,10 @@ using Warframe_Progress_Tracker.Utils;
 
 namespace Warframe_Progress_Tracker.Model
 {
-    internal class Node
+    class Node : CodexEntry
     {
-        public int Id { get; set; }
-        public string Name { get; set; }
         public string Planet { get; set; }
-        public int MasteryPoints { get; set; }
+        
         public byte[] Image { get; set; }
         public BitmapImage ImageBitmap => ImageUtil.BytesToImage(Image);
     }

@@ -4,9 +4,21 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:Warframe_Progress_Tracker.View"
+             xmlns:model="clr-namespace:Warframe_Progress_Tracker.Model"
+             xmlns:selectors="clr-namespace:Warframe_Progress_Tracker.View.TemplateSelectors"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
-
+    <UserControl.Resources>
+        <DataTemplate x:Key="ItemCardTemplate">
+            <local:ItemCard/>
+        </DataTemplate>
+        <DataTemplate x:Key="NodeCardTemplate">
+            <local:NodeCard/>
+        </DataTemplate>
+        <selectors:CodexTemplateSelector x:Key="CodexTemplateSelector"
+                                         ItemTemplate="{StaticResource ItemCardTemplate}"
+                                         NodeTemplate="{StaticResource NodeCardTemplate}"/>
+    </UserControl.Resources>
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="10">
             <TextBlock Text="Category:" VerticalAlignment="Center" Margin="0,0,5,0"/>
@@ -17,8 +29,9 @@
         </StackPanel>
 
         <ListBox x:Name="ItemsList"
-                 ItemsSource="{Binding FilteredItems}" 
-                
+                 ItemsSource="{Binding FilteredEntries}" 
+                 Tag="{Binding CurrentUser}"
+                 ItemTemplateSelector="{StaticResource CodexTemplateSelector}"
                  ScrollViewer.ScrollChanged="ItemsList_ScrollChanged"
                  ScrollViewer.CanContentScroll="False"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -30,12 +43,6 @@
                     <WrapPanel Orientation="Horizontal" ItemWidth="160" ItemHeight="220"/>
                 </ItemsPanelTemplate>
             </ListBox.ItemsPanel>
-
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <local:ItemCard/>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
         </ListBox>
     </DockPanel>
 </UserControl>

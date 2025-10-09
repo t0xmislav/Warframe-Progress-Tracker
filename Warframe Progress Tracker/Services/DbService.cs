@@ -40,8 +40,10 @@ namespace Warframe_Progress_Tracker.Services
                     Id Integer PRIMARY KEY AUTOINCREMENT,
                     Name TEXT NOT NULL,
                     Planet TEXT NOT NULL,
+                    CategoryId Integer,
                     Image BLOB,
-                    MasteryPoints INTEGER DEFAULT 0
+                    MasteryPoints INTEGER DEFAULT 0,
+                    FOREIGN KEY(CategoryId) REFERENCES Categories(Id)
                 );
                 CREATE TABLE IF NOT EXISTS Users(
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -65,8 +67,10 @@ namespace Warframe_Progress_Tracker.Services
                 CREATE TABLE IF NOT EXISTS NodeProgress(
                     NodeId INTEGER NOT NULL,
                     UserId INTEGER NOT NULL,
-                    Cleared INTEGER NOT NULL DEFAULT 0,
+                    ClearedNormal INTEGER NOT NULL DEFAULT 0,
                     ClearedSteelPath INTEGER NOT NULL DEFAULT 0,
+                    DateNormalClear TEXT,
+                    DateSteelPathClear TEXT,
                     PRIMARY KEY(UserId, NodeId),
                     FOREIGN KEY(UserId) REFERENCES Users(Id),
                     FOREIGN KEY(NodeId) REFERENCES Nodes(Id)
@@ -147,18 +151,20 @@ namespace Warframe_Progress_Tracker.Services
         }
         public static bool AddNode(Model.Node node)
         {
-            
+            var categoryId = AddCategory("Node");
             using var connection = new SqliteConnection($"Data source={dbPath}");
+
             connection.Open();
 
 
             var command = connection.CreateCommand();
             command.CommandText =
                 @"
-                    INSERT OR IGNORE INTO Nodes (Name, Planet, Image, MasteryPoints)
-                    VALUES ($name, $planet, $image, $masteryPoints)";
+                    INSERT OR IGNORE INTO Nodes (Name, Planet, Image, MasteryPoints, CategoryId)
+                    VALUES ($name, $planet, $image, $masteryPoints, $categoryId)";
             command.Parameters.AddWithValue("$name", node.Name);
             command.Parameters.AddWithValue("$planet", node.Planet);
+            command.Parameters.AddWithValue("$categoryId", categoryId);
             command.Parameters.AddWithValue("$image", node.Image ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("$masteryPoints", node.MasteryPoints);
             int rowsAffected = command.ExecuteNonQuery();
@@ -166,7 +172,7 @@ namespace Warframe_Progress_Tracker.Services
         }
         public static async Task<int> PopulateNodesFromWiki()
         {
-            AddCategory("Node");
+
             int newCount = 0;
             var nodes = await WikiScraperService.ScrapeNodesAsync();
 
@@ -216,7 +222,33 @@ namespace Warframe_Progress_Tracker.Services
             }
             return list;
         }
-        public static UserProgress GetProgressForItem(int userId, int itemId) {
+        public static List<Node> GetAllNodes()
+        {
+            var list = new List<Node>();
+
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                SELECT n.Id, n.Name, n.Planet, n.CategoryId, c.DisplayName, n.Image FROM nodes n
+                LEFT JOIN Categories c ON n.CategoryId = c.Id;
+            ";
+            using var reader = command.ExecuteReader();
+            while (reader.Read()) {
+                var nodes = new Node
+                {
+                    Id = reader.GetInt32(0),
+                    Name = reader.GetString(1),
+                    Planet = reader.GetString(2),
+                    Category = new Category { Id = reader.GetInt32(3), DisplayName = reader.GetString(4) },
+                    Image = reader.IsDBNull(5) ? null : (byte[])reader["Image"]
+                };
+                list.Add(nodes);
+            }
+            return list;
+        }
+        public static ItemProgress GetProgressForItem(User user, Item item) {
             using var connection = new SqliteConnection($"Data Source={dbPath}");
             connection.Open();
 
@@ -224,25 +256,54 @@ namespace Warframe_Progress_Tracker.Services
             cmd.CommandText = @"
                 SELECT Owned, Mastered, DateOwned, DateMastered
                 FROM UserProgress
-                WHERE UserId = $userId AND ItemId = $itemId;
+                WHERE UserId = $userId AND ItemId = $nodeId;
             ";
-            cmd.Parameters.AddWithValue("$userId", userId);
-            cmd.Parameters.AddWithValue("$itemId", itemId);
+            cmd.Parameters.AddWithValue("$userId", user.Id);
+            cmd.Parameters.AddWithValue("$nodeId", item.Id);
 
             using var reader = cmd.ExecuteReader();
             if (reader.Read())
             {
-                return new UserProgress
+                return new ItemProgress
                 {
-                    UserId = userId,
-                    ItemId = itemId,
+                    User = user,
+                    Item = item,
                     Owned = reader.GetInt32(0) == 1,
                     Mastered = reader.GetInt32(1) == 1,
                     DateOwned = reader.IsDBNull(2) ? null : DateTime.Parse(reader.GetString(2)),
                     DateMastered = reader.IsDBNull(3) ? null : DateTime.Parse(reader.GetString(3))
                 };
             }
-            return new UserProgress { ItemId = itemId, UserId = userId };
+            return new ItemProgress { Item = item, User = user };
+        }
+        public static NodeProgress GetProgressForNode(User user, Node node)
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                SELECT ClearedNormal, ClearedSteelPath, DateNormalClear, DateSteelPathClear
+                FROM NodeProgress
+                WHERE UserId = $userId AND NodeId = nodeId;
+            ";
+            cmd.Parameters.AddWithValue("$userId", user.Id);
+            cmd.Parameters.AddWithValue("$nodeId", node.Id);
+
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                return new NodeProgress
+                {
+                    User = user,
+                    Node = node,
+                    ClearedNormal = reader.GetInt32(0) == 1,
+                    ClearedSteelPath = reader.GetInt32(1) == 1,
+                    DateNormalClear = reader.IsDBNull(2) ? null : DateTime.Parse(reader.GetString(2)),
+                    DateSteelPathClear = reader.IsDBNull(3) ? null : DateTime.Parse(reader.GetString(3))
+                };
+            }
+            return new NodeProgress { Node = node, User = user };
         }
         public static List<Category> GetCategories()
         {
@@ -270,18 +331,18 @@ namespace Warframe_Progress_Tracker.Services
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"
                 INSERT INTO UserProgress (UserId, ItemId, Owned, DateOwned)
-                VALUES ($userId, $itemId, $owned, $date)
+                VALUES ($userId, $nodeId, $clearedSteelPath, $date)
                 ON CONFLICT(UserId, ItemId) DO UPDATE SET
-                    Owned = $owned,
-                    DateOwned = CASE WHEN $owned=1 THEN $date ELSE NULL END
+                    Owned = $clearedSteelPath,
+                    DateOwned = CASE WHEN $clearedSteelPath=1 THEN $date ELSE NULL END
                 ";
             cmd.Parameters.AddWithValue("$userId", userId);
-            cmd.Parameters.AddWithValue("$itemId", itemId);
-            cmd.Parameters.AddWithValue("$owned", owned ? 1 : 0);
+            cmd.Parameters.AddWithValue("$nodeId", itemId);
+            cmd.Parameters.AddWithValue("$clearedSteelPath", owned ? 1 : 0);
             cmd.Parameters.AddWithValue("$date", owned ? DateTime.UtcNow.ToString("o") : (object)DBNull.Value);
             cmd.ExecuteNonQuery();
         }
-        public static void UpdateProgress(int userId, int itemId, bool mastered, bool owned)
+        public static void UpdateItemProgress(int userId, int itemId, bool mastered, bool owned)
         {
             using var connection = new SqliteConnection($"Data Source={dbPath}");
             connection.Open();
@@ -289,7 +350,7 @@ namespace Warframe_Progress_Tracker.Services
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"
                 INSERT INTO UserProgress (UserId, ItemId, Owned, Mastered, DateOwned, DateMastered)
-                VALUES ($userId, $itemId, $owned, $mastered, $ownedDate, $masteredDate)
+                VALUES ($userId, $nodeId, $owned, $mastered, $ownedDate, $masteredDate)
                 ON CONFLICT(UserId, ItemId) DO UPDATE SET
                     Owned = $owned,
                     Mastered = $mastered,
@@ -297,14 +358,37 @@ namespace Warframe_Progress_Tracker.Services
                     DateMastered = $masteredDate;
                 ";
             cmd.Parameters.AddWithValue("$userId", userId);
-            cmd.Parameters.AddWithValue("$itemId", itemId);
+            cmd.Parameters.AddWithValue("$nodeId", itemId);
             cmd.Parameters.AddWithValue("$owned", owned ? 1 : 0);
             cmd.Parameters.AddWithValue("$mastered", mastered ? 1 : 0);
             cmd.Parameters.AddWithValue("$ownedDate", owned ? DateTime.UtcNow.ToString("o") : (object)DBNull.Value);
             cmd.Parameters.AddWithValue("$masteredDate", mastered ? DateTime.UtcNow.ToString("o") : (object)DBNull.Value);
             cmd.ExecuteNonQuery();
         }
-        public static void SaveProgress(ItemWithProgress vm, User user)
+        public static void UpdateNodeProgress(int userId, int nodeId, bool cleared, bool clearedSteelPath)
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                INSERT INTO NodeProgress (UserId, NodeId, ClearedNormal, ClearedSteelPath, DateNormalClear, DateSteelPathClear)
+                VALUES ($userId, $nodeId, $cleared, $clearedSteelPath, $dateNormalClear, $dateSteelPathClear)
+                ON CONFLICT(UserId, NodeId) DO UPDATE SET
+                    ClearedNormal = $clearedSteelPath,
+                    ClearedSteelPath = $cleared,
+                    DateNormalClear = $dateNormalClear,
+                    DateSteelPathClear = $dateSteelPathClear;
+                ";
+            cmd.Parameters.AddWithValue("$userId", userId);
+            cmd.Parameters.AddWithValue("$nodeId", nodeId);
+            cmd.Parameters.AddWithValue("$clearedSteelPath", clearedSteelPath ? 1 : 0);
+            cmd.Parameters.AddWithValue("$cleared", cleared ? 1 : 0);
+            cmd.Parameters.AddWithValue("$dateNormalClear", cleared ? DateTime.UtcNow.ToString("o") : (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("$dateSteelPathClear", clearedSteelPath ? DateTime.UtcNow.ToString("o") : (object)DBNull.Value);
+            cmd.ExecuteNonQuery();
+        }
+        public static void SaveProgress(ItemProgress vm, User user)
         {
             if (vm == null) return;
 
@@ -314,15 +398,15 @@ namespace Warframe_Progress_Tracker.Services
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"
                 INSERT INTO UserProgress (UserId, ItemId, Owned, Mastered, DateOwned, DateMastered)
-                VALUES ($userId, $itemId, $owned, $mastered, $ownedDate, $masteredDate)
+                VALUES ($userId, $nodeId, $clearedSteelPath, $cleared, $ownedDate, $masteredDate)
                 ON CONFLICT(UserId, ItemId) DO UPDATE SET
-                    Owned=$owned, Mastered=$mastered,
+                    Owned=$clearedSteelPath, Mastered=$cleared,
                     DateOwned=$ownedDate, DateMastered=$masteredDate;
                 ";
             cmd.Parameters.AddWithValue("$userId", user.Id);
-            cmd.Parameters.AddWithValue("$itemId", vm.Item.Id);
-            cmd.Parameters.AddWithValue("$owned", vm.Owned ? 1 : 0);
-            cmd.Parameters.AddWithValue("$mastered", vm.Mastered ? 1 : 0);
+            cmd.Parameters.AddWithValue("$nodeId", vm.Item.Id);
+            cmd.Parameters.AddWithValue("$clearedSteelPath", vm.Owned ? 1 : 0);
+            cmd.Parameters.AddWithValue("$cleared", vm.Mastered ? 1 : 0);
             cmd.Parameters.AddWithValue("$ownedDate", vm.Owned ? vm.DateOwned?.ToString("o") : (object)DBNull.Value);
             cmd.Parameters.AddWithValue("$masteredDate", vm.Mastered ? vm.DateMastered?.ToString("o") : (object)DBNull.Value);
 
@@ -338,6 +422,13 @@ namespace Warframe_Progress_Tracker.Services
 
             var count = Convert.ToInt32(cmd.ExecuteScalar());
             return count == 0;
+        }
+
+        public static (List<Item> items, List<Node> nodes) GetAllCodexSummaries()
+        {
+            var items = GetAllItems();
+            var nodes = GetAllNodes();
+            return (items, nodes);
         }
     }
 }

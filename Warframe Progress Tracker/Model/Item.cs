@@ -9,13 +9,14 @@ using Warframe_Progress_Tracker.Utils;
 
 namespace Warframe_Progress_Tracker.Model
 {
-    class Item
+    class Item : CodexEntry
     {
-        public int Id { get; set; }
         public string UniqueName { get; set; }
-        public string Name { get; set; }
         public int MasteryPoint { get; set; }
-        public Category Category { get; set; }
+        public bool Owned { get; set; }
+        public DateTime? DateOwned { get; set; }
+        public bool Mastered { get; set; }
+        public DateTime? DateMastered { get; set; }
         public byte[] Image { get; set; }
         public BitmapImage ImageBitmap => ImageUtil.BytesToImage(Image);
     }

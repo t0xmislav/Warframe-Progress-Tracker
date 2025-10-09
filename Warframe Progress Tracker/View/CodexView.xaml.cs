@@ -40,20 +40,18 @@ namespace Warframe_Progress_Tracker.View
         private async void ItemsList_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             var sv = e.OriginalSource as ScrollViewer;
-            Debug.WriteLine($"Offset={sv?.VerticalOffset} Viewport={sv?.ViewportHeight} Extent={sv?.ExtentHeight} Scrollable={sv?.ScrollableHeight}");
 
             if (sv == null) {
-                Debug.WriteLine("SV IS NULL!!!!");
+                
 
                 return; 
             }
 
-            System.Diagnostics.Debug.WriteLine($"Offset={sv.VerticalOffset}, Viewport={sv.ViewportHeight}, Extent={sv.ExtentHeight}, Scrollable={sv.ScrollableHeight}");
 
             const double threshold = 250.0;
             if (sv.VerticalOffset + sv.ViewportHeight >= sv.ExtentHeight - threshold) 
             {
-                System.Diagnostics.Debug.WriteLine("[Scroll] Near bottom → requesting next batch");
+                
 
                 await _vm.LoadNextBatchAsync();
                 

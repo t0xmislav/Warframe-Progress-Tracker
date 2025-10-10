@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Warframe_Progress_Tracker.Model
 {
-    abstract class CodexEntry
+    public abstract class CodexEntry
     {
         public int Id { get; set; }
         public string Name { get; set; }

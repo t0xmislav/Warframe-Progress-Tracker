@@ -8,7 +8,7 @@ using Warframe_Progress_Tracker.Utils;
 
 namespace Warframe_Progress_Tracker.Model
 {
-    class Node : CodexEntry
+    public class Node : CodexEntry
     {
         public string Planet { get; set; }
         

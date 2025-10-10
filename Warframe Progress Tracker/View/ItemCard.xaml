@@ -16,21 +16,11 @@
             <Image Source="{Binding ImageBitmap}" Stretch="UniformToFill"/>
             <StackPanel Grid.Row="1" Background="#AA000000" Margin="5">
                 <TextBlock Text="{Binding Name}" Foreground="White" TextWrapping="Wrap" FontWeight="Bold" FontSize="12" HorizontalAlignment="Center"/>
-                <CheckBox x:Name="OwnedCheck" IsChecked="{Binding Owned, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Owned" Foreground="White" Margin="0,5,0,0">
+                <CheckBox x:Name="OwnedCheck"  Content="Owned" Foreground="White" Margin="0,5,0,0">
                 </CheckBox>
-                <CheckBox x:Name="MasteredCheck" IsChecked="{Binding Mastered, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Mastered" Foreground="White">
+                <CheckBox x:Name="MasteredCheck" Content="Mastered" Foreground="White">
                 </CheckBox>
-                <TextBlock x:Name="DatesBlock" Text="{Binding DateMastered, StringFormat='Mastered on {0:dd-MM-yyyy}'}" Foreground="LightGray" FontSize="10" TextAlignment="Center">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Mastered}" Value="True">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
+                <TextBlock x:Name="DatesBlock"  Foreground="LightGray" FontSize="10" TextAlignment="Center">
                 </TextBlock>
             </StackPanel>
         </Grid>

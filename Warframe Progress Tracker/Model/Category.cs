@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Warframe_Progress_Tracker.Model
 {
-    class Category
+    public class Category
     {
         public int Id { get; set; }
         public string DisplayName { get; set; }

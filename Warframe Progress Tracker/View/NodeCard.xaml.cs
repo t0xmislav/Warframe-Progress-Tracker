@@ -23,27 +23,29 @@ namespace Warframe_Progress_Tracker.View
     /// </summary>
     public partial class NodeCard : UserControl
     {
+        private bool _isInitializing = false; 
         public NodeCard()
         {
             InitializeComponent();
         }
         private async void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            Debug.WriteLine("NodeCard Loaded");
             if (DataContext is not Node node)
                 return;
 
             var parent = FindParent<ListBox>(this);
             if (parent?.Tag is not User currentUser)
-                { 
+                return;
 
-                return; 
-            }
 
             var progress = await Task.Run(() => DbService.GetProgressForNode(currentUser, node));
 
+            Utils.ProgressCacheUtil.StoreNodeProgress(currentUser.Id, node.Id, progress);
+
+            _isInitializing = true;
             ClearedNormalCheck.IsChecked = progress.ClearedNormal;
             ClearedSteelCheck.IsChecked = progress.ClearedSteelPath;
+            _isInitializing = false;
 
             NormalDateBlock.Text = progress.ClearedNormal
                 ? $"Normal cleared: {progress.DateNormalClear?.ToShortDateString()}"
@@ -53,13 +55,14 @@ namespace Warframe_Progress_Tracker.View
                 ? $"Steel Path: {progress.DateSteelPathClear?.ToShortDateString()}"
                 : string.Empty;
 
-            ClearedNormalCheck.Checked += async (_, _) => await UpdateProgressAsync(currentUser, node.Id);
-            ClearedNormalCheck.Unchecked += async (_, _) => await UpdateProgressAsync(currentUser, node.Id);
-            ClearedSteelCheck.Checked += async (_, _) => await UpdateProgressAsync(currentUser, node.Id);
-            ClearedSteelCheck.Unchecked += async (_, _) => await UpdateProgressAsync(currentUser, node.Id);
+            ClearedNormalCheck.Checked += async (_, _) => { if (!_isInitializing) await UpdateProgressAsync(currentUser, node); };
+            ClearedNormalCheck.Unchecked += async (_, _) => { if (!_isInitializing) await UpdateProgressAsync(currentUser, node); };
+            ClearedSteelCheck.Checked += async (_, _) =>{ if (!_isInitializing) await UpdateProgressAsync(currentUser, node); };
+            ClearedSteelCheck.Unchecked += async (_, _) => { if (!_isInitializing) await UpdateProgressAsync(currentUser, node); };
+            
         }
 
-        private async Task UpdateProgressAsync(User user, int nodeId)
+        private async Task UpdateProgressAsync(User user, Node node)
         {
             var normalCleared = ClearedNormalCheck.IsChecked == true;
             var steelPathCleared = ClearedSteelCheck.IsChecked == true;
@@ -67,11 +70,30 @@ namespace Warframe_Progress_Tracker.View
             {
                 DbService.UpdateNodeProgress(
                     user.Id,
-                    nodeId,
+                    node.Id,
                     normalCleared,
                     steelPathCleared
                 );
             });
+            var updated = DbService.GetProgressForNode(user, node);
+            Utils.ProgressCacheUtil.StoreNodeProgress(user.Id, node.Id, updated);
+            if (normalCleared) { 
+                NormalDateBlock.Text = $"Normal cleared: {updated.DateNormalClear?.ToShortDateString()}";
+            }
+            else
+            {
+                NormalDateBlock.Text = string.Empty;
+            }
+            if (steelPathCleared)
+            {
+                SteelDateBlock.Text = $"Steel path cleared: {updated.DateSteelPathClear?.ToShortDateString()}";
+            }
+            else
+            {
+                SteelDateBlock.Text = string.Empty;
+            }
+            
+
         }
         private T FindParent<T>(DependencyObject child) where T : DependencyObject
         {

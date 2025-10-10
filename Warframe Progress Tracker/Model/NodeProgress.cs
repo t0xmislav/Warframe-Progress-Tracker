@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Warframe_Progress_Tracker.Model
 {
-    internal class NodeProgress
+    public class NodeProgress
     {
         public User User { get; set; }
         public Node Node { get; set; }

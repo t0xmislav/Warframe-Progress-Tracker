@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Warframe_Progress_Tracker.Model
 {
-    class ItemProgress
+    public class ItemProgress
     {
         public Item Item { get; set; }
         public User User { get; set; }

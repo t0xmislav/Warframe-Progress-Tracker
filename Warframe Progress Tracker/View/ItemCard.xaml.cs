@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -43,15 +44,16 @@ namespace Warframe_Progress_Tracker.View
             DatesBlock.Text = progress.Mastered
                 ? $"Mastered: {progress.DateMastered?.ToShortDateString()}"
                 : string.Empty;
-
+            Utils.ProgressCacheUtil.StoreItemProgress(currentUser.Id, item.Id, progress);
             // Attach event handlers for saving changes
-            OwnedCheck.Checked += async (_, _) => await UpdateProgressAsync(currentUser, item.Id);
-            OwnedCheck.Unchecked += async (_, _) => await UpdateProgressAsync(currentUser, item.Id);
-            MasteredCheck.Checked += async (_, _) => await UpdateProgressAsync(currentUser, item.Id);
-            MasteredCheck.Unchecked += async (_, _) => await UpdateProgressAsync(currentUser, item.Id);
+            OwnedCheck.Checked += async (_, _) => await UpdateProgressAsync(currentUser, item);
+            OwnedCheck.Unchecked += async (_, _) => await UpdateProgressAsync(currentUser, item);
+            MasteredCheck.Checked += async (_, _) => await UpdateProgressAsync(currentUser, item);
+            MasteredCheck.Unchecked += async (_, _) => await UpdateProgressAsync(currentUser, item);
+            
         }
 
-        private async Task UpdateProgressAsync(User user, int itemId)
+        private async Task UpdateProgressAsync(User user, Item item)
         {
             bool owned = OwnedCheck.IsChecked == true;
             bool mastered = MasteredCheck.IsChecked == true;
@@ -60,11 +62,21 @@ namespace Warframe_Progress_Tracker.View
             {
                 DbService.UpdateItemProgress(
                     user.Id,
-                    itemId,
+                    item.Id,
                     mastered,
                     owned
                 );
             });
+            var updated = DbService.GetProgressForItem(user, item);
+            Utils.ProgressCacheUtil.StoreItemProgress(user.Id, item.Id, updated);
+            if (mastered)
+            {
+                DatesBlock.Text = $"Mastered: {updated.DateMastered?.ToShortDateString()}";
+            }
+            else
+            {
+                DatesBlock.Text = string.Empty;
+            }
         }
 
         private T FindParent<T>(DependencyObject child) where T : DependencyObject

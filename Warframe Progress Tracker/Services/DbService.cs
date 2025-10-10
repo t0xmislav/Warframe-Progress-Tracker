@@ -14,6 +14,7 @@ namespace Warframe_Progress_Tracker.Services
     {
         private static readonly string folderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "WarframeTracker");
         private static readonly string dbPath = Path.Combine(folderPath, "warframeItemsDb.db");
+
         public static string GetDbPath() { return dbPath; }
         public static void InitializeDatabase() {
             if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
@@ -285,7 +286,7 @@ namespace Warframe_Progress_Tracker.Services
             cmd.CommandText = @"
                 SELECT ClearedNormal, ClearedSteelPath, DateNormalClear, DateSteelPathClear
                 FROM NodeProgress
-                WHERE UserId = $userId AND NodeId = nodeId;
+                WHERE UserId = $userId AND NodeId = $nodeId;
             ";
             cmd.Parameters.AddWithValue("$userId", user.Id);
             cmd.Parameters.AddWithValue("$nodeId", node.Id);
@@ -323,25 +324,6 @@ namespace Warframe_Progress_Tracker.Services
             }
             return list;
         }
-        public static void SetOwned(int userId, int itemId, bool owned)
-        {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
-
-            var cmd = connection.CreateCommand();
-            cmd.CommandText = @"
-                INSERT INTO UserProgress (UserId, ItemId, Owned, DateOwned)
-                VALUES ($userId, $nodeId, $clearedSteelPath, $date)
-                ON CONFLICT(UserId, ItemId) DO UPDATE SET
-                    Owned = $clearedSteelPath,
-                    DateOwned = CASE WHEN $clearedSteelPath=1 THEN $date ELSE NULL END
-                ";
-            cmd.Parameters.AddWithValue("$userId", userId);
-            cmd.Parameters.AddWithValue("$nodeId", itemId);
-            cmd.Parameters.AddWithValue("$clearedSteelPath", owned ? 1 : 0);
-            cmd.Parameters.AddWithValue("$date", owned ? DateTime.UtcNow.ToString("o") : (object)DBNull.Value);
-            cmd.ExecuteNonQuery();
-        }
         public static void UpdateItemProgress(int userId, int itemId, bool mastered, bool owned)
         {
             using var connection = new SqliteConnection($"Data Source={dbPath}");
@@ -356,6 +338,7 @@ namespace Warframe_Progress_Tracker.Services
                     Mastered = $mastered,
                     DateOwned = $ownedDate,
                     DateMastered = $masteredDate;
+                
                 ";
             cmd.Parameters.AddWithValue("$userId", userId);
             cmd.Parameters.AddWithValue("$nodeId", itemId);
@@ -375,8 +358,8 @@ namespace Warframe_Progress_Tracker.Services
                 INSERT INTO NodeProgress (UserId, NodeId, ClearedNormal, ClearedSteelPath, DateNormalClear, DateSteelPathClear)
                 VALUES ($userId, $nodeId, $cleared, $clearedSteelPath, $dateNormalClear, $dateSteelPathClear)
                 ON CONFLICT(UserId, NodeId) DO UPDATE SET
-                    ClearedNormal = $clearedSteelPath,
-                    ClearedSteelPath = $cleared,
+                    ClearedNormal = $cleared,
+                    ClearedSteelPath = $clearedSteelPath,
                     DateNormalClear = $dateNormalClear,
                     DateSteelPathClear = $dateSteelPathClear;
                 ";
@@ -388,30 +371,7 @@ namespace Warframe_Progress_Tracker.Services
             cmd.Parameters.AddWithValue("$dateSteelPathClear", clearedSteelPath ? DateTime.UtcNow.ToString("o") : (object)DBNull.Value);
             cmd.ExecuteNonQuery();
         }
-        public static void SaveProgress(ItemProgress vm, User user)
-        {
-            if (vm == null) return;
 
-            using var connection = new SqliteConnection($"Data Source={DbService.GetDbPath}");
-            connection.Open();
-
-            var cmd = connection.CreateCommand();
-            cmd.CommandText = @"
-                INSERT INTO UserProgress (UserId, ItemId, Owned, Mastered, DateOwned, DateMastered)
-                VALUES ($userId, $nodeId, $clearedSteelPath, $cleared, $ownedDate, $masteredDate)
-                ON CONFLICT(UserId, ItemId) DO UPDATE SET
-                    Owned=$clearedSteelPath, Mastered=$cleared,
-                    DateOwned=$ownedDate, DateMastered=$masteredDate;
-                ";
-            cmd.Parameters.AddWithValue("$userId", user.Id);
-            cmd.Parameters.AddWithValue("$nodeId", vm.Item.Id);
-            cmd.Parameters.AddWithValue("$clearedSteelPath", vm.Owned ? 1 : 0);
-            cmd.Parameters.AddWithValue("$cleared", vm.Mastered ? 1 : 0);
-            cmd.Parameters.AddWithValue("$ownedDate", vm.Owned ? vm.DateOwned?.ToString("o") : (object)DBNull.Value);
-            cmd.Parameters.AddWithValue("$masteredDate", vm.Mastered ? vm.DateMastered?.ToString("o") : (object)DBNull.Value);
-
-            cmd.ExecuteNonQuery();
-        }
         public static bool IsItemsTableEmpty()
         {
             using var connection = new SqliteConnection($"Data Source={dbPath}");

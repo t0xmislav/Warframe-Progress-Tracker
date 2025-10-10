@@ -29,25 +29,29 @@ namespace Warframe_Progress_Tracker.ViewModel
         private int _offset = 0;
         private bool _isLoading = false;
         private bool _hasMore = true;
-
+        private string _sortKey = "Name";
+        public string SortKey
+        {
+            get => _sortKey;
+            set { _sortKey = value; OnPropertyChanged(); RefreshFilteredEntries(resetOffset : true, preserveLoaded: false); }
+        }
         public string SelectedCategory
         {
             get => _selectedCategory;
-            set { _selectedCategory = value; OnPropertyChanged(); ApplyFilters(); }
+            set { _selectedCategory = value; OnPropertyChanged(); RefreshFilteredEntries(resetOffset : true, preserveLoaded : false); }
         }
 
         private string _nameFilter;
         public string NameFilter
         {
             get => _nameFilter;
-            set { _nameFilter = value; OnPropertyChanged(); ApplyFilters(); }
+            set { _nameFilter = value; OnPropertyChanged(); RefreshFilteredEntries(resetOffset : true, preserveLoaded : false); }
         }
 
 
         private List<Model.Item> _allItemsSummaries = new();
         private List<Model.Node> _allNodeSummaries = new();
         private List<Model.CodexEntry> _allSummaries = new();
-        private List<Model.CodexEntry> _filteredEntries = new();
 
         public CodexViewModel(Model.User currentUser)
         {
@@ -57,9 +61,10 @@ namespace Warframe_Progress_Tracker.ViewModel
         }
         public async Task InitializeAsync()
         {
+            SelectedCategory = "All";
             await LoadCodexSummariesAsync();
             LoadCategories();
-            await LoadNextBatchAsync();
+            RefreshFilteredEntries(resetOffset : true);
         }
         public async Task LoadNextBatchAsync()
         {
@@ -68,27 +73,12 @@ namespace Warframe_Progress_Tracker.ViewModel
             _isLoading = true;
             try
             {
-                var filtered = _allSummaries
-                    .Where(x => (SelectedCategory == "All" || x.Category.DisplayName == SelectedCategory) &&
-                        (string.IsNullOrWhiteSpace(NameFilter) || x.Name.Contains(NameFilter, StringComparison.OrdinalIgnoreCase)))
-                    .Skip(_offset)
-                    .Take(_batchSize)
-                    .ToList();
-                if (filtered.Count == 0) 
-                {
-                    _hasMore = false;
-                    return; 
-                }
+                
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    foreach (var entry in filtered)
-                    {
-                        FilteredEntries.Add(entry);
-                    }
+                    RefreshFilteredEntries(resetOffset : false);
+
                 });
-                    
-                _offset += filtered.Count();
-                _hasMore = filtered.Count == _batchSize;
             }
             finally
             {
@@ -110,25 +100,53 @@ namespace Warframe_Progress_Tracker.ViewModel
 
             SelectedCategory = "All";
         }
-        private void ApplyFilters()
+        
+        private void RefreshFilteredEntries(bool resetOffset = false, bool preserveLoaded = true)
         {
-            var allSummaries = new List<CodexEntry>();
-            allSummaries.AddRange(_allItemsSummaries);
-            allSummaries.AddRange(_allNodeSummaries);
-
-            var filtered = allSummaries
+            if (resetOffset)
+            {
+                _offset = 0;
+                if (!preserveLoaded) FilteredEntries.Clear();
+            }
+            var filtered = _allSummaries
                 .Where(e =>
                     (SelectedCategory == "All" || e.Category.DisplayName == SelectedCategory) &&
                     (string.IsNullOrWhiteSpace(NameFilter) || e.Name.Contains(NameFilter, StringComparison.OrdinalIgnoreCase)))
                 .ToList();
+            IEnumerable<CodexEntry> sorted;
+            if (SortKey == "DateMastered")
+            {
+                sorted = filtered.OrderByDescending(e =>
+                {
+                    if (e is Item item)
+                    {
+                        var progress = Utils.ProgressCacheUtil.GetItemProgress(CurrentUser.Id, item.Id);
+                        return progress?.DateMastered ?? DateTime.MinValue;
+                    }
+                    if (e is Node node)
+                    {
+                        var progress = Utils.ProgressCacheUtil.GetNodeProgress(CurrentUser.Id, node.Id);
+                        if (progress?.DateSteelPathClear > DateTime.MinValue) return progress?.DateSteelPathClear;
+                        else return progress?.DateNormalClear ?? DateTime.MinValue;
+                    }
+                    return DateTime.MinValue;
+                });
+            }
+            else
+            {
+                sorted = filtered.OrderBy(e => e.Name);
+            }
 
-            FilteredEntries.Clear();
-            foreach (var entry in filtered.Take(_batchSize))
+            var batch = sorted.Skip(_offset).Take(_batchSize).ToList();
+            if (!preserveLoaded) FilteredEntries.Clear();
+            foreach (var entry in batch)
+            {
                 FilteredEntries.Add(entry);
-
-            _offset = filtered.Take(_batchSize).Count();
-            _hasMore = filtered.Count() > _batchSize;
+            }
+            _offset += batch.Count;
+            _hasMore = filtered.Count > _offset;
         }
+           
         public async Task LoadCodexSummariesAsync()
         {
             List<Item> items = null;

@@ -13,14 +13,14 @@ namespace Warframe_Progress_Tracker.Services
     {
         private static readonly HttpClient httpClient = new HttpClient();
 
-        public static async Task<List<Model.Item>> FetchItemsAsync()
+        public static async Task<List<Model.Item>> FetchItemsAsync(IProgress<string>? progress = null)
         {
-            System.Diagnostics.Debug.WriteLine("Before fetch...");
+            progress?.Report("Fetching item list...");
+
             var response = await httpClient.GetStringAsync("https://api.warframestat.us/items");
-            System.Diagnostics.Debug.WriteLine("After response...");
             var jsonArray = JArray.Parse(response);
-            System.Diagnostics.Debug.WriteLine("Before List...");
             var items = new List<Model.Item>();
+            int count = 0;
             System.Diagnostics.Debug.WriteLine("After Fetch.");
             foreach (var item in jsonArray)
             {
@@ -32,7 +32,11 @@ namespace Warframe_Progress_Tracker.Services
 
                 //Skip all items not granting mastery, including mission nodes
                 if (!ItemFilter.GrantsMastery(uniqueName, category, masteryReq, excludeFromCodex)) continue;
-
+                count++;
+                if(count % 10 == 0)
+                {
+                    progress?.Report($"Processed {count} items...");
+                }
                 var masteryPoints = MasteryCalculator.GetMasteryPoints(category, uniqueName);
                 var imageName = (string)item["imageName"];
                 byte[] imageBytes = null;
@@ -61,6 +65,7 @@ namespace Warframe_Progress_Tracker.Services
                 });
      
             }
+            progress?.Report("Finished fetching items.");
             return items;
         }
 

@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Warframe.Tracker.Filters;
 using Warframe_Progress_Tracker.Model;
+using Warframe_Progress_Tracker.View;
 
 namespace Warframe_Progress_Tracker.Services
 {
@@ -125,11 +126,33 @@ namespace Warframe_Progress_Tracker.Services
             int rowsAffected = command.ExecuteNonQuery();
             return rowsAffected > 0;
         }
-        public static async Task<int> PopulateItemsFromApi()
+        public static int SaveItems(List<Item> items)
+        {
+            var count = 0;
+            using var connection = new SqliteConnection($"Data source={dbPath}");
+            connection.Open();
+
+            foreach (var item in items)
+            {
+                var checkCmd = connection.CreateCommand();
+                checkCmd.CommandText = "SELECT COUNT(*) FROM Items WHERE UniqueName = $name";
+                checkCmd.Parameters.AddWithValue("$name", item.UniqueName);
+
+                long exists = (long)checkCmd.ExecuteScalar();
+
+                if (exists == 0)
+                {
+                    AddItem(item);
+                    count++;
+                }
+            }
+            return count;
+        }
+        public static async Task<int> PopulateItemsFromApi(LoadingDialog dialog)
         {
             int newCount = 0;
-
-            var items = await ApiService.FetchItemsAsync();
+            var progress = new Progress<string>(msg => dialog.UpdateMessage(msg));
+            var items = await ApiService.FetchItemsAsync(progress);
 
             using var connection = new SqliteConnection($"Data source={dbPath}");
             connection.Open();
@@ -171,6 +194,27 @@ namespace Warframe_Progress_Tracker.Services
             int rowsAffected = command.ExecuteNonQuery();
             return rowsAffected > 0;
         }
+        public static int SaveNodes(List<Node> nodes)
+        {
+            int count = 0;
+            using var connection = new SqliteConnection($"Data source={dbPath}");
+            connection.Open();
+
+            foreach (var node in nodes)
+            {
+                var checkCmd = connection.CreateCommand();
+                checkCmd.CommandText = "SELECT COUNT(*) FROM Nodes WHERE Name = $name";
+                checkCmd.Parameters.AddWithValue("$name", node.Name);
+
+                long exists = (long)checkCmd.ExecuteScalar();
+                if (exists == 0)
+                {
+                    AddNode(node);
+                    count++;
+                }
+            }
+            return count;
+        } 
         public static async Task<int> PopulateNodesFromWiki()
         {
 

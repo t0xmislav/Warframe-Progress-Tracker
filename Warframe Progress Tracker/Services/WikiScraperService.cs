@@ -15,7 +15,7 @@ namespace Warframe_Progress_Tracker.Services
     internal class WikiScraperService
     {
         private static string wikiUrl = "https://wiki.warframe.com";
-        public static async Task<List<Model.Node>> ScrapeNodesAsync()
+        public static async Task<List<Model.Node>> ScrapeNodesAsync(IProgress<string>? progress = null)
         {
 
 
@@ -35,6 +35,7 @@ namespace Warframe_Progress_Tracker.Services
                     .ToList();
            
             */
+            progress?.Report("Fetching mission nodes...");
             var nodes = new List<Model.Node>();
             using var playwright = await Playwright.CreateAsync();
             var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
@@ -64,8 +65,8 @@ namespace Warframe_Progress_Tracker.Services
                 planetName = Regex.Replace(planetName, @"\s*-\s*Warframe Wiki\s*$", "", RegexOptions.IgnoreCase).Trim();
                 var nodeTables = planetDoc.DocumentNode.SelectNodes("//table[contains(@class,'wikitable')]");
                 if (nodeTables == null) continue;
-
-                foreach(var table in nodeTables)
+                progress?.Report($"Fetching nodes for {planetName}");
+                foreach (var table in nodeTables)
                 {
                     var rows = table.SelectNodes(".//tr[td]");
                     if(rows == null) continue;

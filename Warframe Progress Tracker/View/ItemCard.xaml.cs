@@ -78,7 +78,26 @@ namespace Warframe_Progress_Tracker.View
                 DatesBlock.Text = string.Empty;
             }
         }
-
+        private void EditItem_Click(object sender, RoutedEventArgs e)
+        {
+            if(DataContext is Model.Item item)
+            {
+                var editWindow = new ItemEditWindow(item);
+                editWindow.Owner = Application.Current.MainWindow;
+                editWindow.ShowDialog();
+            }
+        }
+        private void DeleteItem_Click(object sender, RoutedEventArgs e)
+        {
+            if(DataContext is Model.Item item)
+            {
+                var result = MessageBox.Show($"Delete item '{item.Name}'?", "Confirm Delete", MessageBoxButton.YesNo);
+                if(result == MessageBoxResult.Yes)
+                {
+                    DbService.DeleteItem(item);
+                }
+            }
+        }
         private T FindParent<T>(DependencyObject child) where T : DependencyObject
         {
             DependencyObject parentObject = VisualTreeHelper.GetParent(child);

@@ -64,6 +64,7 @@ namespace Warframe_Progress_Tracker.View
                 {
                     var progress = new Progress<string>(msg => dialog.UpdateMessage(msg));
                     var items = await ApiService.FetchItemsAsync(progress);
+                    dialog.UpdateMessage("Saving items to database...");
                     added = DbService.SaveItems(items);
 
                 });
@@ -90,6 +91,7 @@ namespace Warframe_Progress_Tracker.View
                 {
                     var progress = new Progress<string>(msg => dialog.UpdateMessage(msg));
                     var nodes = await WikiScraperService.ScrapeNodesAsync(progress);
+                    dialog.UpdateMessage("Saving nodes to database...");
                     added = DbService.SaveNodes(nodes);
                 });
                 MessageBox.Show($"{added} new nodes added", "Database Update");

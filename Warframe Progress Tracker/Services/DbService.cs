@@ -368,7 +368,7 @@ namespace Warframe_Progress_Tracker.Services
             }
             return list;
         }
-        public static void UpdateItemProgress(int userId, int itemId, bool mastered, bool owned)
+        public static bool UpdateItemProgress(int userId, int itemId, bool mastered, bool owned)
         {
             using var connection = new SqliteConnection($"Data Source={dbPath}");
             connection.Open();
@@ -390,9 +390,10 @@ namespace Warframe_Progress_Tracker.Services
             cmd.Parameters.AddWithValue("$mastered", mastered ? 1 : 0);
             cmd.Parameters.AddWithValue("$ownedDate", owned ? DateTime.UtcNow.ToString("o") : (object)DBNull.Value);
             cmd.Parameters.AddWithValue("$masteredDate", mastered ? DateTime.UtcNow.ToString("o") : (object)DBNull.Value);
-            cmd.ExecuteNonQuery();
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
-        public static void UpdateNodeProgress(int userId, int nodeId, bool cleared, bool clearedSteelPath)
+        public static bool UpdateNodeProgress(int userId, int nodeId, bool cleared, bool clearedSteelPath)
         {
             using var connection = new SqliteConnection($"Data Source={dbPath}");
             connection.Open();
@@ -413,9 +414,36 @@ namespace Warframe_Progress_Tracker.Services
             cmd.Parameters.AddWithValue("$cleared", cleared ? 1 : 0);
             cmd.Parameters.AddWithValue("$dateNormalClear", cleared ? DateTime.UtcNow.ToString("o") : (object)DBNull.Value);
             cmd.Parameters.AddWithValue("$dateSteelPathClear", clearedSteelPath ? DateTime.UtcNow.ToString("o") : (object)DBNull.Value);
-            cmd.ExecuteNonQuery();
+            int rowsAffected = cmd.ExecuteNonQuery();
+
+            return rowsAffected > 0;
+        }
+        public static bool DeleteItem(Item item)
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                DELETE FROM Items WHERE Id = $id;
+            ";
+            cmd.Parameters.AddWithValue("$id", item.Id);
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
+        public static void DeleteNode(Node node)
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                DELETE FROM Nodes WHERE Id = $id;
+            ";
+
+            cmd.Parameters.AddWithValue("$id", node.Id);
+            cmd.ExecuteNonQuery();
+        }
         public static bool IsItemsTableEmpty()
         {
             using var connection = new SqliteConnection($"Data Source={dbPath}");
@@ -427,7 +455,43 @@ namespace Warframe_Progress_Tracker.Services
             var count = Convert.ToInt32(cmd.ExecuteScalar());
             return count == 0;
         }
+        public static bool UpdateNode(Node node)
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
 
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                UPDATE Nodes
+                SET Name = $name, Planet = $planet, MasteryPoints = $masteryPoints, Image = $image
+                WHERE Id = $id;
+            ";
+            cmd.Parameters.AddWithValue("$name", node.Name);
+            cmd.Parameters.AddWithValue("$planet", node.Planet);
+            cmd.Parameters.AddWithValue("$masteryPoints", node.MasteryPoints);
+            cmd.Parameters.AddWithValue("$Image", node.Image ?? (object)DBNull.Value);
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
+        }
+
+        public static bool UpdateItem(Item item)
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                UPDATE Nodes
+                SET Name = $name, MasteryPoints = $masteryPoints, CategoryId = $categoryId, Image = $image
+                WHERE Id = $id;
+            ";
+            cmd.Parameters.AddWithValue("$name", item.Name);
+            cmd.Parameters.AddWithValue("$planet", item.Category.Id);
+            cmd.Parameters.AddWithValue("$masteryPoints", item.MasteryPoints);
+            cmd.Parameters.AddWithValue("$Image", item.Image ?? (object)DBNull.Value);
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
+        }
         public static (List<Item> items, List<Node> nodes) GetAllCodexSummaries()
         {
             var items = GetAllItems();

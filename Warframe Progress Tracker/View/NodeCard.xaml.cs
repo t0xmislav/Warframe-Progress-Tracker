@@ -95,6 +95,26 @@ namespace Warframe_Progress_Tracker.View
             
 
         }
+        private void EditNode_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is Model.Node node)
+            {
+                var editWindow = new NodeEditWindow(node);
+                editWindow.Owner = Application.Current.MainWindow;
+                editWindow.ShowDialog();
+            }
+        }
+        private void DeleteNode_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is Model.Node node)
+            {
+                var result = MessageBox.Show($"Delete ndoe '{node.Name}'?", "Confirm Delete", MessageBoxButton.YesNo);
+                if (result == MessageBoxResult.Yes)
+                {
+                    DbService.DeleteNode(node);
+                }
+            }
+        }
         private T FindParent<T>(DependencyObject child) where T : DependencyObject
         {
             DependencyObject parentObject = VisualTreeHelper.GetParent(child);

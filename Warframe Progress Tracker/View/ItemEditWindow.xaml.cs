@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,6 +14,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
 
 namespace Warframe_Progress_Tracker.View
@@ -23,11 +25,22 @@ namespace Warframe_Progress_Tracker.View
     public partial class ItemEditWindow : Window
     {
         private Model.Item _item;
+        public ObservableCollection<Category> Categories { get; } = new();
+
+        public Category SelectedCategory { get; set; }
+        public Item EditableItem { get; }
+
         public ItemEditWindow(Model.Item item)
         {
             InitializeComponent();
             _item = item;
-            PreviewImage.Source = _item.ImageBitmap;
+            EditableItem = item.Clone();
+            DataContext = EditableItem;
+            if (_item.Image != null)
+            {
+                PreviewImage.Source = EditableItem.ImageBitmap;
+            }
+            LoadCategories();
         }
 
         private void ChangeImage_Click(object sender, RoutedEventArgs e)
@@ -39,7 +52,7 @@ namespace Warframe_Progress_Tracker.View
             if (dialog.ShowDialog() == true)
             {
                 var bytes = File.ReadAllBytes(dialog.FileName);
-                _item.Image = bytes;
+                EditableItem.Image = bytes;
 
                 using var ms = new MemoryStream(bytes);
                 var bmp = new BitmapImage();
@@ -53,7 +66,13 @@ namespace Warframe_Progress_Tracker.View
         }
         private void SaveItem_Click(object sender, RoutedEventArgs e)
         {
+            _item.Name = EditableItem.Name;
+            _item.Category = SelectedCategory;
+            _item.MasteryPoints = EditableItem.MasteryPoints;
+            _item.Image = EditableItem.Image;
+
             DbService.UpdateItem(_item);
+
             DialogResult = true;
             Close();
 
@@ -62,6 +81,18 @@ namespace Warframe_Progress_Tracker.View
         {
             DialogResult = false;
             Close();
+        }
+        private void LoadCategories()
+        {
+            var categories = DbService.GetCategories();
+
+            Categories.Clear();
+            foreach (var c in categories)
+            {
+                if(!c.DisplayName.Equals("Node"))
+                    Categories.Add(c);
+            }
+            SelectedCategory = Categories.FirstOrDefault(c => c.Id == _item.Category?.Id);
         }
     }
 }

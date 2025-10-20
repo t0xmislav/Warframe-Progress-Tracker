@@ -41,7 +41,6 @@ namespace Warframe_Progress_Tracker.View
             if (sender is RadioButton radioButton && radioButton.Tag is string sortKey && DataContext is CodexViewModel vm)
             {
                 vm.SortKey = sortKey;
-                
             }
         }
         private async void ItemsList_ScrollChanged(object sender, ScrollChangedEventArgs e)
@@ -49,20 +48,13 @@ namespace Warframe_Progress_Tracker.View
             var sv = e.OriginalSource as ScrollViewer;
 
             if (sv == null) {
-                
-
                 return; 
             }
-
 
             const double threshold = 250.0;
             if (sv.VerticalOffset + sv.ViewportHeight >= sv.ExtentHeight - threshold) 
             {
-                
-
                 await _vm.LoadNextBatchAsync();
-                
-                   
             }
         }
 

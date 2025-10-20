@@ -16,16 +16,18 @@ using Warframe_Progress_Tracker.Services;
 
 namespace Warframe_Progress_Tracker.ViewModel
 {
-    class CodexViewModel : INotifyPropertyChanged
+    public class CodexViewModel : INotifyPropertyChanged
     {
         public ObservableCollection<Model.CodexEntry> FilteredEntries { get; } = new();
         public ObservableCollection<string> Categories { get; } = new();
         public User CurrentUser { get; }
         public ICollectionView ItemsView { get; }
 
-        private string _selectedCategory;
+        private const int BatchSize = 50;
 
-        private const int _batchSize = 50;
+        private string _selectedCategory;
+        
+
         private int _offset = 0;
         private bool _isLoading = false;
         private bool _hasMore = true;
@@ -68,17 +70,14 @@ namespace Warframe_Progress_Tracker.ViewModel
         }
         public async Task LoadNextBatchAsync()
         {
-            Task.Yield();
+
             if (_isLoading || !_hasMore) return;
             _isLoading = true;
+
             try
             {
-                
                 await Application.Current.Dispatcher.InvokeAsync(() =>
-                {
-                    RefreshFilteredEntries(resetOffset : false);
-
-                });
+                    RefreshFilteredEntries(resetOffset : false));
             }
             finally
             {
@@ -92,6 +91,7 @@ namespace Warframe_Progress_Tracker.ViewModel
             var categories = DbService.GetCategories()
                 .Select(c => c.DisplayName ?? "Unknown")
                 .Distinct()
+                .OrderBy(c => c)
                 .ToList();
 
             categories.Insert(0, "All");
@@ -100,7 +100,32 @@ namespace Warframe_Progress_Tracker.ViewModel
 
             SelectedCategory = "All";
         }
-        
+        private IEnumerable<CodexEntry> ApplyFilters(IEnumerable<CodexEntry> entries)
+        {
+            return entries.Where(e =>
+                    (SelectedCategory == "All" || e.Category.DisplayName == SelectedCategory) &&
+                    (string.IsNullOrWhiteSpace(NameFilter) || e.Name.Contains(NameFilter, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+        }
+        private DateTime GetMasteryDate(CodexEntry entry)
+        {
+            return entry switch
+            {
+                Item item => Utils.ProgressCacheUtil.GetItemProgress(CurrentUser.Id, item.Id)?.DateMastered ?? DateTime.MinValue,
+                Node node => Utils.ProgressCacheUtil.GetNodeProgress(CurrentUser.Id, node.Id)?.DateSteelPathClear > DateTime.MinValue
+                            ? Utils.ProgressCacheUtil.GetNodeProgress(CurrentUser.Id, node.Id)?.DateSteelPathClear ?? DateTime.MinValue
+                            : Utils.ProgressCacheUtil.GetNodeProgress(CurrentUser.Id, node.Id)?.DateNormalClear ?? DateTime.MinValue,
+                            _ => DateTime.MinValue
+            };
+        }
+        private IEnumerable<CodexEntry> ApplySorting(IEnumerable<CodexEntry> entries)
+        {
+            return SortKey switch
+            {
+                "DateMastered" => entries.OrderByDescending(GetMasteryDate),
+                _ => entries.OrderBy(e => e.Name)
+            };
+        }
         private void RefreshFilteredEntries(bool resetOffset = false, bool preserveLoaded = true)
         {
             if (resetOffset)
@@ -108,41 +133,17 @@ namespace Warframe_Progress_Tracker.ViewModel
                 _offset = 0;
                 if (!preserveLoaded) FilteredEntries.Clear();
             }
-            var filtered = _allSummaries
-                .Where(e =>
-                    (SelectedCategory == "All" || e.Category.DisplayName == SelectedCategory) &&
-                    (string.IsNullOrWhiteSpace(NameFilter) || e.Name.Contains(NameFilter, StringComparison.OrdinalIgnoreCase)))
-                .ToList();
-            IEnumerable<CodexEntry> sorted;
-            if (SortKey == "DateMastered")
-            {
-                sorted = filtered.OrderByDescending(e =>
-                {
-                    if (e is Item item)
-                    {
-                        var progress = Utils.ProgressCacheUtil.GetItemProgress(CurrentUser.Id, item.Id);
-                        return progress?.DateMastered ?? DateTime.MinValue;
-                    }
-                    if (e is Node node)
-                    {
-                        var progress = Utils.ProgressCacheUtil.GetNodeProgress(CurrentUser.Id, node.Id);
-                        if (progress?.DateSteelPathClear > DateTime.MinValue) return progress?.DateSteelPathClear;
-                        else return progress?.DateNormalClear ?? DateTime.MinValue;
-                    }
-                    return DateTime.MinValue;
-                });
-            }
-            else
-            {
-                sorted = filtered.OrderBy(e => e.Name);
-            }
+            var filtered = ApplyFilters(_allSummaries).ToList();
+            var sorted = ApplySorting(filtered).ToList();
+            
 
-            var batch = sorted.Skip(_offset).Take(_batchSize).ToList();
+            var batch = sorted.Skip(_offset).Take(BatchSize).ToList();
+
             if (!preserveLoaded) FilteredEntries.Clear();
+
             foreach (var entry in batch)
-            {
                 FilteredEntries.Add(entry);
-            }
+            
             _offset += batch.Count;
             _hasMore = filtered.Count > _offset;
         }

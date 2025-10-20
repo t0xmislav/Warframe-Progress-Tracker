@@ -249,7 +249,7 @@ namespace Warframe_Progress_Tracker.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                SELECT i.Id, i.UniqueName, i.Name, i.CategoryId, c.DisplayName, i.Image FROM items i
+                SELECT i.Id, i.UniqueName, i.Name, i.MasteryPoints, i.CategoryId, c.DisplayName, i.Image FROM items i
                 LEFT JOIN Categories c ON i.CategoryId = c.Id;
             ";
             using var reader = command.ExecuteReader();
@@ -260,8 +260,9 @@ namespace Warframe_Progress_Tracker.Services
                     Id = reader.GetInt32(0),
                     UniqueName = reader.GetString(1),
                     Name = reader.GetString(2),
-                    Category = new Category { Id = reader.GetInt32(3), DisplayName = reader.GetString(4) },
-                    Image = reader.IsDBNull(5) ? null : (byte[])reader["Image"]
+                    MasteryPoints = reader.GetInt32(3),
+                    Category = new Category { Id = reader.GetInt32(4), DisplayName = reader.GetString(5) },
+                    Image = reader.IsDBNull(6) ? null : (byte[])reader["Image"]
                 };
                 list.Add(item); 
             }
@@ -276,7 +277,7 @@ namespace Warframe_Progress_Tracker.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                SELECT n.Id, n.Name, n.Planet, n.CategoryId, c.DisplayName, n.Image FROM nodes n
+                SELECT n.Id, n.Name, n.Planet, n.MasteryPoints, n.CategoryId, c.DisplayName, n.Image FROM nodes n
                 LEFT JOIN Categories c ON n.CategoryId = c.Id;
             ";
             using var reader = command.ExecuteReader();
@@ -286,8 +287,9 @@ namespace Warframe_Progress_Tracker.Services
                     Id = reader.GetInt32(0),
                     Name = reader.GetString(1),
                     Planet = reader.GetString(2),
-                    Category = new Category { Id = reader.GetInt32(3), DisplayName = reader.GetString(4) },
-                    Image = reader.IsDBNull(5) ? null : (byte[])reader["Image"]
+                    MasteryPoints = reader.GetInt32(3),
+                    Category = new Category { Id = reader.GetInt32(4), DisplayName = reader.GetString(5) },
+                    Image = reader.IsDBNull(6) ? null : (byte[])reader["Image"]
                 };
                 list.Add(nodes);
             }
@@ -466,10 +468,11 @@ namespace Warframe_Progress_Tracker.Services
                 SET Name = $name, Planet = $planet, MasteryPoints = $masteryPoints, Image = $image
                 WHERE Id = $id;
             ";
+            cmd.Parameters.AddWithValue("$id", node.Id);
             cmd.Parameters.AddWithValue("$name", node.Name);
             cmd.Parameters.AddWithValue("$planet", node.Planet);
             cmd.Parameters.AddWithValue("$masteryPoints", node.MasteryPoints);
-            cmd.Parameters.AddWithValue("$Image", node.Image ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("$image", node.Image ?? (object)DBNull.Value);
             int rowsAffected = cmd.ExecuteNonQuery();
             return rowsAffected > 0;
         }
@@ -485,10 +488,11 @@ namespace Warframe_Progress_Tracker.Services
                 SET Name = $name, MasteryPoints = $masteryPoints, CategoryId = $categoryId, Image = $image
                 WHERE Id = $id;
             ";
+            cmd.Parameters.AddWithValue("$id", item.Id);
             cmd.Parameters.AddWithValue("$name", item.Name);
             cmd.Parameters.AddWithValue("$planet", item.Category.Id);
             cmd.Parameters.AddWithValue("$masteryPoints", item.MasteryPoints);
-            cmd.Parameters.AddWithValue("$Image", item.Image ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("$image", item.Image ?? (object)DBNull.Value);
             int rowsAffected = cmd.ExecuteNonQuery();
             return rowsAffected > 0;
         }

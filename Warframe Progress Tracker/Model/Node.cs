@@ -14,5 +14,18 @@ namespace Warframe_Progress_Tracker.Model
         
         public byte[] Image { get; set; }
         public BitmapImage ImageBitmap => ImageUtil.BytesToImage(Image);
+
+        public Node Clone()
+        {
+            return new Node
+            {
+                Id = this.Id,
+                Planet = this.Planet,
+                Name = this.Name,
+                Category = this.Category,
+                Image = this.Image,
+                MasteryPoints = this.MasteryPoints
+            };
+        }
     }
 }

@@ -60,7 +60,7 @@ namespace Warframe_Progress_Tracker.Services
                     Name = (String)item["name"],
                     UniqueName = (String)item["uniqueName"],
                     Category = new Model.Category {DisplayName = category},
-                    MasteryPoint = masteryPoints,
+                    MasteryPoints = masteryPoints,
                     Image = imageBytes
                 });
      

@@ -23,11 +23,14 @@ namespace Warframe_Progress_Tracker.View
     public partial class NodeEditWindow : Window
     {
         private Model.Node _node;
+
+        public Model.Node EditableNode { get; }
         public NodeEditWindow(Model.Node node)
         {
             InitializeComponent();
             _node = node;
-            DataContext = _node;
+            EditableNode = _node.Clone();
+            DataContext = EditableNode;
 
             if (_node.Image != null) 
             {
@@ -59,7 +62,12 @@ namespace Warframe_Progress_Tracker.View
         }
         private void SaveNode_Click(object sender, RoutedEventArgs e)
         {
-            DbService.UpdateNode(_node );
+            _node.Name = EditableNode.Name;
+            _node.Planet = EditableNode.Planet;
+            _node.MasteryPoints = EditableNode.MasteryPoints;
+            _node.Image = EditableNode.Image;
+
+            DbService.UpdateNode(_node);
             DialogResult = true;
             Close();
                 

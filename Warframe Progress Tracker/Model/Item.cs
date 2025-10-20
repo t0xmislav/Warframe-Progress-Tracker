@@ -12,8 +12,20 @@ namespace Warframe_Progress_Tracker.Model
     public class Item : CodexEntry
     {
         public string UniqueName { get; set; }
-        public int MasteryPoint { get; set; }
         public byte[] Image { get; set; }
         public BitmapImage ImageBitmap => ImageUtil.BytesToImage(Image);
+
+        public Item Clone()
+        {
+            return new Item
+            {
+                Id = this.Id,
+                UniqueName = this.UniqueName,
+                Name = this.Name,
+                Category = this.Category,
+                Image = this.Image,
+                MasteryPoints = this.MasteryPoints
+            };
+        }
     }
 }

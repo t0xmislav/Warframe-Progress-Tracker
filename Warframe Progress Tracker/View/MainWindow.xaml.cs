@@ -54,6 +54,11 @@ namespace Warframe_Progress_Tracker.View
         }
         private async void PopulateDb_Click(object sender, RoutedEventArgs e)
         {
+            if(MessageBox.Show("Are you sure you want to fetch items? It might take a couple minutes.", 
+                "Fetch Items", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
+            {
+                return;
+            }
             var dialog = new LoadingDialog("Fetching items from API, please wait...");
             dialog.Owner = Application.Current.MainWindow;
             dialog.Show();
@@ -81,6 +86,11 @@ namespace Warframe_Progress_Tracker.View
         }
         private async void PopulateNodes_Click(object sender, RoutedEventArgs e)
         {
+            if (MessageBox.Show("Are you sure you want to fetch nodes?", 
+                "Fetch Nodes", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
+            {
+                return;
+            }
             var dialog = new LoadingDialog("Scraping nodes from Wiki, please wait...");
             dialog.Owner = Application.Current.MainWindow;
             dialog.Show();

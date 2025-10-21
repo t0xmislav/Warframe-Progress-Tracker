@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace Warframe_Progress_Tracker.Model
 {
-    class UserProgress
+    public class ItemProgress
     {
-        public int ItemId { get; set; }
-        public int UserId { get; set; }
+        public Item Item { get; set; }
+        public User User { get; set; }
         public bool Owned { get; set; }
         public bool Mastered { get; set; }
         public DateTime? DateOwned { get; set; }

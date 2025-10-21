@@ -16,118 +16,68 @@ using Warframe_Progress_Tracker.Services;
 
 namespace Warframe_Progress_Tracker.ViewModel
 {
-    class CodexViewModel : INotifyPropertyChanged
+    public class CodexViewModel : INotifyPropertyChanged
     {
-        public ObservableCollection<Model.ItemWithProgress> FilteredItems { get; } = new();
+        public ObservableCollection<Model.CodexEntry> FilteredEntries { get; } = new();
         public ObservableCollection<string> Categories { get; } = new();
-
+        public User CurrentUser { get; }
         public ICollectionView ItemsView { get; }
 
-        private string _selectedCategory;
+        private const int BatchSize = 50;
 
-        private const int _batchSize = 50;
+        private string _selectedCategory;
+        
+
         private int _offset = 0;
         private bool _isLoading = false;
         private bool _hasMore = true;
-        public UserProgress UserProgress { get; set; }
-        public bool Owned
+        private string _sortKey = "Name";
+        public string SortKey
         {
-            get => UserProgress?.Owned ?? false;
-            set
-            {
-                if (UserProgress != null) return;
-                if (UserProgress.Owned != value) { 
-                    UserProgress.Owned = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public bool Mastered
-        {
-            get => UserProgress?.Mastered ?? false;
-            set
-            {
-                if (UserProgress != null) return;
-                if (UserProgress.Owned != value)
-                {
-                    UserProgress.Owned = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-        public DateTime? DateMastered
-        {
-            get => UserProgress?.DateMastered;
-            set
-            {
-                if (UserProgress != null) return;
-                if (UserProgress.DateMastered != value)
-                {
-                    UserProgress.DateMastered = value;
-                    OnPropertyChanged();
-                }
-            }
+            get => _sortKey;
+            set { _sortKey = value; OnPropertyChanged(); RefreshFilteredEntries(resetOffset : true, preserveLoaded: false); }
         }
         public string SelectedCategory
         {
             get => _selectedCategory;
-            set { _selectedCategory = value; OnPropertyChanged(); ApplyFilters(); }
+            set { _selectedCategory = value; OnPropertyChanged(); RefreshFilteredEntries(resetOffset : true, preserveLoaded : false); }
         }
 
         private string _nameFilter;
         public string NameFilter
         {
             get => _nameFilter;
-            set { _nameFilter = value; OnPropertyChanged(); ApplyFilters(); }
+            set { _nameFilter = value; OnPropertyChanged(); RefreshFilteredEntries(resetOffset : true, preserveLoaded : false); }
         }
 
 
         private List<Model.Item> _allItemsSummaries = new();
-        private List<Model.Item> _filteredSummaries = new();
-        private List<Model.ItemWithProgress> _allItemsProgress = new();
-        private User _currentUser;
+        private List<Model.Node> _allNodeSummaries = new();
+        private List<Model.CodexEntry> _allSummaries = new();
+
         public CodexViewModel(Model.User currentUser)
         {
-            _currentUser = currentUser;
-            _allItemsSummaries = DbService.GetAllItems();
-            LoadCategories();
+            CurrentUser = currentUser;
+            _ = InitializeAsync();
             
+        }
+        public async Task InitializeAsync()
+        {
+            SelectedCategory = "All";
+            await LoadCodexSummariesAsync();
+            LoadCategories();
+            RefreshFilteredEntries(resetOffset : true);
         }
         public async Task LoadNextBatchAsync()
         {
-            if (_isLoading) return;
+
+            if (_isLoading || !_hasMore) return;
             _isLoading = true;
+
             try
             {
-                var batchSummaries = _filteredSummaries.Skip(_offset).Take(_batchSize).ToList();
-                if (batchSummaries.Count == 0)
-                {
-                    _hasMore = false;
-                    _isLoading = false;
-                    return;
-                }
-
-
-                var batch = await Task.Run(() =>
-                {
-                    return batchSummaries.Select(summary =>
-                    {
-                        var progress = DbService.GetProgressForItem(_currentUser.Id, summary.Id);
-                        var vm = new ItemWithProgress { Item = summary, UserProgress = progress };
-                        vm.PropertyChanged += (s, e) =>
-                        {
-                            DbService.UpdateProgress(_currentUser.Id, progress.ItemId, vm.Mastered, vm.Owned);
-                        };
-                        return vm;
-                    }).ToList();
-                });
-                foreach (var vm in batch)
-                {
-                    FilteredItems.Add(vm);
-                    _allItemsProgress.Add(vm);
-                }
-                _offset += batchSummaries.Count();
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                    RefreshFilteredEntries(resetOffset : false));
             }
             finally
             {
@@ -141,6 +91,7 @@ namespace Warframe_Progress_Tracker.ViewModel
             var categories = DbService.GetCategories()
                 .Select(c => c.DisplayName ?? "Unknown")
                 .Distinct()
+                .OrderBy(c => c)
                 .ToList();
 
             categories.Insert(0, "All");
@@ -149,23 +100,78 @@ namespace Warframe_Progress_Tracker.ViewModel
 
             SelectedCategory = "All";
         }
-        private void ApplyFilters()
+        private IEnumerable<CodexEntry> ApplyFilters(IEnumerable<CodexEntry> entries)
         {
-            _filteredSummaries = _allItemsSummaries
-                .Where(i =>
-                    (SelectedCategory == "All" || i.Category?.DisplayName == SelectedCategory) &&
-                    (string.IsNullOrWhiteSpace(NameFilter) || i.Name.Contains(NameFilter, StringComparison.OrdinalIgnoreCase))
-                ).ToList();
-
-            FilteredItems.Clear();
-            _offset = 0;
-            _hasMore = true;
-            _ = LoadNextBatchAsync();
+            return entries.Where(e =>
+                    (SelectedCategory == "All" || e.Category.DisplayName == SelectedCategory) &&
+                    (string.IsNullOrWhiteSpace(NameFilter) || e.Name.Contains(NameFilter, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
         }
-        private void MasteredCheckBox(object sender, EventArgs e)
+        private DateTime GetMasteryDate(CodexEntry entry)
         {
-
+            return entry switch
+            {
+                Item item => Utils.ProgressCacheUtil.GetItemProgress(CurrentUser.Id, item.Id)?.DateMastered ?? DateTime.MinValue,
+                Node node => Utils.ProgressCacheUtil.GetNodeProgress(CurrentUser.Id, node.Id)?.DateSteelPathClear > DateTime.MinValue
+                            ? Utils.ProgressCacheUtil.GetNodeProgress(CurrentUser.Id, node.Id)?.DateSteelPathClear ?? DateTime.MinValue
+                            : Utils.ProgressCacheUtil.GetNodeProgress(CurrentUser.Id, node.Id)?.DateNormalClear ?? DateTime.MinValue,
+                            _ => DateTime.MinValue
+            };
         }
+        private IEnumerable<CodexEntry> ApplySorting(IEnumerable<CodexEntry> entries)
+        {
+            return SortKey switch
+            {
+                "DateMastered" => entries.OrderByDescending(GetMasteryDate),
+                _ => entries.OrderBy(e => e.Name)
+            };
+        }
+        private void RefreshFilteredEntries(bool resetOffset = false, bool preserveLoaded = true)
+        {
+            if (resetOffset)
+            {
+                _offset = 0;
+                if (!preserveLoaded) FilteredEntries.Clear();
+            }
+            var filtered = ApplyFilters(_allSummaries).ToList();
+            var sorted = ApplySorting(filtered).ToList();
+            
+
+            var batch = sorted.Skip(_offset).Take(BatchSize).ToList();
+
+            if (!preserveLoaded) FilteredEntries.Clear();
+
+            foreach (var entry in batch)
+                FilteredEntries.Add(entry);
+            
+            _offset += batch.Count;
+            _hasMore = filtered.Count > _offset;
+        }
+           
+        public async Task LoadCodexSummariesAsync()
+        {
+            List<Item> items = null;
+            List<Node> nodes = null;
+            await Task.Run(() =>
+            {
+                var result = DbService.GetAllCodexSummaries();
+                items = result.items;
+                nodes = result.nodes;
+
+            });
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                _allItemsSummaries = items;
+                _allNodeSummaries = nodes;
+
+                _allSummaries.Clear();
+
+                _allSummaries.AddRange(items);
+                _allSummaries.AddRange(nodes);
+            });
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string propName = "") =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));

@@ -5,6 +5,8 @@ VisualStudioVersion = 17.9.34622.214
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Warframe Progress Tracker", "Warframe Progress Tracker\Warframe Progress Tracker.csproj", "{ED5C0A20-72BF-4F03-9884-60DFBDADD62B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Warframe.Tracker.Filters", "Warframe.Tracker.Filters\Warframe.Tracker.Filters.csproj", "{82F7F4D5-E9A4-4F5C-A49C-DADBB38149E2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{ED5C0A20-72BF-4F03-9884-60DFBDADD62B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ED5C0A20-72BF-4F03-9884-60DFBDADD62B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ED5C0A20-72BF-4F03-9884-60DFBDADD62B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{82F7F4D5-E9A4-4F5C-A49C-DADBB38149E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82F7F4D5-E9A4-4F5C-A49C-DADBB38149E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82F7F4D5-E9A4-4F5C-A49C-DADBB38149E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82F7F4D5-E9A4-4F5C-A49C-DADBB38149E2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

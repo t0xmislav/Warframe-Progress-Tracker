@@ -4,23 +4,23 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
-using Warframe_Progress_Tracker.Services;
 using Warframe_Progress_Tracker.Utils;
 
 namespace Warframe_Progress_Tracker.Model
 {
-    public class Item : CodexEntry
+    public class Node : CodexEntry
     {
-        public string UniqueName { get; set; }
+        public string Planet { get; set; }
+        
         public byte[] Image { get; set; }
         public BitmapImage ImageBitmap => ImageUtil.BytesToImage(Image);
 
-        public Item Clone()
+        public Node Clone()
         {
-            return new Item
+            return new Node
             {
                 Id = this.Id,
-                UniqueName = this.UniqueName,
+                Planet = this.Planet,
                 Name = this.Name,
                 Category = this.Category,
                 Image = this.Image,

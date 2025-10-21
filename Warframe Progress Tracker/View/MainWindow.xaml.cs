@@ -54,9 +54,66 @@ namespace Warframe_Progress_Tracker.View
         }
         private async void PopulateDb_Click(object sender, RoutedEventArgs e)
         {
-            int added = await DbService.PopulateItemsFromApi();
-            MessageBox.Show($"{added} new items added", "Database Update");
+            if(MessageBox.Show("Are you sure you want to fetch items? It might take a couple minutes.", 
+                "Fetch Items", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
+            {
+                return;
+            }
+            var dialog = new LoadingDialog("Fetching items from API, please wait...");
+            dialog.Owner = Application.Current.MainWindow;
+            dialog.Show();
+            try
+            {
+                int added = 0;
+                await Task.Run(async () =>
+                {
+                    var progress = new Progress<string>(msg => dialog.UpdateMessage(msg));
+                    var items = await ApiService.FetchItemsAsync(progress);
+                    dialog.UpdateMessage("Saving items to database...");
+                    added = DbService.SaveItems(items);
 
+                });
+                MessageBox.Show($"{added} new items added", "Database Update");
+            }catch(Exception ex)
+            {
+                MessageBox.Show($"Error while fetching items:\n{ex.Message}");
+            }
+            finally
+            {
+                dialog.SafeClose();
+            }
+
+        }
+        private async void PopulateNodes_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show("Are you sure you want to fetch nodes?", 
+                "Fetch Nodes", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
+            {
+                return;
+            }
+            var dialog = new LoadingDialog("Scraping nodes from Wiki, please wait...");
+            dialog.Owner = Application.Current.MainWindow;
+            dialog.Show();
+            int added = 0;
+            try
+            {
+                await Task.Run(async () =>
+                {
+                    var progress = new Progress<string>(msg => dialog.UpdateMessage(msg));
+                    var nodes = await WikiScraperService.ScrapeNodesAsync(progress);
+                    dialog.UpdateMessage("Saving nodes to database...");
+                    added = DbService.SaveNodes(nodes);
+                });
+                MessageBox.Show($"{added} new nodes added", "Database Update");
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show($"Error while fetching nodes:\n{ex.Message}");
+            }
+            finally
+            {
+                dialog.SafeClose();
+            }
         }
         public MainWindow(Model.User user)
         {

@@ -21,6 +21,7 @@
             </MenuItem>
             <MenuItem Header="_Tools">
                 <MenuItem Header="Populate Items Database" Click="PopulateDb_Click"/>
+                <MenuItem Header="Fetch Mission Nodes" Click="PopulateNodes_Click"/>
             </MenuItem>
             
         </Menu>

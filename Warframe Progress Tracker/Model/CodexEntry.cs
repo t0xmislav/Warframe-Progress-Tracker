@@ -1,15 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Warframe_Progress_Tracker.Model
 {
-    public class Category
+    public abstract class CodexEntry
     {
         public int Id { get; set; }
-        public string DisplayName { get; set; }
+        public string Name { get; set; }
+        public int MasteryPoints { get; set; }
+
+        public Category Category { get; set; }
+
+
     }
 }

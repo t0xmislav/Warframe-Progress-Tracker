@@ -15,6 +15,7 @@
             </MenuItem>
             <MenuItem Header="_Codex">
                 <MenuItem Header="Open Codex" Click="OpenCodex_Click"/>
+                <MenuItem Header="Create Entry" Click="OpenCreateEntry_Click"/>
             </MenuItem>
             <MenuItem Header="_Account">
                 <MenuItem Header="Account Settings" Click="OpenAccountSettings_Click"/>

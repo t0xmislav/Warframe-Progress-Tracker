@@ -121,7 +121,8 @@ namespace Warframe_Progress_Tracker.Services
             command.Parameters.AddWithValue("$name", item.Name);
             command.Parameters.AddWithValue("$categoryId", categoryId);
             command.Parameters.AddWithValue("$image", item.Image ?? (object)DBNull.Value);
-            command.Parameters.AddWithValue("$masteryPoints", MasteryCalculator.GetMasteryPoints(item.Category.DisplayName, item.UniqueName));
+            command.Parameters.AddWithValue("$masteryPoints", 
+                item.MasteryPoints > 0 ? item.MasteryPoints : MasteryCalculator.GetMasteryPoints(item.Category.DisplayName, item.UniqueName));
 
             int rowsAffected = command.ExecuteNonQuery();
             return rowsAffected > 0;
@@ -267,6 +268,23 @@ namespace Warframe_Progress_Tracker.Services
                 list.Add(item); 
             }
             return list;
+        }
+        public static bool IsUniqueNameTaken(string uniqueName)
+        {
+            var list = new List<Item>();
+
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                SELECT COUNT(*) FROM Items 
+                WHERE UniqueName = $uniqueName;
+            ";
+            command.Parameters.AddWithValue("$uniqueName", uniqueName);
+            var count = Convert.ToInt32(command.ExecuteScalar());
+            return count > 0;
+
         }
         public static List<Node> GetAllNodes()
         {

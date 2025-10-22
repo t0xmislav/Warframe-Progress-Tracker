@@ -34,23 +34,14 @@ namespace Warframe_Progress_Tracker.View
             var accountWindow = new AccountSettingsWindow(_currentUser);
             accountWindow.Show();
         }
-        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
-        {
-            if (DbService.IsItemsTableEmpty())
-            {
-                var items = await ApiService.FetchItemsAsync();
-                int newItems = 0;
-
-                foreach (var item in items)
-                {
-                    if (DbService.AddItem(item)) newItems++;
-                }
-                MessageBox.Show($"{newItems} items added to database");
-            }
-        }
         private void OpenCodex_Click(object sender, RoutedEventArgs e)
         {
             MainContent.Content = new CodexView(_currentUser);
+        }
+        private void OpenCreateEntry_Click(object sender, RoutedEventArgs e)
+        {
+            var createWindow = new CreateEntryWindow(_currentUser);
+            createWindow.ShowDialog();
         }
         private async void PopulateDb_Click(object sender, RoutedEventArgs e)
         {
@@ -115,6 +106,7 @@ namespace Warframe_Progress_Tracker.View
                 dialog.SafeClose();
             }
         }
+        
         public MainWindow(Model.User user)
         {
             InitializeComponent();

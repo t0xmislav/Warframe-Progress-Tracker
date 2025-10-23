@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
@@ -89,7 +90,12 @@ namespace Warframe_Progress_Tracker.ViewModel
             SaveCommand = new Utils.RelayCommand(_ => Save(), _ => CanSave());
             ExitCommand = new Utils.RelayCommand(_ => Exit());
         }
-        private bool CanSave() => !string.IsNullOrWhiteSpace(Name) && SelectedCategory != null;
+        private bool CanSave() {
+
+            if (SelectedCategory.DisplayName == "Node") return !string.IsNullOrWhiteSpace(Name) && !string.IsNullOrWhiteSpace(Planet);
+            return !string.IsNullOrWhiteSpace(Name);
+        
+        }
         private void LoadCategories()
         {
             var categories = DbService.GetCategories();
@@ -124,6 +130,11 @@ namespace Warframe_Progress_Tracker.ViewModel
 
         private void Save()
         {
+            if(MasteryPoints < 0)
+            {
+                MessageBox.Show("Mastery Points must be a positive number.", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             if (IsNode)
             {
                 var node = new Node
@@ -137,10 +148,18 @@ namespace Warframe_Progress_Tracker.ViewModel
             }
             else
             {
+                var category = SelectedCategory.DisplayName;
+                var uniqueName = string.IsNullOrWhiteSpace(UniqueName) ? GenerateUniqueName(category, Name) : UniqueName;
+                if (DbService.IsUniqueNameTaken(uniqueName))
+                {
+                    MessageBox.Show("Unique Name already exists in the database, please choose a different unique name.", 
+                        "Duplicate Unique Name", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
                 var item = new Item
                 {
                     Name = Name,
-                    UniqueName = UniqueName,
+                    UniqueName = uniqueName,
                     Category = SelectedCategory,
                     Image = Image
                 };
@@ -149,7 +168,18 @@ namespace Warframe_Progress_Tracker.ViewModel
 
             Exit();
         }
-
+        private string GenerateUniqueName(string category,  string name)
+        {
+            string baseName = $"{category}/{name}";
+            string uniqueName = baseName;
+            int counter = 1;
+            while (DbService.IsUniqueNameTaken(uniqueName)) 
+            {
+                uniqueName = $"{uniqueName}{counter}";
+                counter++;
+            }
+            return uniqueName;
+        }
         private void Exit() => RequestClose?.Invoke(true);
 
         public event PropertyChangedEventHandler? PropertyChanged;

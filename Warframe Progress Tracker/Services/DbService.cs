@@ -107,16 +107,21 @@ namespace Warframe_Progress_Tracker.Services
         }
         public static bool AddItem(Item item)
         {
+            var categoryId = AddCategory(item.Category.DisplayName);
             using var connection = new SqliteConnection($"Data source={dbPath}");
             connection.Open();
 
-            var categoryId = AddCategory(item.Category.DisplayName);
-
+            
             var command = connection.CreateCommand();
             command.CommandText =
                 @"
                     INSERT OR IGNORE INTO Items (UniqueName, Name, CategoryId, Image, MasteryPoints)
                     VALUES ($uniqueName, $name, $categoryId, $image, $masteryPoints)";
+            System.Diagnostics.Debug.WriteLine($"Unique Name: {item.UniqueName}");
+            System.Diagnostics.Debug.WriteLine($"Name: {item.Name}");
+            System.Diagnostics.Debug.WriteLine($"CategoryId: {categoryId}");
+            System.Diagnostics.Debug.WriteLine($"Image: {item.Image}");
+            System.Diagnostics.Debug.WriteLine($"MasteryPoints: {item.MasteryPoints}");
             command.Parameters.AddWithValue("$uniqueName", item.UniqueName);
             command.Parameters.AddWithValue("$name", item.Name);
             command.Parameters.AddWithValue("$categoryId", categoryId);

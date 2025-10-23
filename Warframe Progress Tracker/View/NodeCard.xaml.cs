@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -112,6 +113,8 @@ namespace Warframe_Progress_Tracker.View
                 if (result == MessageBoxResult.Yes)
                 {
                     DbService.DeleteNode(node);
+                    var parentListBox = FindParent<ListBox>(this);
+                    if (parentListBox?.ItemsSource is ObservableCollection<Model.CodexEntry> entries) entries.Remove(node);
                 }
             }
         }

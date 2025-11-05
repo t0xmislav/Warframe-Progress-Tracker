@@ -2,6 +2,7 @@
 {
     public class ItemFilter
     {
+        //Filters out items that can't actually get mastered or grant mastery points.
         public static bool GrantsMastery(string uniqueName, string category, int masteryReq, bool excludeFromCodex)
         {
             if (masteryReq < 0 || string.IsNullOrEmpty(category) || excludeFromCodex) return false;

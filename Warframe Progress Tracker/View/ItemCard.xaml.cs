@@ -17,6 +17,7 @@ using System.Windows.Shapes;
 using System.Xml.Linq;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
+using Warframe_Progress_Tracker.Utils;
 
 namespace Warframe_Progress_Tracker.View
 {
@@ -59,26 +60,34 @@ namespace Warframe_Progress_Tracker.View
         {
             bool owned = OwnedCheck.IsChecked == true;
             bool mastered = MasteredCheck.IsChecked == true;
-
             await Task.Run(() =>
             {
-                DbService.UpdateItemProgress(
-                    user.Id,
-                    item.Id,
-                    mastered,
-                    owned
-                );
+                ThreadPoolManager.QueueDatabaseTask(async () =>
+                {
+
+                    DbService.UpdateItemProgress(
+                        user.Id,
+                        item.Id,
+                        mastered,
+                        owned
+                    );
+                
+                    var updated = DbService.GetProgressForItem(user, item);
+                    Utils.ProgressCacheUtil.StoreItemProgress(user.Id, item.Id, updated);
+                    await Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                            if (mastered)
+                            {
+                                DatesBlock.Text = $"Mastered: {updated.DateMastered?.ToShortDateString()}";
+                            }   
+                            else
+                            {
+                                DatesBlock.Text = string.Empty;
+                            }
+                    });
+                });
             });
-            var updated = DbService.GetProgressForItem(user, item);
-            Utils.ProgressCacheUtil.StoreItemProgress(user.Id, item.Id, updated);
-            if (mastered)
-            {
-                DatesBlock.Text = $"Mastered: {updated.DateMastered?.ToShortDateString()}";
-            }
-            else
-            {
-                DatesBlock.Text = string.Empty;
-            }
+            
         }
         private void EditItem_Click(object sender, RoutedEventArgs e)
         {

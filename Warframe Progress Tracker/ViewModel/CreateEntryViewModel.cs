@@ -168,6 +168,8 @@ namespace Warframe_Progress_Tracker.ViewModel
 
             Exit();
         }
+
+        
         private string GenerateUniqueName(string category,  string name)
         {
             string baseName = $"{category}/{name}";

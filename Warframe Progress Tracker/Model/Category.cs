@@ -11,5 +11,17 @@ namespace Warframe_Progress_Tracker.Model
     {
         public int Id { get; set; }
         public string DisplayName { get; set; }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is Category category &&
+                   Id == category.Id &&
+                   DisplayName == category.DisplayName;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Id, DisplayName);
+        }
     }
 }

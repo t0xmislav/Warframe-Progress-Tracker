@@ -28,7 +28,7 @@ namespace Warframe_Progress_Tracker.View
         public CodexView(Model.User currentUser)
         {
             InitializeComponent();
-            _vm = new ViewModel.CodexViewModel(currentUser);
+            _vm = new CodexViewModel(currentUser);
             DataContext = _vm;
             Loaded += async (s, e) =>
             {

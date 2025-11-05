@@ -11,14 +11,18 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
+using System.Xml.Linq;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
+using Warframe_Progress_Tracker.Utils;
+using Warframe_Progress_Tracker.View;
 
 namespace Warframe_Progress_Tracker.ViewModel
 {
     public class CodexViewModel : INotifyPropertyChanged
     {
-        public ObservableCollection<Model.CodexEntry> FilteredEntries { get; } = new();
+        public ObservableCollection<object> FilteredEntries { get; } = new();
         public ObservableCollection<string> Categories { get; } = new();
         public User CurrentUser { get; }
         public ICollectionView ItemsView { get; }
@@ -57,9 +61,10 @@ namespace Warframe_Progress_Tracker.ViewModel
 
         public CodexViewModel(Model.User currentUser)
         {
+            
             CurrentUser = currentUser;
             _ = InitializeAsync();
-            
+
         }
         public async Task InitializeAsync()
         {
@@ -111,10 +116,8 @@ namespace Warframe_Progress_Tracker.ViewModel
         {
             return entry switch
             {
-                Item item => Utils.ProgressCacheUtil.GetItemProgress(CurrentUser.Id, item.Id)?.DateMastered ?? DateTime.MinValue,
-                Node node => Utils.ProgressCacheUtil.GetNodeProgress(CurrentUser.Id, node.Id)?.DateSteelPathClear > DateTime.MinValue
-                            ? Utils.ProgressCacheUtil.GetNodeProgress(CurrentUser.Id, node.Id)?.DateSteelPathClear ?? DateTime.MinValue
-                            : Utils.ProgressCacheUtil.GetNodeProgress(CurrentUser.Id, node.Id)?.DateNormalClear ?? DateTime.MinValue,
+                Item item => Utils.ProgressCacheUtil.GetItemProgress(CurrentUser.Id, item.Id)?.GetProgressDate() ?? DateTime.MinValue,
+                Node node => Utils.ProgressCacheUtil.GetNodeProgress(CurrentUser.Id, node.Id)?.GetClearedDate() ?? DateTime.MinValue,
                             _ => DateTime.MinValue
             };
         }

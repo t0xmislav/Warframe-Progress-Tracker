@@ -31,7 +31,7 @@ namespace Warframe_Progress_Tracker.View
             if (user != null)
             {
                 MessageBox.Show($"Welcome {user.Name}!");
-                var main = new MainWindow(user);
+                var main = new DashboardWindow(user);
                 main.Show();
                 this.Close();
             }

@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Warframe.Tracker.Filters;
 using Warframe_Progress_Tracker.Model;
+using Warframe_Progress_Tracker.Utils;
 using Warframe_Progress_Tracker.View;
 
 namespace Warframe_Progress_Tracker.Services
@@ -80,7 +81,7 @@ namespace Warframe_Progress_Tracker.Services
             command.ExecuteNonQuery();
         }
 
-        public static int AddCategory(String categoryName)
+        public static async Task<int> AddCategory(String categoryName)
         {
             using var connection = new SqliteConnection($"Data Source={dbPath}");
             connection.Open();
@@ -271,6 +272,35 @@ namespace Warframe_Progress_Tracker.Services
                     Image = reader.IsDBNull(6) ? null : (byte[])reader["Image"]
                 };
                 list.Add(item); 
+            }
+            return list;
+        }
+        public static List<Item> GetItemByCategory(Category category)
+        {
+            var list = new List<Item>();
+
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                SELECT i.Id, i.UniqueName, i.Name, i.MasteryPoints, i.CategoryId, i.Image FROM items i
+                WHERE i.CategoryId = $categoryId;
+            ";
+            command.Parameters.AddWithValue("$categoryId", category.Id);
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                var item = new Item
+                {
+                    Id = reader.GetInt32(0),
+                    UniqueName = reader.GetString(1),
+                    Name = reader.GetString(2),
+                    MasteryPoints = reader.GetInt32(3),
+                    Category = category,
+                    Image = reader.IsDBNull(5) ? null : (byte[])reader["Image"]
+                };
+                list.Add(item);
             }
             return list;
         }

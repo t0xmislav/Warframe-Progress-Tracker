@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -9,21 +10,51 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Warframe_Progress_Tracker.Services;
+using Warframe_Progress_Tracker.Utils;
 
 namespace Warframe_Progress_Tracker.View
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class DashboardWindow : Window
     {
         private readonly Model.User _currentUser;
-        
+        public DashboardWindow(Model.User user)
+        {
+            InitializeComponent();
+            _currentUser = user;
+            Title = $"Warframe Tracker - {_currentUser.Name}";
+            Loaded += DashboardWindow_Loaded;
+        }
+        private async void DashboardWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            await LoadUserProgress();
+            LoadDashboard();
+        }
+        private Task LoadUserProgress()
+        {
+            var tcs = new TaskCompletionSource();
+            ThreadPoolManager.QueueDatabaseTask(async () =>
+            {
+                ProgressCacheUtil.PreloadUserProgress(_currentUser);
+                tcs.SetResult();
+            });
+            return tcs.Task;
+        }
+        private void LoadDashboard()
+        {
+            MainContent.Content = new DashboardView(_currentUser);
+        }
         private void Logout_Click(object sender, RoutedEventArgs e)
         {
             var loginWindow = new LoginWindow();
             loginWindow.Show();
             this.Close();
+        }
+        private void OpenDashboard_Click(object sender, RoutedEventArgs e)
+        {
+            MainContent.Content = new DashboardView(_currentUser);
         }
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
@@ -107,11 +138,6 @@ namespace Warframe_Progress_Tracker.View
             }
         }
         
-        public MainWindow(Model.User user)
-        {
-            InitializeComponent();
-            _currentUser = user;
-            Title = $"Warframe Tracker - {_currentUser.Name}";
-        }
+        
     }
 }

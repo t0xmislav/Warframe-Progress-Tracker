@@ -1,21 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
+
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
+using Warframe_Progress_Tracker.Utils;
 
 namespace Warframe_Progress_Tracker.View
 {
@@ -69,32 +62,37 @@ namespace Warframe_Progress_Tracker.View
             var steelPathCleared = ClearedSteelCheck.IsChecked == true;
             await Task.Run(() =>
             {
-                DbService.UpdateNodeProgress(
-                    user.Id,
-                    node.Id,
-                    normalCleared,
-                    steelPathCleared
-                );
+                ThreadPoolManager.QueueDatabaseTask(async () =>
+                {
+                    DbService.UpdateNodeProgress(
+                        user.Id,
+                        node.Id,
+                        normalCleared,
+                        steelPathCleared
+                    );
+                    var updated = DbService.GetProgressForNode(user, node);
+                    Utils.ProgressCacheUtil.StoreNodeProgress(user.Id, node.Id, updated);
+                    await Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        if (normalCleared)
+                        {
+                            NormalDateBlock.Text = $"Normal cleared: {updated.DateNormalClear?.ToShortDateString()}";
+                        }
+                        else
+                        {
+                            NormalDateBlock.Text = string.Empty;
+                        }
+                        if (steelPathCleared)
+                        {
+                            SteelDateBlock.Text = $"Steel path cleared: {updated.DateSteelPathClear?.ToShortDateString()}";
+                        }
+                        else
+                        {
+                            SteelDateBlock.Text = string.Empty;
+                        }
+                    });
+                });
             });
-            var updated = DbService.GetProgressForNode(user, node);
-            Utils.ProgressCacheUtil.StoreNodeProgress(user.Id, node.Id, updated);
-            if (normalCleared) { 
-                NormalDateBlock.Text = $"Normal cleared: {updated.DateNormalClear?.ToShortDateString()}";
-            }
-            else
-            {
-                NormalDateBlock.Text = string.Empty;
-            }
-            if (steelPathCleared)
-            {
-                SteelDateBlock.Text = $"Steel path cleared: {updated.DateSteelPathClear?.ToShortDateString()}";
-            }
-            else
-            {
-                SteelDateBlock.Text = string.Empty;
-            }
-            
-
         }
         private void EditNode_Click(object sender, RoutedEventArgs e)
         {

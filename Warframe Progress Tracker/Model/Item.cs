@@ -14,7 +14,15 @@ namespace Warframe_Progress_Tracker.Model
         public string UniqueName { get; set; }
         public byte[] Image { get; set; }
         public BitmapImage ImageBitmap => ImageUtil.BytesToImage(Image);
+        public string CategoryName => Category?.DisplayName ?? string.Empty;
+        public string GetDisplayName() => Category != null ? $"{Category.DisplayName}/{Name}" : Name;
+        
 
+        public bool IsMastered(User user)
+        {
+            var progress = ProgressCacheUtil.GetItemProgress(user.Id, Id);
+            return progress?.Mastered ?? false;
+        }
         public Item Clone()
         {
             return new Item

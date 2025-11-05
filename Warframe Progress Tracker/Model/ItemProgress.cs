@@ -14,5 +14,7 @@ namespace Warframe_Progress_Tracker.Model
         public bool Mastered { get; set; }
         public DateTime? DateOwned { get; set; }
         public DateTime? DateMastered { get; set; }
+
+        public DateTime GetProgressDate() => DateMastered ?? DateTime.MinValue;
     }
 }

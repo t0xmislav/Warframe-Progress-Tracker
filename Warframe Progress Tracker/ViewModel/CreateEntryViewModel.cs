@@ -14,6 +14,7 @@ using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
+using Warframe_Progress_Tracker.Utils;
 
 namespace Warframe_Progress_Tracker.ViewModel
 {
@@ -137,33 +138,55 @@ namespace Warframe_Progress_Tracker.ViewModel
             }
             if (IsNode)
             {
-                var node = new Node
+                
+                ThreadPoolManager.QueueDatabaseWrite(async () =>
                 {
-                    Name = Name,
-                    Planet = Planet,
-                    MasteryPoints = MasteryPoints,
-                    Image = Image,
-                };
-                DbService.AddNode(node);
+                    var node = new Node
+                    {
+                        Name = Name,
+                        Planet = Planet,
+                        MasteryPoints = MasteryPoints,
+                        Image = Image,
+                    };
+                    DbService.AddNode(node);
+                    await Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        MessageBox.Show("Node created successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    });
+                });
             }
             else
             {
                 var category = SelectedCategory.DisplayName;
                 var uniqueName = string.IsNullOrWhiteSpace(UniqueName) ? GenerateUniqueName(category, Name) : UniqueName;
-                if (DbService.IsUniqueNameTaken(uniqueName))
+                ThreadPoolManager.QueueDatabaseRead(async () =>
                 {
-                    MessageBox.Show("Unique Name already exists in the database, please choose a different unique name.", 
-                        "Duplicate Unique Name", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-                var item = new Item
-                {
-                    Name = Name,
-                    UniqueName = uniqueName,
-                    Category = SelectedCategory,
-                    Image = Image
-                };
-                DbService.AddItem(item);
+                    bool exists = DbService.IsUniqueNameTaken(uniqueName);
+                    if (exists)
+                    {
+                        await Application.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            MessageBox.Show("Unique Name already exists in the database, please choose a different unique name.",
+                            "Duplicate Unique Name", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        });
+                        return;
+                    }
+                    ThreadPoolManager.QueueDatabaseWrite(async async =>
+                    {
+                        var item = new Item
+                        {
+                            Name = Name,
+                            UniqueName = uniqueName,
+                            Category = SelectedCategory,
+                            Image = Image
+                        };
+                        DbService.AddItem(item);
+                        await Application.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            MessageBox.Show("Item created successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                        });
+                    });
+                });
             }
 
             Exit();

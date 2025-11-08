@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -17,7 +15,6 @@ namespace Warframe_Progress_Tracker.View
     /// </summary>
     public partial class NodeCard : UserControl
     {
-        private bool _isInitializing = false; 
         public NodeCard()
         {
             InitializeComponent();
@@ -36,10 +33,8 @@ namespace Warframe_Progress_Tracker.View
 
             Utils.ProgressCacheUtil.StoreNodeProgress(currentUser.Id, node.Id, progress);
 
-            _isInitializing = true;
             ClearedNormalCheck.IsChecked = progress.ClearedNormal;
             ClearedSteelCheck.IsChecked = progress.ClearedSteelPath;
-            _isInitializing = false;
 
             NormalDateBlock.Text = progress.ClearedNormal
                 ? $"Normal cleared: {progress.DateNormalClear?.ToShortDateString()}"
@@ -49,50 +44,49 @@ namespace Warframe_Progress_Tracker.View
                 ? $"Steel Path: {progress.DateSteelPathClear?.ToShortDateString()}"
                 : string.Empty;
 
-            ClearedNormalCheck.Checked += async (_, _) => { if (!_isInitializing) await UpdateProgressAsync(currentUser, node); };
-            ClearedNormalCheck.Unchecked += async (_, _) => { if (!_isInitializing) await UpdateProgressAsync(currentUser, node); };
-            ClearedSteelCheck.Checked += async (_, _) =>{ if (!_isInitializing) await UpdateProgressAsync(currentUser, node); };
-            ClearedSteelCheck.Unchecked += async (_, _) => { if (!_isInitializing) await UpdateProgressAsync(currentUser, node); };
+            ClearedNormalCheck.Checked += (_, _) => {  UpdateProgressAsync(currentUser, node); };
+            ClearedNormalCheck.Unchecked += (_, _) => { UpdateProgressAsync(currentUser, node); };
+            ClearedSteelCheck.Checked += (_, _) =>{ UpdateProgressAsync(currentUser, node); };
+            ClearedSteelCheck.Unchecked += (_, _) => { UpdateProgressAsync(currentUser, node); };
             
         }
 
-        private async Task UpdateProgressAsync(User user, Node node)
+        private void UpdateProgressAsync(User user, Node node)
         {
             var normalCleared = ClearedNormalCheck.IsChecked == true;
             var steelPathCleared = ClearedSteelCheck.IsChecked == true;
-            await Task.Run(() =>
+            
+            ThreadPoolManager.QueueDatabaseWrite(async () =>
             {
-                ThreadPoolManager.QueueDatabaseTask(async () =>
+                DbService.UpdateNodeProgress(
+                    user.Id,
+                    node.Id,
+                    normalCleared,
+                    steelPathCleared
+                );
+                var updated = DbService.GetProgressForNode(user, node);
+                Utils.ProgressCacheUtil.StoreNodeProgress(user.Id, node.Id, updated);
+                await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    DbService.UpdateNodeProgress(
-                        user.Id,
-                        node.Id,
-                        normalCleared,
-                        steelPathCleared
-                    );
-                    var updated = DbService.GetProgressForNode(user, node);
-                    Utils.ProgressCacheUtil.StoreNodeProgress(user.Id, node.Id, updated);
-                    await Application.Current.Dispatcher.InvokeAsync(() =>
+                    if (normalCleared)
                     {
-                        if (normalCleared)
-                        {
-                            NormalDateBlock.Text = $"Normal cleared: {updated.DateNormalClear?.ToShortDateString()}";
-                        }
-                        else
-                        {
-                            NormalDateBlock.Text = string.Empty;
-                        }
-                        if (steelPathCleared)
-                        {
-                            SteelDateBlock.Text = $"Steel path cleared: {updated.DateSteelPathClear?.ToShortDateString()}";
-                        }
-                        else
-                        {
-                            SteelDateBlock.Text = string.Empty;
-                        }
-                    });
+                        NormalDateBlock.Text = $"Normal cleared: {updated.DateNormalClear?.ToShortDateString()}";
+                    }
+                    else
+                    {
+                        NormalDateBlock.Text = string.Empty;
+                    }
+                    if (steelPathCleared)
+                    {
+                        SteelDateBlock.Text = $"Steel path cleared: {updated.DateSteelPathClear?.ToShortDateString()}";
+                    }
+                    else
+                    {
+                        SteelDateBlock.Text = string.Empty;
+                    }
                 });
-            });
+             });
+            
         }
         private void EditNode_Click(object sender, RoutedEventArgs e)
         {
@@ -110,9 +104,15 @@ namespace Warframe_Progress_Tracker.View
                 var result = MessageBox.Show($"Delete ndoe '{node.Name}'?", "Confirm Delete", MessageBoxButton.YesNo);
                 if (result == MessageBoxResult.Yes)
                 {
-                    DbService.DeleteNode(node);
-                    var parentListBox = FindParent<ListBox>(this);
-                    if (parentListBox?.ItemsSource is ObservableCollection<Model.CodexEntry> entries) entries.Remove(node);
+                    ThreadPoolManager.QueueDatabaseWrite(async () => {
+                        DbService.DeleteNode(node);
+                        await Application.Current.Dispatcher.InvokeAsync(() => 
+                        {
+                            MessageBox.Show("Node deleted successfully", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                            var parentListBox = FindParent<ListBox>(this);
+                            if (parentListBox?.ItemsSource is ObservableCollection<Model.CodexEntry> entries) entries.Remove(node);
+                        });
+                    });
                 }
             }
         }

@@ -35,7 +35,7 @@ namespace Warframe_Progress_Tracker.View
         private Task LoadUserProgress()
         {
             var tcs = new TaskCompletionSource();
-            ThreadPoolManager.QueueDatabaseTask(async () =>
+            ThreadPoolManager.QueueDatabaseRead(async () =>
             {
                 ProgressCacheUtil.PreloadUserProgress(_currentUser);
                 tcs.SetResult();

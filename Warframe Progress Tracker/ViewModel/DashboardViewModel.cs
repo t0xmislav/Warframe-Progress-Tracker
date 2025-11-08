@@ -16,7 +16,7 @@ namespace Warframe_Progress_Tracker.ViewModel
     {
         public ObservableCollection<CategoryProgress> CategoryProgresses { get; } = new();
         public double TotalProgressPercentage { get; private set; }
-        private User _currentUser;
+        private readonly User _currentUser;
 
         private int _totalMastered;
         private readonly object _totalMasteredLock = new();
@@ -35,7 +35,7 @@ namespace Warframe_Progress_Tracker.ViewModel
             while (true)
             {
 
-                ThreadPoolManager.QueueDatabaseTask(RefreshDasboardProgressAsync);
+                ThreadPoolManager.QueueDatabaseRead(RefreshDasboardProgressAsync);
 
                 await Task.Delay(_refreshInterval);
             }
@@ -60,13 +60,13 @@ namespace Warframe_Progress_Tracker.ViewModel
                 {
                     Category = category,
                     MasteredItems = masteredInCategory,
-                    TotalItems = items.Count(),
+                    TotalItems = items.Count,
                 };
             }));
 
             CategoryProgress? normalNodeProgress = null;
             CategoryProgress? steelPathNodeProgress = null;
-            tasks = tasks.Concat(new[] {
+            tasks = tasks.Concat([
                 Task.Run(() =>
                 {
                     int normalCleared = nodes.Count(n => ProgressCacheUtil.GetNodeProgress(_currentUser.Id, n.Id)?.ClearedNormal == true);
@@ -98,7 +98,7 @@ namespace Warframe_Progress_Tracker.ViewModel
                         TotalItems = nodes.Count(),
                     };
                 })
-            });
+            ]);
 
             await Task.WhenAll(tasks);
             System.Windows.Application.Current.Dispatcher.Invoke(() =>

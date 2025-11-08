@@ -16,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
+using Warframe_Progress_Tracker.Utils;
 
 namespace Warframe_Progress_Tracker.View
 {
@@ -27,7 +28,7 @@ namespace Warframe_Progress_Tracker.View
         private Model.Item _item;
         public ObservableCollection<Category> Categories { get; } = new();
 
-        public Category SelectedCategory { get; set; }
+        public Category? SelectedCategory { get; set; }
         public Item EditableItem { get; }
 
         public ItemEditWindow(Model.Item item)
@@ -70,9 +71,15 @@ namespace Warframe_Progress_Tracker.View
             _item.Category = SelectedCategory;
             _item.MasteryPoints = EditableItem.MasteryPoints;
             _item.Image = EditableItem.Image;
+            ThreadPoolManager.QueueDatabaseWrite(async() =>
+            {
+                DbService.UpdateItem(_item);
 
-            DbService.UpdateItem(_item);
-
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    MessageBox.Show("Item updated succesfully");
+                });
+            });
             DialogResult = true;
             Close();
 

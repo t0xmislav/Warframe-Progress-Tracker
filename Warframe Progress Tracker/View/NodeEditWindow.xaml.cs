@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Warframe_Progress_Tracker.Services;
+using Warframe_Progress_Tracker.Utils;
 
 namespace Warframe_Progress_Tracker.View
 {
@@ -66,8 +67,14 @@ namespace Warframe_Progress_Tracker.View
             _node.Planet = EditableNode.Planet;
             _node.MasteryPoints = EditableNode.MasteryPoints;
             _node.Image = EditableNode.Image;
-
-            DbService.UpdateNode(_node);
+            ThreadPoolManager.QueueDatabaseWrite(async() =>
+            {
+                DbService.UpdateNode(_node);
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    MessageBox.Show("Node updated succesfully");
+                });
+            });
             DialogResult = true;
             Close();
                 

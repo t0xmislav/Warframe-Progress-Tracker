@@ -55,8 +55,8 @@ namespace Warframe_Progress_Tracker.ViewModel
         }
 
 
-        private List<Model.Item> _allItemsSummaries = new();
-        private List<Model.Node> _allNodeSummaries = new();
+        private List<Model.Item>? _allItemsSummaries = new();
+        private List<Model.Node>? _allNodeSummaries = new();
         private List<Model.CodexEntry> _allSummaries = new();
 
         public CodexViewModel(Model.User currentUser)
@@ -153,8 +153,8 @@ namespace Warframe_Progress_Tracker.ViewModel
            
         public async Task LoadCodexSummariesAsync()
         {
-            List<Item> items = null;
-            List<Node> nodes = null;
+            List<Item>? items = null;
+            List<Node>? nodes = null;
             await Task.Run(() =>
             {
                 var result = DbService.GetAllCodexSummaries();
@@ -175,7 +175,7 @@ namespace Warframe_Progress_Tracker.ViewModel
             });
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string propName = "") =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
     }

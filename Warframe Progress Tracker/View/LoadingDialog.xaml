@@ -7,14 +7,20 @@
         mc:Ignorable="d"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        WindowStyle="None"
         Title="LoadingDialog" Height="150" Width="350"
         ShowInTaskbar="False" Topmost="True">
-    <Border Background="#FF1E1E1E" Padding="20">
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-            <ProgressBar IsIndeterminate="True" Width="200" Height="20" Margin="0,0,0,10"/>
-            <TextBlock x:Name="MessageBlock" Text="Loading, please wait..." Foreground="White" FontSize="14" HorizontalAlignment="Center"/>
-        </StackPanel>
+    <Border Padding="5">
+        <Grid RenderTransformOrigin="0.5,0.5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <ProgressBar IsIndeterminate="True" Width="200" Height="20" Margin="0,0,0,10" Grid.Row="0"/>
+            <TextBlock x:Name="MessageBlock" Text="Loading, please wait..." FontSize="14" HorizontalAlignment="Center" Grid.Row="1" VerticalAlignment="Center"/>
+            <Button x:Name="CancelButton" Content="Cancel" Click="CancelButton_Click" Width="70" Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+            
+        </Grid>
         
     </Border>
 </Window>

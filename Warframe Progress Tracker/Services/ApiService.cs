@@ -13,7 +13,7 @@ namespace Warframe_Progress_Tracker.Services
     {
         private static readonly HttpClient httpClient = new HttpClient();
 
-        public static async Task<List<Model.Item>> FetchItemsAsync(IProgress<string>? progress = null)
+        public static async Task<List<Model.Item>> FetchItemsAsync(IProgress<string>? progress = null, CancellationToken cancellationToken = default)
         {
             progress?.Report("Fetching item list...");
 
@@ -24,11 +24,18 @@ namespace Warframe_Progress_Tracker.Services
             System.Diagnostics.Debug.WriteLine("After Fetch.");
             foreach (var item in jsonArray)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+                var uniqueName = (string)item["uniqueName"];
+                if (DbService.ItemExists(uniqueName)) 
+                {
+                    System.Diagnostics.Debug.WriteLine($"Item Exists {uniqueName}");
+                    continue;
+                }
                 System.Diagnostics.Debug.WriteLine("populating...");
                 var masteryReq = item["masteryReq"]?.ToObject<int?>() ?? -1;
                 var category = (string)item["category"];
                 var excludeFromCodex = item["excludeFromCodex"]?.ToObject<bool>() ?? false;
-                var uniqueName = (string)item["uniqueName"];
+                
 
                 //Skip all items not granting mastery, including mission nodes
                 if (!ItemFilter.GrantsMastery(uniqueName, category, masteryReq, excludeFromCodex)) continue;

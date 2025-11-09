@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Warframe.Tracker.Filters;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Utils;
@@ -141,44 +142,33 @@ namespace Warframe_Progress_Tracker.Services
 
             foreach (var item in items)
             {
-                var checkCmd = connection.CreateCommand();
-                checkCmd.CommandText = "SELECT COUNT(*) FROM Items WHERE UniqueName = $name";
-                checkCmd.Parameters.AddWithValue("$name", item.UniqueName);
-
-                long exists = (long)checkCmd.ExecuteScalar();
-
-                if (exists == 0)
-                {
-                    AddItem(item);
-                    count++;
-                }
+                AddItem(item);
+                count++;
             }
             return count;
         }
-        public static async Task<int> PopulateItemsFromApi(LoadingDialog dialog)
+        public static bool ItemExists(string uniqueName)
         {
-            int newCount = 0;
-            var progress = new Progress<string>(msg => dialog.UpdateMessage(msg));
-            var items = await ApiService.FetchItemsAsync(progress);
+            using var connection = new SqliteConnection($"Data source={dbPath}");
+            connection.Open();
+            var checkCmd = connection.CreateCommand();
+            checkCmd.CommandText = "SELECT COUNT(*) FROM Items WHERE UniqueName = $name";
+            checkCmd.Parameters.AddWithValue("$name", uniqueName);
 
+            long exists = (long)checkCmd.ExecuteScalar();
+            return exists != 0;
+        }
+        public static bool NodeExists(string name)
+        {
             using var connection = new SqliteConnection($"Data source={dbPath}");
             connection.Open();
 
-            foreach (var item in items)
-            {
-                var checkCmd = connection.CreateCommand();
-                checkCmd.CommandText = "SELECT COUNT(*) FROM Items WHERE UniqueName = $name";
-                checkCmd.Parameters.AddWithValue("$name", item.UniqueName);
+            var checkCmd = connection.CreateCommand();
+            checkCmd.CommandText = "SELECT COUNT(*) FROM Nodes WHERE Name = $name";
+            checkCmd.Parameters.AddWithValue("$name", name);
 
-                long exists = (long)checkCmd.ExecuteScalar();
-
-                if (exists == 0)
-                {
-                    AddItem(item);
-                    newCount++;
-                }
-            }
-            return newCount;
+            long exists = (long)checkCmd.ExecuteScalar();
+            return exists != 0;
         }
         public static bool AddNode(Model.Node node)
         {
@@ -209,19 +199,12 @@ namespace Warframe_Progress_Tracker.Services
 
             foreach (var node in nodes)
             {
-                var checkCmd = connection.CreateCommand();
-                checkCmd.CommandText = "SELECT COUNT(*) FROM Nodes WHERE Name = $name";
-                checkCmd.Parameters.AddWithValue("$name", node.Name);
-
-                long exists = (long)checkCmd.ExecuteScalar();
-                if (exists == 0)
-                {
-                    AddNode(node);
-                    count++;
-                }
+                AddNode(node);
+                count++;
             }
             return count;
-        } 
+        }
+        /*
         public static async Task<int> PopulateNodesFromWiki()
         {
 
@@ -247,6 +230,7 @@ namespace Warframe_Progress_Tracker.Services
             return newCount;
 
         }
+        */
         public static List<Item> GetAllItems()
         {
             var list = new List<Item>();

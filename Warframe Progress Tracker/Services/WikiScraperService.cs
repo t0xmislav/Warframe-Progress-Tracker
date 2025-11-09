@@ -1,21 +1,22 @@
-﻿using System;
+﻿using HtmlAgilityPack;
+using Microsoft.Playwright;
+using Newtonsoft.Json.Serialization;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Documents;
-using HtmlAgilityPack;
-using Microsoft.Playwright;
-using Newtonsoft.Json.Serialization;
 
 namespace Warframe_Progress_Tracker.Services
 {
     internal class WikiScraperService
     {
         private static string wikiUrl = "https://wiki.warframe.com";
-        public static async Task<List<Model.Node>> ScrapeNodesAsync(IProgress<string>? progress = null)
+        public static async Task<List<Model.Node>> ScrapeNodesAsync(IProgress<string>? progress = null, CancellationToken cancellationToken = default)
         {
 
 
@@ -57,6 +58,7 @@ namespace Warframe_Progress_Tracker.Services
 
             foreach (var planetUrl in planetLinks)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 await page.GotoAsync(planetUrl);
                 var planetHtml = await page.ContentAsync();
                 var planetDoc = new HtmlAgilityPack.HtmlDocument();
@@ -68,6 +70,7 @@ namespace Warframe_Progress_Tracker.Services
                 progress?.Report($"Fetching nodes for {planetName}");
                 foreach (var table in nodeTables)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     var rows = table.SelectNodes(".//tr[td]");
                     if(rows == null) continue;
                     System.Diagnostics.Debug.WriteLine(planetName);
@@ -77,7 +80,11 @@ namespace Warframe_Progress_Tracker.Services
                         if (cells == null || cells.Count < 3) continue;
 
                         var nodeName = WebUtility.HtmlDecode(cells.ElementAtOrDefault(1)?.InnerText?.Trim() ?? "");
-
+                        if (DbService.NodeExists(nodeName))
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Exists {nodeName}");
+                            continue;
+                        }
                         var masteryText = WebUtility.HtmlEncode(cells.ElementAtOrDefault(7)?.InnerText?.Trim() ?? "");
                         masteryText = Regex.Replace(masteryText, @"\[\d+\]", "");
                         var numMatch = Regex.Match(masteryText, @"[-\d,]+");

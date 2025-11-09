@@ -171,7 +171,7 @@ namespace Warframe_Progress_Tracker.ViewModel
                         });
                         return;
                     }
-                    ThreadPoolManager.QueueDatabaseWrite(async async =>
+                    ThreadPoolManager.QueueDatabaseWrite(async ()=>
                     {
                         var item = new Item
                         {

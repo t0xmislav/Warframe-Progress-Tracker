@@ -82,22 +82,43 @@ namespace Warframe_Progress_Tracker.View
                 return;
             }
             var dialog = new LoadingDialog("Fetching items from API, please wait...");
+
+            var progress = new Progress<string>(msg => dialog.UpdateMessage(msg));
             dialog.Owner = Application.Current.MainWindow;
             dialog.Show();
+
+            var cts = new CancellationTokenSource();
+            dialog.OnCancel += () => cts.Cancel();
             try
             {
                 int added = 0;
                 await Task.Run(async () =>
                 {
-                    var progress = new Progress<string>(msg => dialog.UpdateMessage(msg));
-                    var items = await ApiService.FetchItemsAsync(progress);
-                    dialog.UpdateMessage("Saving items to database...");
-                    added = DbService.SaveItems(items);
+                    var items = await ApiService.FetchItemsAsync(progress, cts.Token);
 
-                });
+                    if(items.Count == 0)
+                    {
+                        dialog.UpdateMessage("No new items found");
+                        return;
+                    }
+                    dialog.UpdateMessage("Saving items to database...");
+                    ThreadPoolManager.QueueDatabaseWrite(() =>
+                    {
+                        added = DbService.SaveItems(items);
+                        return Task.CompletedTask;
+                    });
+
+                }, cts.Token);
                 MessageBox.Show($"{added} new items added", "Database Update");
-            }catch(Exception ex)
+            }
+            catch (OperationCanceledException)
             {
+                dialog.SafeClose();
+                MessageBox.Show("Fetching items cancelled by user.", "Cancelled", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch(Exception ex)
+            {
+                dialog.SafeClose();
                 MessageBox.Show($"Error while fetching items:\n{ex.Message}");
             }
             finally
@@ -115,21 +136,35 @@ namespace Warframe_Progress_Tracker.View
             }
             var dialog = new LoadingDialog("Scraping nodes from Wiki, please wait...");
             dialog.Owner = Application.Current.MainWindow;
+            var progress = new Progress<string>(msg => dialog.UpdateMessage(msg));
             dialog.Show();
+
+            var cts = new CancellationTokenSource();
+            dialog.OnCancel += () => cts.Cancel();
             int added = 0;
             try
             {
                 await Task.Run(async () =>
                 {
-                    var progress = new Progress<string>(msg => dialog.UpdateMessage(msg));
-                    var nodes = await WikiScraperService.ScrapeNodesAsync(progress);
+                    
+                    var nodes = await WikiScraperService.ScrapeNodesAsync(progress, cts.Token);
                     dialog.UpdateMessage("Saving nodes to database...");
-                    added = DbService.SaveNodes(nodes);
-                });
+                    ThreadPoolManager.QueueDatabaseWrite(() =>
+                    {
+                        added = DbService.SaveNodes(nodes);
+                        return Task.CompletedTask;
+                    });
+                }, cts.Token);
                 MessageBox.Show($"{added} new nodes added", "Database Update");
             }
-            catch(Exception ex)
+            catch (OperationCanceledException)
             {
+                dialog.SafeClose();
+                MessageBox.Show("Fetching nodes cancelled by user.", "Cancelled", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                dialog.SafeClose();
                 MessageBox.Show($"Error while fetching nodes:\n{ex.Message}");
             }
             finally

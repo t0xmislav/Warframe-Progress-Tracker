@@ -19,22 +19,36 @@ namespace Warframe_Progress_Tracker.View
     /// </summary>
     public partial class LoadingDialog : Window
     {
-
         private bool _allowClose = false;
+
+        public event Action? OnCancel;
         public LoadingDialog(string message = "Loading, please wait...")
         {
             InitializeComponent();
-            MessageBlock.Text = message;
+            UpdateMessage(message);
             Closing += LoadingDialog_Closing;
         }
         private void LoadingDialog_Closing(object? sender, System.ComponentModel.CancelEventArgs e) 
         {
-            if(!_allowClose) e.Cancel = true;
+            if(!_allowClose) 
+                e.Cancel = true;
+        }
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            CancelButton.IsEnabled = false;
+            UpdateMessage("Cancelling...");
+            OnCancel?.Invoke();
         }
         public void SafeClose()
         {
-            _allowClose = true;
-            Close();
+            Dispatcher.Invoke(() =>
+            {
+                if (IsVisible)
+                {
+                    _allowClose = true;
+                    Close();
+                }
+            });
         }
 
         public void UpdateMessage(string newMessage)

@@ -22,11 +22,11 @@
             <Image Source="{Binding ImageBitmap}" Stretch="UniformToFill"/>
             <StackPanel Grid.Row="1" Background="#AA000000" Margin="5">
                 <TextBlock Text="{Binding Name}" Foreground="White" TextWrapping="Wrap" FontWeight="Bold" FontSize="12" HorizontalAlignment="Center"/>
-                <CheckBox x:Name="ClearedNormalCheck" Content="Normal Clear" Foreground="White" Margin="0,5,0,0">
+                <CheckBox x:Name="ClearedNormalCheck" Content="{DynamicResource NormalClearStr}" Foreground="White" Margin="0,5,0,0">
                 </CheckBox>
                 <TextBlock x:Name="NormalDateBlock" Foreground="LightGray" FontSize="10" TextAlignment="Center">
                 </TextBlock>
-                <CheckBox x:Name="ClearedSteelCheck" Content="Steel Path Clear" Foreground="White">
+                <CheckBox x:Name="ClearedSteelCheck" Content="{DynamicResource SteelPathClearStr}" Foreground="White">
                 </CheckBox>
                 <TextBlock x:Name="SteelDateBlock" Foreground="LightGray" FontSize="10" TextAlignment="Center">
                 </TextBlock>

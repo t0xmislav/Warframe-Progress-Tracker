@@ -33,22 +33,22 @@ namespace Warframe_Progress_Tracker.View
 
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
-                MessageBox.Show("Username and password are required");
+                MessageBox.Show((string)Application.Current.Resources["MissingRegistrationStr"]);
                 return;
             }
             if (password != confirmPassword)
             {
-                MessageBox.Show("Passwords do not match.");
+                MessageBox.Show((string)Application.Current.Resources["MismatchedPasswordsStr"]);
                 return;
             }
             if (AuthService.Register(username, password))
             {
-                MessageBox.Show("Registration successful!");
+                MessageBox.Show((string)Application.Current.Resources["RegistrationSuccessStr"]);
                 this.Close();
             }
             else
             {
-                MessageBox.Show("Username already exists");
+                MessageBox.Show((string)Application.Current.Resources["DuplicateUsernameStr"]);
             }
         }
         private void Cancel_Click(object sender, RoutedEventArgs e)

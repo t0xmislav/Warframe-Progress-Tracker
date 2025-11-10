@@ -10,7 +10,7 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <DockPanel Margin="20">
             <StackPanel DockPanel.Dock="Top" Margin="0,0,0,20">
-                <TextBlock Text="Total Progress" FontSize="16" FontWeight="Bold"/>
+                <TextBlock Text="{DynamicResource DashboardTotalStr}" FontSize="16" FontWeight="Bold"/>
                 <ProgressBar Value="{Binding TotalProgressPercentage, Mode=OneWay}" Height="20" Margin="0,5,0,20" Maximum="1"/>
                 <TextBlock Text="{Binding TotalProgressPercentage, StringFormat='{}{0:F1}%', Mode=OneWay}" HorizontalAlignment="Right" FontStyle="Italic"/>
             </StackPanel>
@@ -26,7 +26,7 @@
                         <DataTemplate>
                             <Border BorderBrush="#333" BorderThickness="1" CornerRadius="8" Padding="10" Margin="8">
                                 <StackPanel>
-                                    <TextBlock Text="{Binding Category.DisplayName}" FontWeight="Bold" FontSize="14"/>
+                                    <TextBlock x:Name="CategoryTxt" Text="{Binding Category.DisplayName}" FontWeight="Bold" FontSize="14"/>
                                     <ProgressBar Value="{Binding Progress, Mode=OneWay}" Maximum="100" Height="20" Margin="0,5,0,0"/>
                                     <TextBlock Text="{Binding DisplayText}" HorizontalAlignment="Right" FontStyle="Italic" FontSize="12"/>
                                 </StackPanel>

@@ -21,17 +21,17 @@
     </UserControl.Resources>
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="10">
-            <TextBlock Text="Category:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <TextBlock Text="{DynamicResource CodexCategoryStr}" VerticalAlignment="Center" Margin="0,0,5,0"/>
             <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" MaxHeight="20"/>
             
-            <TextBlock Text="Name:" VerticalAlignment="Center" Margin="20,0,5,0"/>
+            <TextBlock Text="{DynamicResource CodexNameStr}" VerticalAlignment="Center" Margin="20,0,5,0"/>
             <TextBox Text="{Binding NameFilter, UpdateSourceTrigger=PropertyChanged}" MinWidth="100" MaxHeight="20"/>
-            <GroupBox Header="Sorting Options" BorderBrush="Black" Margin="20,0,5,0">
+            <GroupBox Header="{DynamicResource CodexSortOptionsStr}" BorderBrush="Black" Margin="20,0,5,0">
                 <StackPanel Orientation="Horizontal">
                     <RadioButton Tag="Name" Checked="SortEntries_Checked" 
-                                 Content="Sort by Name"/>
+                                 Content="{DynamicResource CodexSortNameStr}"/>
                     <RadioButton Tag="DateMastered" Checked="SortEntries_Checked" 
-                                 Content="Sort by date Cleared"/>
+                                 Content="{DynamicResource CodexSortDateStr}"/>
                 </StackPanel>
             </GroupBox>
         </StackPanel>

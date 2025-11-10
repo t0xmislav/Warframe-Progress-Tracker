@@ -22,18 +22,18 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <TextBlock Text="Username" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+        <TextBlock Text="{DynamicResource UsernameStr}" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
         <TextBox x:Name="UsernameBox" Grid.Row="0" Grid.Column="1" Margin="5" Width="200"/>
 
-        <TextBlock Text="Password" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
+        <TextBlock Text="{DynamicResource PasswordStr}" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
         <PasswordBox x:Name="PasswordBox" Grid.Row="1" Grid.Column="1" Margin="5" Width="200"/>
 
-        <TextBlock Text="Confirm Password" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
+        <TextBlock Text="{DynamicResource ConfirmPasswordStr}" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
         <PasswordBox x:Name="ConfirmPasswordBox" Grid.Row="2" Grid.Column="1" Margin="5" Width="200"/>
 
         <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,20,0,0" VerticalAlignment="Center" HorizontalAlignment="Center">
-            <Button Content="Register" Width="100" Margin="5" Click="Register_Click"/>
-            <Button Content="Cancel" Width="100" Margin="5" Click="Cancel_Click"/>
+            <Button Content="{DynamicResource RegisterStr}" Width="100" Margin="5" Click="Register_Click"/>
+            <Button Content="{DynamicResource AccountCancelStr}" Width="100" Margin="5" Click="Cancel_Click"/>
         </StackPanel>
     </Grid>
 </Window>

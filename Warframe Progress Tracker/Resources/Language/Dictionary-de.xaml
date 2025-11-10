@@ -1,0 +1,39 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:System="clr-namespace:System;assembly=System.Runtime">
+    
+    <System:String x:Key="EntryNameStr">Name:</System:String>
+    <System:String x:Key="EntryCategoryStr">Kategorie:</System:String>
+    <System:String x:Key="EntryMasteryPointsStr">Meisterschaftspunkte:</System:String>
+    <System:String x:Key="EntryChangeImageStr">Bild ändern...</System:String>
+    <System:String x:Key="EntryUniqueNameStr">Eindeutiger Name:</System:String>
+    <System:String x:Key="DashboardTotalStr">Gesamtfortschritt</System:String>
+    <System:String x:Key="AccountDisplayNameStr">Anzeigename:</System:String>
+    <System:String x:Key="AccountPlatformStr">Plattform:</System:String>
+    <System:String x:Key="UsernameStr">Benutzername</System:String>
+    <System:String x:Key="EntryPlanetStr">Planet:</System:String>
+    <System:String x:Key="SaveStr">Speichern</System:String>
+    <System:String x:Key="PasswordStr">Passwort</System:String>
+    <System:String x:Key="AccountCancelStr">Abbrechen</System:String>
+    <System:String x:Key="LoadingTextStr">Laden, bitte warten...</System:String>
+    <System:String x:Key="LoadingFetchingItemsStr">Fetching items from API, please wait...</System:String>
+    <System:String x:Key="ProcessedItemsStr">Processed {0} items...</System:String>
+    <System:String x:Key="LoadingSavingItemsStr">Saving items to database...</System:String>
+    <System:String x:Key="LoadingScrapingNodesStr">Scraping nodes from Wiki, please wait...</System:String>
+    <System:String x:Key="LoadingPlanetNodesStr">Fetching nodes for {0}</System:String>
+    <System:String x:Key="LoadingSavingNodesStr">Saving nodes to database...</System:String>
+    <System:String x:Key="CodexCategoryStr">Kategorie:</System:String>
+    <System:String x:Key="LoginStr">Anmelden</System:String>
+    <System:String x:Key="CodexNameStr">Name:</System:String>
+    <System:String x:Key="ConfirmPasswordStr">Passwort bestätigen</System:String>
+    <System:String x:Key="NormalClearStr">Normaler Abschluss</System:String>
+    <System:String x:Key="LanguageStr">Sprache:</System:String>
+    <System:String x:Key="RegisterStr">Registrieren</System:String>
+    <System:String x:Key="CodexSortNameStr">Nach Name sortieren</System:String>
+    <System:String x:Key="CodexSortDateStr">Nach Abschlussdatum sortieren</System:String>
+    <System:String x:Key="ExitStr">Beenden</System:String>
+    <System:String x:Key="SteelPathClearStr">Steel Path Abschluss</System:String>
+    <System:String x:Key="CodexSortOptionsStr">Sortieroptionen</System:String>
+    <System:String x:Key="ItemOwnedStr">Besitzt</System:String>
+    <System:String x:Key="ItemMasteredStr">Gemeistert</System:String>
+</ResourceDictionary>

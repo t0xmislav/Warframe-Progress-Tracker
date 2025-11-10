@@ -23,9 +23,9 @@
             <Image Source="{Binding ImageBitmap}" Stretch="UniformToFill"/>
             <StackPanel Grid.Row="1" Background="#AA000000" Margin="5">
                 <TextBlock Text="{Binding Name}" Foreground="White" TextWrapping="Wrap" FontWeight="Bold" FontSize="12" HorizontalAlignment="Center"/>
-                <CheckBox x:Name="OwnedCheck"  Content="Owned" Foreground="White" Margin="0,5,0,0">
+                <CheckBox x:Name="OwnedCheck"  Content="{DynamicResource ItemOwnedStr}" Foreground="White" Margin="0,5,0,0">
                 </CheckBox>
-                <CheckBox x:Name="MasteredCheck" Content="Mastered" Foreground="White">
+                <CheckBox x:Name="MasteredCheck" Content="{DynamicResource ItemMasteredStr}" Foreground="White">
                 </CheckBox>
                 <TextBlock x:Name="DatesBlock"  Foreground="LightGray" FontSize="10" TextAlignment="Center">
                 </TextBlock>

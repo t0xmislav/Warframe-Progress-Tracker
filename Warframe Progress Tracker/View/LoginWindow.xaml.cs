@@ -30,14 +30,14 @@ namespace Warframe_Progress_Tracker.View
             var user = AuthService.Login(UsernameBox.Text, PasswordBox.Password);
             if (user != null)
             {
-                MessageBox.Show($"Welcome {user.Name}!");
+                MessageBox.Show(string.Format((string)Application.Current.Resources["WelcomeStr"], user.Name));
                 var main = new DashboardWindow(user);
                 main.Show();
                 this.Close();
             }
             else
             {
-                MessageBox.Show("Invalid username or password.");
+                MessageBox.Show((string)Application.Current.Resources["InvalidLoginStr"]);
             }
         }
         private void Register_Click(object sender, RoutedEventArgs e)

@@ -45,7 +45,7 @@ namespace Warframe_Progress_Tracker.View
             OwnedCheck.IsChecked = progress.Owned;
             MasteredCheck.IsChecked = progress.Mastered;
             DatesBlock.Text = progress.Mastered
-                ? $"Mastered: {progress.DateMastered?.ToShortDateString()}"
+                ? string.Format((string)Application.Current.Resources["MasteredDateStr"], progress.DateMastered?.ToShortDateString())
                 : string.Empty;
             Utils.ProgressCacheUtil.StoreItemProgress(currentUser.Id, item.Id, progress);
             // Attach event handlers for saving changes
@@ -76,7 +76,7 @@ namespace Warframe_Progress_Tracker.View
                 {
                         if (mastered)
                         {
-                            DatesBlock.Text = $"Mastered: {updated.DateMastered?.ToShortDateString()}";
+                            DatesBlock.Text = string.Format((string)Application.Current.Resources["MasteredDateStr"], updated.DateMastered?.ToShortDateString());
                         }   
                         else
                         {
@@ -98,14 +98,14 @@ namespace Warframe_Progress_Tracker.View
         {
             if(DataContext is Model.Item item)
             {
-                var result = MessageBox.Show($"Delete item '{item.Name}'?", "Confirm Delete", MessageBoxButton.YesNo);
+                var result = MessageBox.Show(string.Format((string)Application.Current.Resources["DeleteItemStr"], item.Name), (string)Application.Current.Resources["ConfirmDeleteStr"], MessageBoxButton.YesNo);
                 if(result == MessageBoxResult.Yes)
                 {
                     ThreadPoolManager.QueueDatabaseWrite(async () => {
                         DbService.DeleteItem(item);
                         await Application.Current.Dispatcher.InvokeAsync(() =>
                         {
-                            MessageBox.Show("Item deleted successfully", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                            MessageBox.Show((string)Application.Current.Resources["DeleteItemSuccessStr"], (string)Application.Current.Resources["SuccessStr"], MessageBoxButton.OK, MessageBoxImage.Information);
                             var parentListBox = FindParent<ListBox>(this);
                             if (parentListBox?.ItemsSource is ObservableCollection<Model.CodexEntry> entries) entries.Remove(item);
                         });

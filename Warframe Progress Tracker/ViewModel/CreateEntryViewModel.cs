@@ -133,7 +133,7 @@ namespace Warframe_Progress_Tracker.ViewModel
         {
             if(MasteryPoints < 0)
             {
-                MessageBox.Show("Mastery Points must be a positive number.", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show((string)Application.Current.Resources["InvalidMasteryPointsStr"], (string)Application.Current.Resources["InvalidInputStr"], MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             if (IsNode)
@@ -151,7 +151,8 @@ namespace Warframe_Progress_Tracker.ViewModel
                     DbService.AddNode(node);
                     await Application.Current.Dispatcher.InvokeAsync(() =>
                     {
-                        MessageBox.Show("Node created successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show((string)Application.Current.Resources["NodeCreatedStr"], 
+                            (string)Application.Current.Resources["SuccessStr"], MessageBoxButton.OK, MessageBoxImage.Information);
                     });
                 });
             }
@@ -166,8 +167,8 @@ namespace Warframe_Progress_Tracker.ViewModel
                     {
                         await Application.Current.Dispatcher.InvokeAsync(() =>
                         {
-                            MessageBox.Show("Unique Name already exists in the database, please choose a different unique name.",
-                            "Duplicate Unique Name", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            MessageBox.Show((string)Application.Current.Resources["DuplicateUniqueNameMessageStr"],
+                            (string)Application.Current.Resources["DuplicateUniqueNameStr"], MessageBoxButton.OK, MessageBoxImage.Warning);
                         });
                         return;
                     }
@@ -183,7 +184,8 @@ namespace Warframe_Progress_Tracker.ViewModel
                         DbService.AddItem(item);
                         await Application.Current.Dispatcher.InvokeAsync(() =>
                         {
-                            MessageBox.Show("Item created successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                            MessageBox.Show((string)Application.Current.Resources["ItemCreatedStr"], 
+                                (string)Application.Current.Resources["SuccessStr"], MessageBoxButton.OK, MessageBoxImage.Information);
                         });
                     });
                 });

@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -37,11 +39,11 @@ namespace Warframe_Progress_Tracker.View
             ClearedSteelCheck.IsChecked = progress.ClearedSteelPath;
 
             NormalDateBlock.Text = progress.ClearedNormal
-                ? $"Normal cleared: {progress.DateNormalClear?.ToShortDateString()}"
+                ? string.Format((string)Application.Current.Resources["NormalClearedDateStr"], progress.DateNormalClear?.ToShortDateString())
                 : string.Empty;
 
             SteelDateBlock.Text = progress.ClearedSteelPath
-                ? $"Steel Path: {progress.DateSteelPathClear?.ToShortDateString()}"
+                ? string.Format((string)Application.Current.Resources["SPClearedDateStr"], progress.DateSteelPathClear?.ToShortDateString())
                 : string.Empty;
 
             ClearedNormalCheck.Checked += (_, _) => {  UpdateProgressAsync(currentUser, node); };
@@ -70,7 +72,7 @@ namespace Warframe_Progress_Tracker.View
                 {
                     if (normalCleared)
                     {
-                        NormalDateBlock.Text = $"Normal cleared: {updated.DateNormalClear?.ToShortDateString()}";
+                        NormalDateBlock.Text = string.Format((string)Application.Current.Resources["NormalClearedDateStr"], updated.DateNormalClear?.ToShortDateString());
                     }
                     else
                     {
@@ -78,7 +80,7 @@ namespace Warframe_Progress_Tracker.View
                     }
                     if (steelPathCleared)
                     {
-                        SteelDateBlock.Text = $"Steel path cleared: {updated.DateSteelPathClear?.ToShortDateString()}";
+                        SteelDateBlock.Text = string.Format((string)Application.Current.Resources["SPClearedDateStr"], updated.DateSteelPathClear?.ToShortDateString());
                     }
                     else
                     {
@@ -101,14 +103,14 @@ namespace Warframe_Progress_Tracker.View
         {
             if (DataContext is Model.Node node)
             {
-                var result = MessageBox.Show($"Delete ndoe '{node.Name}'?", "Confirm Delete", MessageBoxButton.YesNo);
+                var result = MessageBox.Show($string.Format((string)Application.Current.Resources["DeleteNodeStr"], node.Name), (string)Application.Current.Resources["ConfirmDeleteStr"], MessageBoxButton.YesNo);
                 if (result == MessageBoxResult.Yes)
                 {
                     ThreadPoolManager.QueueDatabaseWrite(async () => {
                         DbService.DeleteNode(node);
                         await Application.Current.Dispatcher.InvokeAsync(() => 
                         {
-                            MessageBox.Show("Node deleted successfully", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                            MessageBox.Show((string)Application.Current.Resources["DeleteNodeSuccessStr"], (string)Application.Current.Resources["SuccessStr"], MessageBoxButton.OK, MessageBoxImage.Information);
                             var parentListBox = FindParent<ListBox>(this);
                             if (parentListBox?.ItemsSource is ObservableCollection<Model.CodexEntry> entries) entries.Remove(node);
                         });

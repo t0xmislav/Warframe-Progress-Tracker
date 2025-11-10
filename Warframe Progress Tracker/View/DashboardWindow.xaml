@@ -5,27 +5,29 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Warframe_Progress_Tracker"
         mc:Ignorable="d"
-        Title="MainWindow" Height="600" Width="900">
+        Title="MainWindow" Height="600" Width="900"
+    xmlns:System="clr-namespace:System;assembly=System.Runtime">
+
     <DockPanel>
         <Menu DockPanel.Dock="Top" Padding="3">
-            <MenuItem Header="_File">
-                <MenuItem Header="Logout" Click="Logout_Click"/>
+            <MenuItem Header="{DynamicResource FileStr}">
+                <MenuItem Header="{DynamicResource LogoutStr}" Click="Logout_Click"/>
                 <Separator/>
-                <MenuItem Header="Exit" Click="Exit_Click"/>
+                <MenuItem Header="{DynamicResource ExitStr}" Click="Exit_Click"/>
             </MenuItem>
-            <MenuItem Header="_Dashboard">
-                <MenuItem Header="Open Dashboard" Click="OpenDashboard_Click"/>
+            <MenuItem Header="{DynamicResource DashboardStr}">
+                <MenuItem Header="{DynamicResource OpenDashboardStr}" Click="OpenDashboard_Click"/>
             </MenuItem>
-            <MenuItem Header="_Codex">
-                <MenuItem Header="Open Codex" Click="OpenCodex_Click"/>
-                <MenuItem Header="Create Entry" Click="OpenCreateEntry_Click"/>
+            <MenuItem Header="{DynamicResource CodexStr}">
+                <MenuItem Header="{DynamicResource OpenCodexStr}" Click="OpenCodex_Click"/>
+                <MenuItem Header="{DynamicResource CreateEntryStr}" Click="OpenCreateEntry_Click"/>
             </MenuItem>
-            <MenuItem Header="_Account">
-                <MenuItem Header="Account Settings" Click="OpenAccountSettings_Click"/>
+            <MenuItem Header="{DynamicResource AccountStr}">
+                <MenuItem Header="{DynamicResource SettingsStr}" Click="OpenAccountSettings_Click"/>
             </MenuItem>
-            <MenuItem Header="_Tools">
-                <MenuItem Header="Populate Items Database" Click="PopulateDb_Click"/>
-                <MenuItem Header="Fetch Mission Nodes" Click="PopulateNodes_Click"/>
+            <MenuItem Header="{DynamicResource ToolsStr}">
+                <MenuItem Header="{DynamicResource PopulateItemsStr}" Click="PopulateDb_Click"/>
+                <MenuItem Header="{DynamicResource FetchMissionsStr}" Click="PopulateNodes_Click"/>
             </MenuItem>
             
         </Menu>

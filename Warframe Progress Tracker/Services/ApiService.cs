@@ -15,7 +15,7 @@ namespace Warframe_Progress_Tracker.Services
 
         public static async Task<List<Model.Item>> FetchItemsAsync(IProgress<string>? progress = null, CancellationToken cancellationToken = default)
         {
-            progress?.Report("Fetching item list...");
+            progress?.Report(string.Format((string)System.Windows.Application.Current.Resources["LoadingFetchingItemsStr"]));
 
             var response = await httpClient.GetStringAsync("https://api.warframestat.us/items");
             var jsonArray = JArray.Parse(response);
@@ -42,7 +42,7 @@ namespace Warframe_Progress_Tracker.Services
                 count++;
                 if(count % 10 == 0)
                 {
-                    progress?.Report($"Processed {count} items...");
+                    progress?.Report(string.Format((string)System.Windows.Application.Current.Resources["ProcessedItemsStr"], count));
                 }
                 var masteryPoints = MasteryCalculator.GetMasteryPoints(category, uniqueName);
                 var imageName = (string)item["imageName"];

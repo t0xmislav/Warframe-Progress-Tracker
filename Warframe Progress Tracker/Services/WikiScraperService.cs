@@ -36,7 +36,7 @@ namespace Warframe_Progress_Tracker.Services
                     .ToList();
            
             */
-            progress?.Report("Fetching mission nodes...");
+            progress?.Report(string.Format((string)System.Windows.Application.Current.Resources["LoadingScrapingNodesStr"]));
             var nodes = new List<Model.Node>();
             using var playwright = await Playwright.CreateAsync();
             var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
@@ -67,10 +67,11 @@ namespace Warframe_Progress_Tracker.Services
                 planetName = Regex.Replace(planetName, @"\s*-\s*Warframe Wiki\s*$", "", RegexOptions.IgnoreCase).Trim();
                 var nodeTables = planetDoc.DocumentNode.SelectNodes("//table[contains(@class,'wikitable')]");
                 if (nodeTables == null) continue;
-                progress?.Report($"Fetching nodes for {planetName}");
+                progress?.Report(string.Format((string)System.Windows.Application.Current.Resources["LoadingPlanetNodesStr"], planetName));
                 foreach (var table in nodeTables)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
+
                     var rows = table.SelectNodes(".//tr[td]");
                     if(rows == null) continue;
                     System.Diagnostics.Debug.WriteLine(planetName);
@@ -85,11 +86,14 @@ namespace Warframe_Progress_Tracker.Services
                             System.Diagnostics.Debug.WriteLine($"Exists {nodeName}");
                             continue;
                         }
+
                         var masteryText = WebUtility.HtmlEncode(cells.ElementAtOrDefault(7)?.InnerText?.Trim() ?? "");
                         masteryText = Regex.Replace(masteryText, @"\[\d+\]", "");
                         var numMatch = Regex.Match(masteryText, @"[-\d,]+");
+
                         if (!numMatch.Success) continue;
                         var digits = numMatch.Value;
+
                         if (!int.TryParse(digits, System.Globalization.NumberStyles.AllowThousands | 
                             System.Globalization.NumberStyles.AllowLeadingSign, System.Globalization.CultureInfo.InvariantCulture, out int masteryXp))
                             continue;

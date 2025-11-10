@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Warframe_Progress_Tracker.Services;
+using Warframe_Progress_Tracker.Utils;
 
 namespace Warframe_Progress_Tracker.View
 {
@@ -28,21 +29,33 @@ namespace Warframe_Progress_Tracker.View
 
             DisplayNameBox.Text = _user.WarframeDisplayName ?? "";
             PlatformBox.SelectedItem = _user.Platform ?? "pc";
+            LanguageBox.SelectedIndex = 0;
         }
 
-        private void Save_Click(Object sender, RoutedEventArgs e)
+        private void Save_Click(object sender, RoutedEventArgs e)
         {
+            if (MessageBox.Show(string.Format((string)System.Windows.Application.Current.Resources["SaveConfirmationStr"]),
+                string.Format((string)System.Windows.Application.Current.Resources["SaveSettingsStr"]), MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
+            {
+                return;
+            }
+
             string displayName = DisplayNameBox.Text.Trim();
             string platform = ((ComboBoxItem)PlatformBox.SelectedItem).Content.ToString();
+            string lang = ((ComboBoxItem)LanguageBox.SelectedItem).Tag.ToString();
 
             AuthService.LinkWarframeAccount(_user.Id, displayName, platform);
-
-            MessageBox.Show("Account settings updated");
-            this.Close();
+            LanguageManager.SetLanguage(lang);
+            MessageBox.Show(string.Format((string)System.Windows.Application.Current.Resources["SettingsUpdatedStr"]));
         }
 
-        private void Cancel_Click(Object sender, RoutedEventArgs e)
+        private void Cancel_Click(object sender, RoutedEventArgs e)
         {
+            if (MessageBox.Show(string.Format((string)System.Windows.Application.Current.Resources["CancelSettingsStr"]),
+                string.Format((string)System.Windows.Application.Current.Resources["CancelStr"]), MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
+            {
+                return;
+            }
             this.Close();
         }
     }

@@ -13,26 +13,33 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="120"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <TextBlock Text="Display Name:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+        <TextBlock Text="{DynamicResource AccountDisplayNameStr}" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
         <TextBox x:Name="DisplayNameBox" Grid.Row="0" Grid.Column="1" Width="200"/>
 
-        <TextBlock Text="Platform:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
+        <TextBlock Text="{DynamicResource AccountPlatformStr}" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
         <ComboBox x:Name="PlatformBox" Grid.Row="1" Grid.Column="1" Width="120">
             <ComboBoxItem Content="pc" IsSelected="True"/>
             <ComboBoxItem Content="ps4"/>
             <ComboBoxItem Content="xbox"/>
             <ComboBoxItem Content="switch"/>
         </ComboBox>
-
-        <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
-            <Button Content="Save" Width="100" Margin="5" Click="Save_Click"/>
-            <Button Content="Cancel" Width="100" Margin="5" Click="Cancel_Click"/>
+        <TextBlock Text="{DynamicResource LanguageStr}" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
+        <ComboBox x:Name="LanguageBox" Grid.Row="2" Grid.Column="1" Width="120">
+            <ComboBoxItem Content="English" Tag="en"/>
+            <ComboBoxItem Content="Croatian" Tag="hr"/>
+            <ComboBoxItem Content="German" Tag="de"/>
+            
+        </ComboBox>
+        <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+            <Button Content="{DynamicResource SaveStr}" Width="100" Margin="5" Click="Save_Click"/>
+            <Button Content="{DynamicResource AccountCancelStr}" Width="100" Margin="5" Click="Cancel_Click"/>
         </StackPanel>
     </Grid>
 </Window>

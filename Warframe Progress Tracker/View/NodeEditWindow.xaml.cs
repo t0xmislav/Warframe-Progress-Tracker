@@ -72,7 +72,7 @@ namespace Warframe_Progress_Tracker.View
                 DbService.UpdateNode(_node);
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    MessageBox.Show("Node updated succesfully");
+                    MessageBox.Show((string)Application.Current.Resources["NodeUpdatedStr"]);
                 });
             });
             DialogResult = true;

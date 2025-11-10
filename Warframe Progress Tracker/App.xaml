@@ -4,6 +4,12 @@
              xmlns:local="clr-namespace:Warframe_Progress_Tracker"
              StartupUri="View/LoginWindow.xaml">
     <Application.Resources>
-         
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Resources/Language/Dictionary-en.xaml"/>
+                <ResourceDictionary Source="/Resources/Language/Dictionary-de.xaml"/>
+                <ResourceDictionary Source="/Resources/Language/Dictionary-hr.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -77,7 +77,7 @@ namespace Warframe_Progress_Tracker.View
 
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    MessageBox.Show("Item updated succesfully");
+                    MessageBox.Show((string)Application.Current.Resources["ItemUpdatedStr"]);
                 });
             });
             DialogResult = true;

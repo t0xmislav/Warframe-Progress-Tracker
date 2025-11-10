@@ -76,12 +76,12 @@ namespace Warframe_Progress_Tracker.View
         }
         private async void PopulateDb_Click(object sender, RoutedEventArgs e)
         {
-            if(MessageBox.Show("Are you sure you want to fetch items? It might take a couple minutes.", 
-                "Fetch Items", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
+            if (MessageBox.Show((string)Application.Current.Resources["ConfirmItemFetchStr"],
+                (string)Application.Current.Resources["FetchItemsStr"], MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
             {
                 return;
             }
-            var dialog = new LoadingDialog("Fetching items from API, please wait...");
+            var dialog = new LoadingDialog((string)Application.Current.Resources["FetchItemsLoadingStr"]);
 
             var progress = new Progress<string>(msg => dialog.UpdateMessage(msg));
             dialog.Owner = Application.Current.MainWindow;
@@ -98,10 +98,10 @@ namespace Warframe_Progress_Tracker.View
 
                     if(items.Count == 0)
                     {
-                        dialog.UpdateMessage("No new items found");
+                        dialog.UpdateMessage((string)Application.Current.Resources["NoItemsStr"]);
                         return;
                     }
-                    dialog.UpdateMessage("Saving items to database...");
+                    dialog.UpdateMessage((string)Application.Current.Resources["SavingItemsStr"]);
                     ThreadPoolManager.QueueDatabaseWrite(() =>
                     {
                         added = DbService.SaveItems(items);
@@ -109,17 +109,17 @@ namespace Warframe_Progress_Tracker.View
                     });
 
                 }, cts.Token);
-                MessageBox.Show($"{added} new items added", "Database Update");
+                MessageBox.Show(string.Format((string)Application.Current.Resources["ItemsAddedStr"], added), (string)Application.Current.Resources["DbUpdatedStr"]);
             }
             catch (OperationCanceledException)
             {
                 dialog.SafeClose();
-                MessageBox.Show("Fetching items cancelled by user.", "Cancelled", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show((string)Application.Current.Resources["FetchItemsCancelled"], (string)Application.Current.Resources["CancelledStr"], MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch(Exception ex)
             {
                 dialog.SafeClose();
-                MessageBox.Show($"Error while fetching items:\n{ex.Message}");
+                MessageBox.Show(ex.Message, (string)Application.Current.Resources["FetchItemsErrorStr"]);
             }
             finally
             {
@@ -129,12 +129,12 @@ namespace Warframe_Progress_Tracker.View
         }
         private async void PopulateNodes_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageBox.Show("Are you sure you want to fetch nodes?", 
-                "Fetch Nodes", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
+            if (MessageBox.Show((string)Application.Current.Resources["ConfirmNodeFetchStr"],
+                (string)Application.Current.Resources["FetchNodesStr"], MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
             {
                 return;
             }
-            var dialog = new LoadingDialog("Scraping nodes from Wiki, please wait...");
+            var dialog = new LoadingDialog((string)Application.Current.Resources["LoadingScrapingNodesStr"]);
             dialog.Owner = Application.Current.MainWindow;
             var progress = new Progress<string>(msg => dialog.UpdateMessage(msg));
             dialog.Show();
@@ -148,24 +148,24 @@ namespace Warframe_Progress_Tracker.View
                 {
                     
                     var nodes = await WikiScraperService.ScrapeNodesAsync(progress, cts.Token);
-                    dialog.UpdateMessage("Saving nodes to database...");
+                    dialog.UpdateMessage((string)Application.Current.Resources["LoadingSavingNodesStr"]);
                     ThreadPoolManager.QueueDatabaseWrite(() =>
                     {
                         added = DbService.SaveNodes(nodes);
                         return Task.CompletedTask;
                     });
                 }, cts.Token);
-                MessageBox.Show($"{added} new nodes added", "Database Update");
+                MessageBox.Show(string.Format((string)Application.Current.Resources["LoadingSavingNodesStr"], added), (string)Application.Current.Resources["DbUpdatedStr"]);
             }
             catch (OperationCanceledException)
             {
                 dialog.SafeClose();
-                MessageBox.Show("Fetching nodes cancelled by user.", "Cancelled", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show((string)Application.Current.Resources["FetchNodesCancelledStr"], (string)Application.Current.Resources["CancelledStr"], MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
                 dialog.SafeClose();
-                MessageBox.Show($"Error while fetching nodes:\n{ex.Message}");
+                MessageBox.Show($"{ex.Message}", (string)Application.Current.Resources["FetchNodesErrorStr"]);
             }
             finally
             {

@@ -92,4 +92,5 @@
     <System:String x:Key="DuplicateUniqueNameMessageStr">Unique Name already exists in the database, please choose a different unique name.</System:String>
     <System:String x:Key="DuplicateUniqueNameStr">Duplicate Unique Name</System:String>
     <System:String x:Key="ItemCreatedStr">Item created successfully.</System:String>
+    <System:String x:Key="ThemeStr">Theme:</System:String>
 </ResourceDictionary>

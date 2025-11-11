@@ -6,6 +6,8 @@
         xmlns:local="clr-namespace:Warframe_Progress_Tracker.View"
         mc:Ignorable="d"
         WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource PrimaryBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryForegroundBrush}"
         ResizeMode="NoResize"
         Title="LoadingDialog" Height="150" Width="350"
         ShowInTaskbar="False" Topmost="True">

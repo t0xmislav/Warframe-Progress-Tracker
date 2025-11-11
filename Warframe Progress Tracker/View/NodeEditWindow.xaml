@@ -5,6 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Warframe_Progress_Tracker.View"
         mc:Ignorable="d"
+        Background="{DynamicResource PrimaryBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryForegroundBrush}"
         Title="Edit Node" Height="400" Width="400"
         WindowStartupLocation="CenterOwner">
     <Grid>

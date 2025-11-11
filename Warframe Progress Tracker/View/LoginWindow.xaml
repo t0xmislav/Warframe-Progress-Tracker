@@ -5,6 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Warframe_Progress_Tracker"
         mc:Ignorable="d"
+        Background="{DynamicResource PrimaryBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryForegroundBrush}"
         Title="Warframe Tracker - Login" Height="250" Width="400"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen">

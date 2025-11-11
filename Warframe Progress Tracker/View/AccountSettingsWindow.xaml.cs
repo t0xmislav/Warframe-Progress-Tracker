@@ -26,10 +26,24 @@ namespace Warframe_Progress_Tracker.View
         {
             InitializeComponent();
             _user = user;
+            if (IniFileService.Exists)
+            {
+                string savedName = IniFileService.Read("Account", "DisplayName", _user.WarframeDisplayName);
+                string savedPlatform = IniFileService.Read("Account", "Platform", _user.Platform);
+                string savedLanguage = IniFileService.Read("Account", "Language", "en");
+                string savedTheme = IniFileService.Read("Account", "Theme", "Light");
 
-            DisplayNameBox.Text = _user.WarframeDisplayName ?? "";
-            PlatformBox.SelectedItem = _user.Platform ?? "pc";
-            LanguageBox.SelectedIndex = 0;
+                DisplayNameBox.Text = savedName;
+                PlatformBox.SelectedItem = PlatformBox.Items.OfType<ComboBoxItem>().FirstOrDefault(i => (string)i.Content == savedPlatform);
+
+                LanguageBox.SelectedItem = LanguageBox.Items.OfType<ComboBoxItem>().FirstOrDefault(i => (string)(i.Tag ?? i.Content) == savedLanguage);
+                ThemeBox.SelectedItem = ThemeBox.Items.OfType<ComboBoxItem>().FirstOrDefault(i => (string)i.Content == savedTheme);
+            }
+            else
+            {
+                DisplayNameBox.Text = _user.WarframeDisplayName ?? "";
+                PlatformBox.SelectedItem = _user.Platform ?? "pc";
+            }
         }
 
         private void Save_Click(object sender, RoutedEventArgs e)
@@ -43,9 +57,16 @@ namespace Warframe_Progress_Tracker.View
             string displayName = DisplayNameBox.Text.Trim();
             string platform = ((ComboBoxItem)PlatformBox.SelectedItem).Content.ToString();
             string lang = ((ComboBoxItem)LanguageBox.SelectedItem).Tag.ToString();
+            string theme = ((ComboBoxItem)ThemeBox.SelectedItem).Content.ToString();
 
             AuthService.LinkWarframeAccount(_user.Id, displayName, platform);
             LanguageManager.SetLanguage(lang);
+            ThemeManager.ApplyTheme(theme);
+
+            IniFileService.Write("Account", "DisplayName", displayName);
+            IniFileService.Write("Account", "Platform", platform);
+            IniFileService.Write("Account", "Language", lang);
+            IniFileService.Write("Account", "Theme", theme);
             MessageBox.Show(string.Format((string)System.Windows.Application.Current.Resources["SettingsUpdatedStr"]));
         }
 

@@ -5,11 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Warframe_Progress_Tracker"
         mc:Ignorable="d"
+        Background="{DynamicResource PrimaryBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryForegroundBrush}"
         Title="Account settings" Height="200" Width="400"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -37,7 +40,13 @@
             <ComboBoxItem Content="German" Tag="de"/>
             
         </ComboBox>
-        <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+        <TextBlock Text="{DynamicResource ThemeStr}" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"/>
+        <ComboBox x:Name="ThemeBox" Grid.Row="3" Grid.Column="1" Width="120">
+            <ComboBoxItem Content="Light" Tag="Light"/>
+            <ComboBoxItem Content="Dark" Tag="Dark"/>
+
+        </ComboBox>
+        <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
             <Button Content="{DynamicResource SaveStr}" Width="100" Margin="5" Click="Save_Click"/>
             <Button Content="{DynamicResource AccountCancelStr}" Width="100" Margin="5" Click="Cancel_Click"/>
         </StackPanel>

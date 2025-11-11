@@ -11,7 +11,7 @@ namespace Warframe_Progress_Tracker.Services
 {
     internal class AuthService
     {
-        private static String HashPassword(string password)
+        private static string HashPassword(string password)
         {
             using var sha = SHA256.Create();
             var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
@@ -66,6 +66,7 @@ namespace Warframe_Progress_Tracker.Services
             }
             return null;
         }
+        //Attempts to link warframe account, but the api doesn't seem to recognize a lot of accounts, so it just sets the display name and platform.
         public static void LinkWarframeAccount(int userId, string displayName, string platform)
         {
             using var connection = new SqliteConnection($"Data Source={DbService.GetDbPath()}");

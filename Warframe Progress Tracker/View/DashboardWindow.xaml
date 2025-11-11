@@ -5,6 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Warframe_Progress_Tracker"
         mc:Ignorable="d"
+        Background="{DynamicResource PrimaryBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryForegroundBrush}"
         Title="MainWindow" Height="600" Width="900"
     xmlns:System="clr-namespace:System;assembly=System.Runtime">
 

@@ -103,7 +103,7 @@ namespace Warframe_Progress_Tracker.View
         {
             if (DataContext is Model.Node node)
             {
-                var result = MessageBox.Show($string.Format((string)Application.Current.Resources["DeleteNodeStr"], node.Name), (string)Application.Current.Resources["ConfirmDeleteStr"], MessageBoxButton.YesNo);
+                var result = MessageBox.Show(string.Format((string)Application.Current.Resources["DeleteNodeStr"], node.Name), (string)Application.Current.Resources["ConfirmDeleteStr"], MessageBoxButton.YesNo);
                 if (result == MessageBoxResult.Yes)
                 {
                     ThreadPoolManager.QueueDatabaseWrite(async () => {

@@ -18,6 +18,7 @@ using System.Xml.Linq;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
 using Warframe_Progress_Tracker.Utils;
+using Warframe_Progress_Tracker.Utils.Logger;
 
 namespace Warframe_Progress_Tracker.View
 {
@@ -26,8 +27,10 @@ namespace Warframe_Progress_Tracker.View
     /// </summary>
     public partial class ItemCard : UserControl
     {
+        private User _currentUser;
         public ItemCard()
         {
+            
             InitializeComponent();
         }
         private async void UserControl_Loaded(object sender, RoutedEventArgs e)
@@ -39,6 +42,8 @@ namespace Warframe_Progress_Tracker.View
             var parent = FindParent<ListBox>(this);
             if (parent?.Tag is not User currentUser)
                 return;
+
+            _currentUser = currentUser;
 
             var progress = await Task.Run(() => DbService.GetProgressForItem(currentUser, item));
 
@@ -72,6 +77,8 @@ namespace Warframe_Progress_Tracker.View
               
                 var updated = DbService.GetProgressForItem(user, item);
                 Utils.ProgressCacheUtil.StoreItemProgress(user.Id, item.Id, updated);
+                LoggerService.Log("Changed Item Progress", $"{_currentUser.Name}: Changed progress for: {item.Name} | " +
+                    $"Owned status: {updated.Owned.ToString().ToLower()} | Mastered status: {updated.Mastered.ToString().ToLower()}.");
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                         if (mastered)
@@ -89,7 +96,7 @@ namespace Warframe_Progress_Tracker.View
         {
             if(DataContext is Model.Item item)
             {
-                var editWindow = new ItemEditWindow(item);
+                var editWindow = new ItemEditWindow(item, _currentUser);
                 editWindow.Owner = Application.Current.MainWindow;
                 editWindow.ShowDialog();
             }
@@ -103,6 +110,7 @@ namespace Warframe_Progress_Tracker.View
                 {
                     ThreadPoolManager.QueueDatabaseWrite(async () => {
                         DbService.DeleteItem(item);
+                        LoggerService.Log("Deleted Item", $"{_currentUser.Name}: Deleted item: {item.Name}.");
                         await Application.Current.Dispatcher.InvokeAsync(() =>
                         {
                             MessageBox.Show((string)Application.Current.Resources["DeleteItemSuccessStr"], (string)Application.Current.Resources["SuccessStr"], MessageBoxButton.OK, MessageBoxImage.Information);

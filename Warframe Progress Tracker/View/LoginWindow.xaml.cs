@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Warframe_Progress_Tracker.Services;
+using Warframe_Progress_Tracker.Utils.Logger;
 
 namespace Warframe_Progress_Tracker.View
 {
@@ -31,6 +32,7 @@ namespace Warframe_Progress_Tracker.View
             if (user != null)
             {
                 MessageBox.Show(string.Format((string)Application.Current.Resources["WelcomeStr"], user.Name));
+                LoggerService.Log("User Login", $"User {user.Name} logged in");
                 var main = new DashboardWindow(user);
                 main.Show();
                 this.Close();

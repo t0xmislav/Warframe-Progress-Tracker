@@ -17,6 +17,7 @@ using System.Windows.Shapes;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
 using Warframe_Progress_Tracker.Utils;
+using Warframe_Progress_Tracker.Utils.Logger;
 
 namespace Warframe_Progress_Tracker.View
 {
@@ -26,22 +27,29 @@ namespace Warframe_Progress_Tracker.View
     public partial class ItemEditWindow : Window
     {
         private Model.Item _item;
+        private User _currentUser;
+        //For logging purposes
+        private Item _oldItem;
         public ObservableCollection<Category> Categories { get; } = new();
 
         public Category? SelectedCategory { get; set; }
+        //Cloned as to not actively change the item in the codex view while editing
         public Item EditableItem { get; }
 
-        public ItemEditWindow(Model.Item item)
+        public ItemEditWindow(Model.Item item, User user)
         {
             InitializeComponent();
             _item = item;
+            _currentUser = user;
             EditableItem = item.Clone();
+            _oldItem = item.Clone();
             DataContext = EditableItem;
             if (_item.Image != null)
             {
                 PreviewImage.Source = EditableItem.ImageBitmap;
             }
             LoadCategories();
+            _currentUser = user;
         }
 
         private void ChangeImage_Click(object sender, RoutedEventArgs e)
@@ -74,7 +82,7 @@ namespace Warframe_Progress_Tracker.View
             ThreadPoolManager.QueueDatabaseWrite(async() =>
             {
                 DbService.UpdateItem(_item);
-
+                LoggerService.LogItemChanges(_oldItem, _item, _currentUser);
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     MessageBox.Show((string)Application.Current.Resources["ItemUpdatedStr"]);

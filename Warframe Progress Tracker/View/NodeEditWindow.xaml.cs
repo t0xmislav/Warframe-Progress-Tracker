@@ -15,6 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Warframe_Progress_Tracker.Services;
 using Warframe_Progress_Tracker.Utils;
+using Warframe_Progress_Tracker.Utils.Logger;
 
 namespace Warframe_Progress_Tracker.View
 {
@@ -23,14 +24,20 @@ namespace Warframe_Progress_Tracker.View
     /// </summary>
     public partial class NodeEditWindow : Window
     {
+        private Model.User _currentUser;
         private Model.Node _node;
-
+        
+        //For logging purposes
+        private Model.Node _oldNode;
+        //Cloned as to not change node in codex while editing
         public Model.Node EditableNode { get; }
-        public NodeEditWindow(Model.Node node)
+        public NodeEditWindow(Model.Node node, Model.User user)
         {
             InitializeComponent();
+            _currentUser = user;
             _node = node;
             EditableNode = _node.Clone();
+            _oldNode = _node.Clone();
             DataContext = EditableNode;
 
             if (_node.Image != null) 
@@ -70,6 +77,7 @@ namespace Warframe_Progress_Tracker.View
             ThreadPoolManager.QueueDatabaseWrite(async() =>
             {
                 DbService.UpdateNode(_node);
+                LoggerService.LogNodeChanges(_oldNode, _node, _currentUser);
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     MessageBox.Show((string)Application.Current.Resources["NodeUpdatedStr"]);

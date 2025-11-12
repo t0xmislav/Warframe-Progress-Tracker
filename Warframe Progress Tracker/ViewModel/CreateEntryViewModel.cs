@@ -12,9 +12,11 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using System.Xml.Linq;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
 using Warframe_Progress_Tracker.Utils;
+using Warframe_Progress_Tracker.Utils.Logger;
 
 namespace Warframe_Progress_Tracker.ViewModel
 {
@@ -149,6 +151,7 @@ namespace Warframe_Progress_Tracker.ViewModel
                         Image = Image,
                     };
                     DbService.AddNode(node);
+                    LoggerService.Log("Created Node", $"{_currentUser.Name} Created node: {node.Name}");
                     await Application.Current.Dispatcher.InvokeAsync(() =>
                     {
                         MessageBox.Show((string)Application.Current.Resources["NodeCreatedStr"], 
@@ -182,6 +185,7 @@ namespace Warframe_Progress_Tracker.ViewModel
                             Image = Image
                         };
                         DbService.AddItem(item);
+                        LoggerService.Log("Created Item", $"{_currentUser.Name} Created item: {item.Name}");
                         await Application.Current.Dispatcher.InvokeAsync(() =>
                         {
                             MessageBox.Show((string)Application.Current.Resources["ItemCreatedStr"], 

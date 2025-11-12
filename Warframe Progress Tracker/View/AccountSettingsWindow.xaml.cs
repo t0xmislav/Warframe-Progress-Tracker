@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Warframe_Progress_Tracker.Services;
 using Warframe_Progress_Tracker.Utils;
+using Warframe_Progress_Tracker.Utils.Logger;
 
 namespace Warframe_Progress_Tracker.View
 {
@@ -67,6 +68,7 @@ namespace Warframe_Progress_Tracker.View
             IniFileService.Write("Account", "Platform", platform);
             IniFileService.Write("Account", "Language", lang);
             IniFileService.Write("Account", "Theme", theme);
+            LoggerService.Log("Settings Changed", $"{_user.Name} changed settings");
             MessageBox.Show(string.Format((string)System.Windows.Application.Current.Resources["SettingsUpdatedStr"]));
         }
 

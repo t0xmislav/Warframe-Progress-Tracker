@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Warframe_Progress_Tracker.Services;
+using Warframe_Progress_Tracker.Utils.Logger;
 
 namespace Warframe_Progress_Tracker.View
 {
@@ -43,6 +44,7 @@ namespace Warframe_Progress_Tracker.View
             }
             if (AuthService.Register(username, password))
             {
+                LoggerService.Log("User Registered", $"User: {username} successfully registered");
                 MessageBox.Show((string)Application.Current.Resources["RegistrationSuccessStr"]);
                 this.Close();
             }

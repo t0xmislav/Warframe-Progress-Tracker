@@ -11,6 +11,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Warframe_Progress_Tracker.Services;
 using Warframe_Progress_Tracker.Utils;
+using Warframe_Progress_Tracker.Utils.Logger;
 
 namespace Warframe_Progress_Tracker.View
 {
@@ -81,6 +82,7 @@ namespace Warframe_Progress_Tracker.View
             {
                 return;
             }
+            LoggerService.Log("Item Fetching Started", $"{_currentUser.Name}: Initiated fetching items from api.");
             var dialog = new LoadingDialog((string)Application.Current.Resources["FetchItemsLoadingStr"]);
 
             var progress = new Progress<string>(msg => dialog.UpdateMessage(msg));
@@ -109,6 +111,7 @@ namespace Warframe_Progress_Tracker.View
                     });
 
                 }, cts.Token);
+                LoggerService.Log("Item Fetching Finished", $"{_currentUser.Name}: Finished fetching node from api | Added: {added} items.");
                 MessageBox.Show(string.Format((string)Application.Current.Resources["ItemsAddedStr"], added), (string)Application.Current.Resources["DbUpdatedStr"]);
             }
             catch (OperationCanceledException)
@@ -134,6 +137,7 @@ namespace Warframe_Progress_Tracker.View
             {
                 return;
             }
+            LoggerService.Log("Node Scraping Started", $"{_currentUser.Name}: Initiated scraping nodes from wiki.");
             var dialog = new LoadingDialog((string)Application.Current.Resources["LoadingScrapingNodesStr"]);
             dialog.Owner = Application.Current.MainWindow;
             var progress = new Progress<string>(msg => dialog.UpdateMessage(msg));
@@ -155,6 +159,7 @@ namespace Warframe_Progress_Tracker.View
                         return Task.CompletedTask;
                     });
                 }, cts.Token);
+                LoggerService.Log("Nodes Scraped", $"{_currentUser.Name}: finished scraping nodes | Added: {added} nodes");
                 MessageBox.Show(string.Format((string)Application.Current.Resources["LoadingSavingNodesStr"], added), (string)Application.Current.Resources["DbUpdatedStr"]);
             }
             catch (OperationCanceledException)

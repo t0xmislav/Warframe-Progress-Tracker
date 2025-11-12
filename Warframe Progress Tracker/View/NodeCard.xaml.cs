@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Security.Policy;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -9,6 +10,7 @@ using System.Windows.Media;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
 using Warframe_Progress_Tracker.Utils;
+using Warframe_Progress_Tracker.Utils.Logger;
 
 namespace Warframe_Progress_Tracker.View
 {
@@ -17,6 +19,7 @@ namespace Warframe_Progress_Tracker.View
     /// </summary>
     public partial class NodeCard : UserControl
     {
+        private User _currentUser;
         public NodeCard()
         {
             InitializeComponent();
@@ -27,13 +30,13 @@ namespace Warframe_Progress_Tracker.View
                 return;
 
             var parent = FindParent<ListBox>(this);
-            if (parent?.Tag is not User currentUser)
+            if (parent?.Tag is not User user)
                 return;
+            _currentUser = user;
 
+            var progress = await Task.Run(() => DbService.GetProgressForNode(user, node));
 
-            var progress = await Task.Run(() => DbService.GetProgressForNode(currentUser, node));
-
-            Utils.ProgressCacheUtil.StoreNodeProgress(currentUser.Id, node.Id, progress);
+            Utils.ProgressCacheUtil.StoreNodeProgress(user.Id, node.Id, progress);
 
             ClearedNormalCheck.IsChecked = progress.ClearedNormal;
             ClearedSteelCheck.IsChecked = progress.ClearedSteelPath;
@@ -46,10 +49,10 @@ namespace Warframe_Progress_Tracker.View
                 ? string.Format((string)Application.Current.Resources["SPClearedDateStr"], progress.DateSteelPathClear?.ToShortDateString())
                 : string.Empty;
 
-            ClearedNormalCheck.Checked += (_, _) => {  UpdateProgressAsync(currentUser, node); };
-            ClearedNormalCheck.Unchecked += (_, _) => { UpdateProgressAsync(currentUser, node); };
-            ClearedSteelCheck.Checked += (_, _) =>{ UpdateProgressAsync(currentUser, node); };
-            ClearedSteelCheck.Unchecked += (_, _) => { UpdateProgressAsync(currentUser, node); };
+            ClearedNormalCheck.Checked += (_, _) => {  UpdateProgressAsync(user, node); };
+            ClearedNormalCheck.Unchecked += (_, _) => { UpdateProgressAsync(user, node); };
+            ClearedSteelCheck.Checked += (_, _) =>{ UpdateProgressAsync(user, node); };
+            ClearedSteelCheck.Unchecked += (_, _) => { UpdateProgressAsync(user, node); };
             
         }
 
@@ -68,6 +71,8 @@ namespace Warframe_Progress_Tracker.View
                 );
                 var updated = DbService.GetProgressForNode(user, node);
                 Utils.ProgressCacheUtil.StoreNodeProgress(user.Id, node.Id, updated);
+                LoggerService.Log("Changed Node Progress", $"{_currentUser.Name}: Changed progress for: {node.Name} | " +
+                    $"Normal clear status: {updated.ClearedNormal.ToString().ToLower()} | Steel Path clear status: {updated.ClearedSteelPath.ToString().ToLower()}.");
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     if (normalCleared)
@@ -94,7 +99,7 @@ namespace Warframe_Progress_Tracker.View
         {
             if (DataContext is Model.Node node)
             {
-                var editWindow = new NodeEditWindow(node);
+                var editWindow = new NodeEditWindow(node, _currentUser);
                 editWindow.Owner = Application.Current.MainWindow;
                 editWindow.ShowDialog();
             }
@@ -108,6 +113,7 @@ namespace Warframe_Progress_Tracker.View
                 {
                     ThreadPoolManager.QueueDatabaseWrite(async () => {
                         DbService.DeleteNode(node);
+                        LoggerService.Log("Deleted Node", $"{_currentUser.Name}: Deleted node: {node.Name}.");
                         await Application.Current.Dispatcher.InvokeAsync(() => 
                         {
                             MessageBox.Show((string)Application.Current.Resources["DeleteNodeSuccessStr"], (string)Application.Current.Resources["SuccessStr"], MessageBoxButton.OK, MessageBoxImage.Information);

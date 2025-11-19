@@ -33,8 +33,9 @@ namespace Warframe_Progress_Tracker.View
             
             InitializeComponent();
         }
-        private async void UserControl_Loaded(object sender, RoutedEventArgs e)
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
+
             if (DataContext is not Item item)
                 return;
 
@@ -44,8 +45,7 @@ namespace Warframe_Progress_Tracker.View
                 return;
 
             _currentUser = currentUser;
-
-            var progress = await Task.Run(() => DbService.GetProgressForItem(currentUser, item));
+            var progress = item.getItemProgress(currentUser) ?? new ItemProgress {User = currentUser, Item = item };
 
             OwnedCheck.IsChecked = progress.Owned;
             MasteredCheck.IsChecked = progress.Mastered;
@@ -108,15 +108,25 @@ namespace Warframe_Progress_Tracker.View
                 var result = MessageBox.Show(string.Format((string)Application.Current.Resources["DeleteItemStr"], item.Name), (string)Application.Current.Resources["ConfirmDeleteStr"], MessageBoxButton.YesNo);
                 if(result == MessageBoxResult.Yes)
                 {
-                    ThreadPoolManager.QueueDatabaseWrite(async () => {
-                        DbService.DeleteItem(item);
-                        LoggerService.Log("Deleted Item", $"{_currentUser.Name}: Deleted item: {item.Name}.");
-                        await Application.Current.Dispatcher.InvokeAsync(() =>
+                    ThreadPoolManager.QueueDatabaseWrite(() => {
+                        try
                         {
-                            MessageBox.Show((string)Application.Current.Resources["DeleteItemSuccessStr"], (string)Application.Current.Resources["SuccessStr"], MessageBoxButton.OK, MessageBoxImage.Information);
-                            var parentListBox = FindParent<ListBox>(this);
-                            if (parentListBox?.ItemsSource is ObservableCollection<Model.CodexEntry> entries) entries.Remove(item);
-                        });
+                            DbService.DeleteItem(item);
+                            LoggerService.Log("Deleted Item", $"{_currentUser.Name}: Deleted item: {item.Name}.");
+                            return Task.CompletedTask;
+                        }
+                        catch (Exception ex) 
+                        {
+                            LoggerService.Log("Delete Error", ex.ToString());
+                            return Task.CompletedTask;
+                        }
+                    });
+
+                    Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        MessageBox.Show((string)Application.Current.Resources["DeleteItemSuccessStr"], (string)Application.Current.Resources["SuccessStr"], MessageBoxButton.OK, MessageBoxImage.Information);
+                        var parentListBox = FindParent<ListBox>(this);
+                        if (parentListBox?.ItemsSource is ObservableCollection<Model.CodexEntry> entries) entries.Remove(item);
                     });
                 }
             }

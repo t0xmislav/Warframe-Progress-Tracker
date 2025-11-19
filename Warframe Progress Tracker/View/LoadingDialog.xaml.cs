@@ -29,7 +29,7 @@ namespace Warframe_Progress_Tracker.View
         public LoadingDialog(string message = "Loading, please wait...")
         {
             InitializeComponent();
-            UpdateMessage(message);
+            UpdateMessage(message, new object[] {});
             Closing += LoadingDialog_Closing;
             LanguageManager.LanguageChanged += OnLanguageChanged;
         }
@@ -42,7 +42,7 @@ namespace Warframe_Progress_Tracker.View
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
             CancelButton.IsEnabled = false;
-            UpdateMessage("Cancelling...");
+            UpdateMessage("CancellingStr");
             OnCancel?.Invoke();
         }
         public void SafeClose()

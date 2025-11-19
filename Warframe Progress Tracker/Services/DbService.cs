@@ -407,6 +407,23 @@ namespace Warframe_Progress_Tracker.Services
             }
             return list;
         }
+        public static HashSet<string> GetAllUniqueItemNames()
+        {
+            var set = new HashSet<string>();
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                SELECT i.UniqueName FROM Items i;
+            ";
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                set.Add(reader.GetString(0));
+            }
+            return set;
+        }
         public static bool UpdateItemProgress(int userId, int itemId, bool mastered, bool owned)
         {
             using var connection = new SqliteConnection($"Data Source={dbPath}");

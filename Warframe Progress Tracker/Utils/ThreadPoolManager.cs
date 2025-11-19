@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -44,11 +45,13 @@ namespace Warframe_Progress_Tracker.Utils
                 {
                     if (_writeQueue.TryDequeue(out var writeTask))
                     {
+                        Debug.WriteLine("Write Queue...");
                         await writeTask();
                         continue;
                     }
                     if (_readQueue.TryDequeue(out var readTask))
                     {
+                        Debug.WriteLine("Read Queue...");
                         await readTask();
                         continue;
                     }

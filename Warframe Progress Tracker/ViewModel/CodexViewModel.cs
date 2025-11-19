@@ -12,6 +12,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Threading;
 using System.Xml.Linq;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
@@ -27,7 +28,7 @@ namespace Warframe_Progress_Tracker.ViewModel
         public User CurrentUser { get; }
         public ICollectionView ItemsView { get; }
 
-        private const int BatchSize = 50;
+        private const int BatchSize = 25;
 
         private string _selectedCategory;
         
@@ -54,6 +55,9 @@ namespace Warframe_Progress_Tracker.ViewModel
             set { _nameFilter = value; OnPropertyChanged(); RefreshFilteredEntries(resetOffset : true, preserveLoaded : false); }
         }
 
+        private List<CodexEntry> _filteredCache = new();
+        private List<CodexEntry> _sortedCache = new();
+        private readonly Dictionary<int, DateTime> _masteryCacheDate = new();
 
         private List<Model.Item>? _allItemsSummaries = new();
         private List<Model.Node>? _allNodeSummaries = new();
@@ -69,20 +73,22 @@ namespace Warframe_Progress_Tracker.ViewModel
         public async Task InitializeAsync()
         {
             SelectedCategory = "All";
+
+            
             await LoadCodexSummariesAsync();
+            
             LoadCategories();
             RefreshFilteredEntries(resetOffset : true);
         }
         public async Task LoadNextBatchAsync()
         {
-
             if (_isLoading || !_hasMore) return;
             _isLoading = true;
 
             try
             {
-                await Application.Current.Dispatcher.InvokeAsync(() =>
-                    RefreshFilteredEntries(resetOffset : false));
+                Debug.WriteLine("Trying refresh...");
+                RefreshFilteredEntries(resetOffset : false);
             }
             finally
             {
@@ -135,12 +141,13 @@ namespace Warframe_Progress_Tracker.ViewModel
             {
                 _offset = 0;
                 if (!preserveLoaded) FilteredEntries.Clear();
-            }
-            var filtered = ApplyFilters(_allSummaries).ToList();
-            var sorted = ApplySorting(filtered).ToList();
-            
 
-            var batch = sorted.Skip(_offset).Take(BatchSize).ToList();
+                _filteredCache = ApplyFilters(_allSummaries).ToList();
+                _sortedCache = ApplySorting(_filteredCache).ToList();
+            }
+
+
+            var batch = _sortedCache.Skip(_offset).Take(BatchSize).ToList();
 
             if (!preserveLoaded) FilteredEntries.Clear();
 
@@ -148,7 +155,7 @@ namespace Warframe_Progress_Tracker.ViewModel
                 FilteredEntries.Add(entry);
             
             _offset += batch.Count;
-            _hasMore = filtered.Count > _offset;
+            _hasMore = _filteredCache.Count > _offset;
         }
            
         public async Task LoadCodexSummariesAsync()
@@ -162,14 +169,13 @@ namespace Warframe_Progress_Tracker.ViewModel
                 nodes = result.nodes;
 
             });
-
             Application.Current.Dispatcher.Invoke(() =>
             {
+
                 _allItemsSummaries = items;
                 _allNodeSummaries = nodes;
 
                 _allSummaries.Clear();
-
                 _allSummaries.AddRange(items);
                 _allSummaries.AddRange(nodes);
             });

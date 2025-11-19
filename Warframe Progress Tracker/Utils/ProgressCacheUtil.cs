@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ namespace Warframe_Progress_Tracker.Utils
 
         public static void PreloadUserProgress(User user)
         {
+            Debug.WriteLine("Preloading...");
             var items = DbService.GetAllItems();
             foreach (var item in items)
             {

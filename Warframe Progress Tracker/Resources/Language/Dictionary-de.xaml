@@ -92,4 +92,8 @@
     <System:String x:Key="DuplicateUniqueNameStr">Doppelter eindeutiger Name</System:String>
     <System:String x:Key="ItemCreatedStr">Item erfolgreich erstellt.</System:String>
     <System:String x:Key="ThemeStr">Thema:</System:String>
+    <System:String x:Key="GenerateReportStr">Generate Progress Report:</System:String>
+    <System:String x:Key="ReportGeneratedStr">Report generated!</System:String>
+    <System:String x:Key="FinishedItemFetchStr">Finished fetching items.</System:String>
+    <System:String x:Key="CancellingStr">Cancelling...</System:String>
 </ResourceDictionary>

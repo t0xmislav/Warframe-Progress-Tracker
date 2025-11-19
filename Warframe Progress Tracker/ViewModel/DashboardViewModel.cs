@@ -22,7 +22,7 @@ namespace Warframe_Progress_Tracker.ViewModel
         private readonly object _totalMasteredLock = new();
 
         private bool isRefreshing = false;
-        private readonly TimeSpan _refreshInterval = TimeSpan.FromSeconds(5);
+        private readonly TimeSpan _refreshInterval = TimeSpan.FromSeconds(10);
         public DashboardViewModel(User currentUser) 
         {
             _currentUser = currentUser;
@@ -34,7 +34,6 @@ namespace Warframe_Progress_Tracker.ViewModel
         {
             while (true)
             {
-
                 ThreadPoolManager.QueueDatabaseRead(RefreshDasboardProgressAsync);
 
                 await Task.Delay(_refreshInterval);

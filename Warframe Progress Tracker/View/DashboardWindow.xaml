@@ -30,6 +30,7 @@
             <MenuItem Header="{DynamicResource ToolsStr}">
                 <MenuItem Header="{DynamicResource PopulateItemsStr}" Click="PopulateDb_Click"/>
                 <MenuItem Header="{DynamicResource FetchMissionsStr}" Click="PopulateNodes_Click"/>
+                <MenuItem Header="{DynamicResource GenerateReportStr}" Click="GenerateReport_Click"/>
             </MenuItem>
             
         </Menu>

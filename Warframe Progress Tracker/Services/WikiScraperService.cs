@@ -9,14 +9,16 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Documents;
+using Warframe_Progress_Tracker.Utils;
 
 namespace Warframe_Progress_Tracker.Services
 {
     internal class WikiScraperService
     {
         private static string wikiUrl = "https://wiki.warframe.com";
-        public static async Task<List<Model.Node>> ScrapeNodesAsync(IProgress<string>? progress = null, CancellationToken cancellationToken = default)
+        public static async Task<List<Model.Node>> ScrapeNodesAsync(IProgress<(string key, object[])>? progress, CancellationToken cancellationToken = default)
         {
 
 
@@ -36,12 +38,13 @@ namespace Warframe_Progress_Tracker.Services
                     .ToList();
            
             */
-            progress?.Report(string.Format((string)System.Windows.Application.Current.Resources["LoadingScrapingNodesStr"]));
+            progress?.Report((("LoadingScrapingNodesStr", new object[] { })));
             var nodes = new List<Model.Node>();
             using var playwright = await Playwright.CreateAsync();
             var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
-                Headless = true
+                Headless = true,
+                Args = new[] { "--lang=en-US" }
             });
 
             var page = await browser.NewPageAsync();
@@ -67,7 +70,7 @@ namespace Warframe_Progress_Tracker.Services
                 planetName = Regex.Replace(planetName, @"\s*-\s*Warframe Wiki\s*$", "", RegexOptions.IgnoreCase).Trim();
                 var nodeTables = planetDoc.DocumentNode.SelectNodes("//table[contains(@class,'wikitable')]");
                 if (nodeTables == null) continue;
-                progress?.Report(string.Format((string)System.Windows.Application.Current.Resources["LoadingPlanetNodesStr"], planetName));
+                progress?.Report(("LoadingPlanetNodesStr", new object[] { planetName }));
                 foreach (var table in nodeTables)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -81,11 +84,6 @@ namespace Warframe_Progress_Tracker.Services
                         if (cells == null || cells.Count < 3) continue;
 
                         var nodeName = WebUtility.HtmlDecode(cells.ElementAtOrDefault(1)?.InnerText?.Trim() ?? "");
-                        if (DbService.NodeExists(nodeName))
-                        {
-                            System.Diagnostics.Debug.WriteLine($"Exists {nodeName}");
-                            continue;
-                        }
 
                         var masteryText = WebUtility.HtmlEncode(cells.ElementAtOrDefault(7)?.InnerText?.Trim() ?? "");
                         masteryText = Regex.Replace(masteryText, @"\[\d+\]", "");
@@ -98,6 +96,7 @@ namespace Warframe_Progress_Tracker.Services
                             System.Globalization.NumberStyles.AllowLeadingSign, System.Globalization.CultureInfo.InvariantCulture, out int masteryXp))
                             continue;
                         System.Diagnostics.Debug.WriteLine(masteryXp);
+
                         nodes.Add(new Model.Node
                         {
                             Name = nodeName,
@@ -110,6 +109,8 @@ namespace Warframe_Progress_Tracker.Services
             }
             return nodes;
         }
+
+        
 
     }
 }

@@ -13,9 +13,9 @@ namespace Warframe_Progress_Tracker.Services
     {
         private static readonly HttpClient httpClient = new HttpClient();
 
-        public static async Task<List<Model.Item>> FetchItemsAsync(IProgress<string>? progress = null, CancellationToken cancellationToken = default)
+        public static async Task<List<Model.Item>> FetchItemsAsync(IProgress<(string key, object[] args)>? progress, CancellationToken cancellationToken = default, HashSet<string>? existingUniqueNames = null)
         {
-            progress?.Report(string.Format((string)System.Windows.Application.Current.Resources["LoadingFetchingItemsStr"]));
+            progress?.Report(("LoadingFetchingItemsStr", new object[] { }));
 
             var response = await httpClient.GetStringAsync("https://api.warframestat.us/items");
             var jsonArray = JArray.Parse(response);
@@ -26,7 +26,7 @@ namespace Warframe_Progress_Tracker.Services
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var uniqueName = (string)item["uniqueName"];
-                if (DbService.ItemExists(uniqueName)) 
+                if (existingUniqueNames.Contains(uniqueName)) 
                 {
                     System.Diagnostics.Debug.WriteLine($"Item Exists {uniqueName}");
                     continue;
@@ -42,7 +42,7 @@ namespace Warframe_Progress_Tracker.Services
                 count++;
                 if(count % 10 == 0)
                 {
-                    progress?.Report(string.Format((string)System.Windows.Application.Current.Resources["ProcessedItemsStr"], count));
+                    progress?.Report(("ProcessedItemsStr", new object[] { count }));
                 }
                 var masteryPoints = MasteryCalculator.GetMasteryPoints(category, uniqueName);
                 var imageName = (string)item["imageName"];
@@ -72,7 +72,7 @@ namespace Warframe_Progress_Tracker.Services
                 });
      
             }
-            progress?.Report("Finished fetching items.");
+            progress?.Report(("FinishedItemFetchStr", new object[] {}));
             return items;
         }
 

@@ -19,22 +19,25 @@ namespace Warframe_Progress_Tracker.Utils.Logger
 
         public static void Log(string action, string? details = null)
         {
-            lock (_lock)
+            Task.Run(() =>
             {
-                var entry = new LogEntry
+                lock (_lock)
                 {
-                    Timestamp = DateTime.Now,
-                    Action = action,
-                    Details = details
-                };
-                _entries.Add(entry);
-                SaveToFile();
-            }
+                    var entry = new LogEntry
+                    {
+                        Timestamp = DateTime.Now,
+                        Action = action,
+                        Details = details
+                    };
+                    _entries.Add(entry);
+                    SaveToFile();
+                }
+            });
         }
         public static void SaveToFile() 
         {
             var options = new JsonSerializerOptions { WriteIndented = true };
-            File.WriteAllText(logFilePath, JsonSerializer.Serialize(_entries, options));
+            File.AppendAllText(logFilePath, JsonSerializer.Serialize(_entries, options));
         }
         public static List<LogEntry> LoadLogs() 
         {

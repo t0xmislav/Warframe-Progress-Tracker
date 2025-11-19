@@ -30,10 +30,6 @@ namespace Warframe_Progress_Tracker.View
             InitializeComponent();
             _vm = new CodexViewModel(currentUser);
             DataContext = _vm;
-            Loaded += async (s, e) =>
-            {
-                await _vm.LoadNextBatchAsync();
-            };
         }
 
         private void SortEntries_Checked(object sender, RoutedEventArgs e)
@@ -46,7 +42,7 @@ namespace Warframe_Progress_Tracker.View
         private async void ItemsList_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             var sv = e.OriginalSource as ScrollViewer;
-
+            Debug.WriteLine("Scroll Called");
             if (sv == null) {
                 return; 
             }
@@ -54,6 +50,7 @@ namespace Warframe_Progress_Tracker.View
             const double threshold = 250.0;
             if (sv.VerticalOffset + sv.ViewportHeight >= sv.ExtentHeight - threshold) 
             {
+                Debug.WriteLine("Scroll Called Load");
                 await _vm.LoadNextBatchAsync();
             }
         }

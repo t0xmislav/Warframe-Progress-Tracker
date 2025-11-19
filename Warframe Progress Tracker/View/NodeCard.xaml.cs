@@ -24,8 +24,9 @@ namespace Warframe_Progress_Tracker.View
         {
             InitializeComponent();
         }
-        private async void UserControl_Loaded(object sender, RoutedEventArgs e)
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
+
             if (DataContext is not Node node)
                 return;
 
@@ -34,7 +35,7 @@ namespace Warframe_Progress_Tracker.View
                 return;
             _currentUser = user;
 
-            var progress = await Task.Run(() => DbService.GetProgressForNode(user, node));
+            var progress = node.GetNodeProgress(_currentUser) ?? new NodeProgress { User = user, Node = node };
 
             Utils.ProgressCacheUtil.StoreNodeProgress(user.Id, node.Id, progress);
 
@@ -111,15 +112,25 @@ namespace Warframe_Progress_Tracker.View
                 var result = MessageBox.Show(string.Format((string)Application.Current.Resources["DeleteNodeStr"], node.Name), (string)Application.Current.Resources["ConfirmDeleteStr"], MessageBoxButton.YesNo);
                 if (result == MessageBoxResult.Yes)
                 {
-                    ThreadPoolManager.QueueDatabaseWrite(async () => {
-                        DbService.DeleteNode(node);
-                        LoggerService.Log("Deleted Node", $"{_currentUser.Name}: Deleted node: {node.Name}.");
-                        await Application.Current.Dispatcher.InvokeAsync(() => 
+                    ThreadPoolManager.QueueDatabaseWrite(() => {
+                        try
                         {
-                            MessageBox.Show((string)Application.Current.Resources["DeleteNodeSuccessStr"], (string)Application.Current.Resources["SuccessStr"], MessageBoxButton.OK, MessageBoxImage.Information);
-                            var parentListBox = FindParent<ListBox>(this);
-                            if (parentListBox?.ItemsSource is ObservableCollection<Model.CodexEntry> entries) entries.Remove(node);
-                        });
+                            DbService.DeleteNode(node);
+                            LoggerService.Log("Deleted Node", $"{_currentUser.Name}: Deleted node: {node.Name}.");
+                            return Task.CompletedTask;
+                        }
+                        catch (Exception ex)
+                        {
+                            LoggerService.Log("Deleting Node Failed", ex.ToString());
+                            return Task.CompletedTask;
+                        }
+                    });
+
+                    Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        MessageBox.Show((string)Application.Current.Resources["DeleteNodeSuccessStr"], (string)Application.Current.Resources["SuccessStr"], MessageBoxButton.OK, MessageBoxImage.Information);
+                        var parentListBox = FindParent<ListBox>(this);
+                        if (parentListBox?.ItemsSource is ObservableCollection<Model.CodexEntry> entries) entries.Remove(node);
                     });
                 }
             }

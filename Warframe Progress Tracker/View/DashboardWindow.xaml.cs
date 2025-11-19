@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using Microsoft.Win32;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -83,9 +84,9 @@ namespace Warframe_Progress_Tracker.View
                 return;
             }
             LoggerService.Log("Item Fetching Started", $"{_currentUser.Name}: Initiated fetching items from api.");
-            var dialog = new LoadingDialog((string)Application.Current.Resources["FetchItemsLoadingStr"]);
+            var dialog = new LoadingDialog("FetchItemsLoadingStr");
 
-            var progress = new Progress<string>(msg => dialog.UpdateMessage(msg));
+            var progress = new Progress<(string key, object[] args)>(msg => dialog.UpdateMessage(msg.key, msg.args));
             dialog.Owner = Application.Current.MainWindow;
             dialog.Show();
 
@@ -93,17 +94,18 @@ namespace Warframe_Progress_Tracker.View
             dialog.OnCancel += () => cts.Cancel();
             try
             {
+                var uniqueNames = DbService.GetAllUniqueItemNames();
                 int added = 0;
                 await Task.Run(async () =>
                 {
-                    var items = await ApiService.FetchItemsAsync(progress, cts.Token);
+                    var items = await ApiService.FetchItemsAsync(progress, cts.Token, uniqueNames);
 
                     if(items.Count == 0)
                     {
-                        dialog.UpdateMessage((string)Application.Current.Resources["NoItemsStr"]);
+                        dialog.UpdateMessage("NoItemsStr", new object[] { });
                         return;
                     }
-                    dialog.UpdateMessage((string)Application.Current.Resources["SavingItemsStr"]);
+                    dialog.UpdateMessage("SavingItemsStr", new object[] { });
                     ThreadPoolManager.QueueDatabaseWrite(() =>
                     {
                         added = DbService.SaveItems(items);
@@ -138,9 +140,9 @@ namespace Warframe_Progress_Tracker.View
                 return;
             }
             LoggerService.Log("Node Scraping Started", $"{_currentUser.Name}: Initiated scraping nodes from wiki.");
-            var dialog = new LoadingDialog((string)Application.Current.Resources["LoadingScrapingNodesStr"]);
+            var dialog = new LoadingDialog("LoadingScrapingNodesStr");
             dialog.Owner = Application.Current.MainWindow;
-            var progress = new Progress<string>(msg => dialog.UpdateMessage(msg));
+            var progress = new Progress<(string key, object[] args)>(msg => dialog.UpdateMessage(msg.key, msg.args));
             dialog.Show();
 
             var cts = new CancellationTokenSource();
@@ -148,11 +150,12 @@ namespace Warframe_Progress_Tracker.View
             int added = 0;
             try
             {
+
                 await Task.Run(async () =>
                 {
                     
                     var nodes = await WikiScraperService.ScrapeNodesAsync(progress, cts.Token);
-                    dialog.UpdateMessage((string)Application.Current.Resources["LoadingSavingNodesStr"]);
+                    dialog.UpdateMessage("LoadingSavingNodesStr", new object[] {});
                     ThreadPoolManager.QueueDatabaseWrite(() =>
                     {
                         added = DbService.SaveNodes(nodes);
@@ -160,7 +163,7 @@ namespace Warframe_Progress_Tracker.View
                     });
                 }, cts.Token);
                 LoggerService.Log("Nodes Scraped", $"{_currentUser.Name}: finished scraping nodes | Added: {added} nodes");
-                MessageBox.Show(string.Format((string)Application.Current.Resources["LoadingSavingNodesStr"], added), (string)Application.Current.Resources["DbUpdatedStr"]);
+                MessageBox.Show(string.Format((string)Application.Current.Resources["NodesAddedStr"], added), (string)Application.Current.Resources["DbUpdatedStr"]);
             }
             catch (OperationCanceledException)
             {
@@ -177,7 +180,22 @@ namespace Warframe_Progress_Tracker.View
                 dialog.SafeClose();
             }
         }
-        
-        
+        private string SelectFolder()
+        {
+            var dialog = new OpenFolderDialog();
+            var folderName = dialog.FolderName;
+
+            return folderName;
+        }
+
+        private void GenerateReport_Click(object sender, RoutedEventArgs e)
+        {
+            var outputPath = SelectFolder();
+            ReportGeneratorUtil.GenerateUserProgressReport(_currentUser, outputPath);
+            MessageBox.Show((string)Application.Current.Resources["ReportGeneratedStr"]);
+        }
+
+
+
     }
 }

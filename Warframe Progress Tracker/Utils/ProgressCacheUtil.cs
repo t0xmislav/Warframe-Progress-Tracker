@@ -12,7 +12,7 @@ namespace Warframe_Progress_Tracker.Utils
     public static class ProgressCacheUtil
     {
         private static readonly Dictionary<(int userId, int itemId), Model.ItemProgress> _itemProgressCache = new Dictionary<(int, int), Model.ItemProgress>();
-        private static readonly Dictionary<(int userId, int nodeId), Model.NodeProgress> _nodeProgressCache = new Dictionary<(int, int), Model.NodeProgress?>();
+        private static readonly Dictionary<(int userId, int nodeId), Model.NodeProgress> _nodeProgressCache = new Dictionary<(int, int), Model.NodeProgress>();
         private static readonly ReaderWriterLockSlim _lock = new();
 
         public static void PreloadUserProgress(User user)

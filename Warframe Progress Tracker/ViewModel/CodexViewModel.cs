@@ -23,7 +23,7 @@ namespace Warframe_Progress_Tracker.ViewModel
 {
     public class CodexViewModel : INotifyPropertyChanged
     {
-        public ObservableCollection<object> FilteredEntries { get; } = new();
+        public ObservableCollection<CodexEntry> FilteredEntries { get; } = new();
         public ObservableCollection<string> Categories { get; } = new();
         public User CurrentUser { get; }
         public ICollectionView ItemsView { get; }

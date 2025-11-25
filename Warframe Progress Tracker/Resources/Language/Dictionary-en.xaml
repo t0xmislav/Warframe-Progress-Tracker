@@ -95,6 +95,7 @@
     <System:String x:Key="ThemeStr">Theme:</System:String>
     <System:String x:Key="GenerateReportStr">Generate Progress Report:</System:String>
     <System:String x:Key="ReportGeneratedStr">Report generated!</System:String>
+    <System:String x:Key="ReportGenerationFailedStr">Failed generating report.</System:String>
     <System:String x:Key="FinishedItemFetchStr">Finished fetching items.</System:String>
     <System:String x:Key="CancellingStr">Cancelling...</System:String>
 

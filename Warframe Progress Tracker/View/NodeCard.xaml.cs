@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Security.Policy;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -57,12 +58,12 @@ namespace Warframe_Progress_Tracker.View
             
         }
 
-        private void UpdateProgressAsync(User user, Node node)
+        private async void UpdateProgressAsync(User user, Node node)
         {
             var normalCleared = ClearedNormalCheck.IsChecked == true;
             var steelPathCleared = ClearedSteelCheck.IsChecked == true;
             
-            ThreadPoolManager.QueueDatabaseWrite(async () =>
+            var updated = await Task.Run(() =>
             {
                 DbService.UpdateNodeProgress(
                     user.Id,
@@ -70,31 +71,29 @@ namespace Warframe_Progress_Tracker.View
                     normalCleared,
                     steelPathCleared
                 );
-                var updated = DbService.GetProgressForNode(user, node);
-                Utils.ProgressCacheUtil.StoreNodeProgress(user.Id, node.Id, updated);
+                var progress = DbService.GetProgressForNode(user, node);
+                Utils.ProgressCacheUtil.StoreNodeProgress(user.Id, node.Id, progress);
                 LoggerService.Log("Changed Node Progress", $"{_currentUser.Name}: Changed progress for: {node.Name} | " +
-                    $"Normal clear status: {updated.ClearedNormal.ToString().ToLower()} | Steel Path clear status: {updated.ClearedSteelPath.ToString().ToLower()}.");
-                await Application.Current.Dispatcher.InvokeAsync(() =>
-                {
-                    if (normalCleared)
-                    {
-                        NormalDateBlock.Text = string.Format((string)Application.Current.Resources["NormalClearedDateStr"], updated.DateNormalClear?.ToShortDateString());
-                    }
-                    else
-                    {
-                        NormalDateBlock.Text = string.Empty;
-                    }
-                    if (steelPathCleared)
-                    {
-                        SteelDateBlock.Text = string.Format((string)Application.Current.Resources["SPClearedDateStr"], updated.DateSteelPathClear?.ToShortDateString());
-                    }
-                    else
-                    {
-                        SteelDateBlock.Text = string.Empty;
-                    }
-                });
+                    $"Normal clear status: {progress.ClearedNormal.ToString().ToLower()} | Steel Path clear status: {progress.ClearedSteelPath.ToString().ToLower()}.");
+                return progress;
              });
-            
+            if (normalCleared)
+            {
+                NormalDateBlock.Text = string.Format((string)Application.Current.Resources["NormalClearedDateStr"], updated.DateNormalClear?.ToShortDateString());
+            }
+            else
+            {
+                NormalDateBlock.Text = string.Empty;
+            }
+            if (steelPathCleared)
+            {
+                SteelDateBlock.Text = string.Format((string)Application.Current.Resources["SPClearedDateStr"], updated.DateSteelPathClear?.ToShortDateString());
+            }
+            else
+            {
+                SteelDateBlock.Text = string.Empty;
+            }
+
         }
         private void EditNode_Click(object sender, RoutedEventArgs e)
         {
@@ -105,33 +104,22 @@ namespace Warframe_Progress_Tracker.View
                 editWindow.ShowDialog();
             }
         }
-        private void DeleteNode_Click(object sender, RoutedEventArgs e)
+        private async void DeleteNode_Click(object sender, RoutedEventArgs e)
         {
             if (DataContext is Model.Node node)
             {
                 var result = MessageBox.Show(string.Format((string)Application.Current.Resources["DeleteNodeStr"], node.Name), (string)Application.Current.Resources["ConfirmDeleteStr"], MessageBoxButton.YesNo);
                 if (result == MessageBoxResult.Yes)
                 {
-                    ThreadPoolManager.QueueDatabaseWrite(() => {
-                        try
-                        {
-                            DbService.DeleteNode(node);
-                            LoggerService.Log("Deleted Node", $"{_currentUser.Name}: Deleted node: {node.Name}.");
-                            return Task.CompletedTask;
-                        }
-                        catch (Exception ex)
-                        {
-                            LoggerService.Log("Deleting Node Failed", ex.ToString());
-                            return Task.CompletedTask;
-                        }
+                    await Task.Run(() => {
+                        DbService.DeleteNode(node);
+                        LoggerService.Log("Deleted Node", $"{_currentUser.Name}: Deleted node: {node.Name}.");
                     });
-
-                    Application.Current.Dispatcher.InvokeAsync(() =>
-                    {
-                        MessageBox.Show((string)Application.Current.Resources["DeleteNodeSuccessStr"], (string)Application.Current.Resources["SuccessStr"], MessageBoxButton.OK, MessageBoxImage.Information);
-                        var parentListBox = FindParent<ListBox>(this);
-                        if (parentListBox?.ItemsSource is ObservableCollection<Model.CodexEntry> entries) entries.Remove(node);
-                    });
+                    var parentListBox = FindParent<ListBox>(this);
+                    if (parentListBox?.ItemsSource is ObservableCollection<Model.CodexEntry> entries) entries.Remove(node);
+                    MessageBox.Show((string)Application.Current.Resources["DeleteNodeSuccessStr"],
+                        (string)Application.Current.Resources["SuccessStr"], MessageBoxButton.OK, MessageBoxImage.Information);
+                    
                 }
             }
         }

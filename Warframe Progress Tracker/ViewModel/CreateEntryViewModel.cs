@@ -93,11 +93,12 @@ namespace Warframe_Progress_Tracker.ViewModel
             SaveCommand = new Utils.RelayCommand(_ => Save(), _ => CanSave());
             ExitCommand = new Utils.RelayCommand(_ => Exit());
         }
-        private bool CanSave() {
+        private bool CanSave()
+        {
 
             if (SelectedCategory.DisplayName == "Node") return !string.IsNullOrWhiteSpace(Name) && !string.IsNullOrWhiteSpace(Planet);
             return !string.IsNullOrWhiteSpace(Name);
-        
+
         }
         private void LoadCategories()
         {
@@ -114,11 +115,11 @@ namespace Warframe_Progress_Tracker.ViewModel
             {
                 Filter = "Image Files|*.png;*.jpg;*.jpeg;*.jfif"
             };
-            if(dialog.ShowDialog() == true)
+            if (dialog.ShowDialog() == true)
             {
                 var bytes = File.ReadAllBytes(dialog.FileName);
                 Image = bytes;
-                
+
                 using var ms = new MemoryStream(bytes);
                 var bmp = new BitmapImage();
 
@@ -131,17 +132,19 @@ namespace Warframe_Progress_Tracker.ViewModel
             }
         }
 
-        private void Save()
+        private async void Save()
         {
-            if(MasteryPoints < 0)
+            if (MasteryPoints < 0)
             {
-                MessageBox.Show((string)Application.Current.Resources["InvalidMasteryPointsStr"], (string)Application.Current.Resources["InvalidInputStr"], MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show((string)Application.Current.Resources["InvalidMasteryPointsStr"],
+                    (string)Application.Current.Resources["InvalidInputStr"], MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            if (IsNode)
+            string successMessage = "";
+            bool success = false;
+            await Task.Run(() =>
             {
-                
-                ThreadPoolManager.QueueDatabaseWrite(async () =>
+                if (IsNode)
                 {
                     var node = new Node
                     {
@@ -152,61 +155,50 @@ namespace Warframe_Progress_Tracker.ViewModel
                     };
                     DbService.AddNode(node);
                     LoggerService.Log("Created Node", $"{_currentUser.Name} Created node: {node.Name}");
-                    await Application.Current.Dispatcher.InvokeAsync(() =>
-                    {
-                        MessageBox.Show((string)Application.Current.Resources["NodeCreatedStr"], 
-                            (string)Application.Current.Resources["SuccessStr"], MessageBoxButton.OK, MessageBoxImage.Information);
-                    });
-                });
-            }
-            else
-            {
-                var category = SelectedCategory.DisplayName;
-                var uniqueName = string.IsNullOrWhiteSpace(UniqueName) ? GenerateUniqueName(category, Name) : UniqueName;
-                ThreadPoolManager.QueueDatabaseRead(async () =>
+                    successMessage = (string)Application.Current.Resources["NodeCreatedStr"];
+                    success = true;
+                }
+                else
                 {
+                    var category = SelectedCategory.DisplayName;
+                    var uniqueName = string.IsNullOrWhiteSpace(UniqueName) ? GenerateUniqueName(category, Name) : UniqueName;
                     bool exists = DbService.IsUniqueNameTaken(uniqueName);
                     if (exists)
                     {
-                        await Application.Current.Dispatcher.InvokeAsync(() =>
-                        {
-                            MessageBox.Show((string)Application.Current.Resources["DuplicateUniqueNameMessageStr"],
-                            (string)Application.Current.Resources["DuplicateUniqueNameStr"], MessageBoxButton.OK, MessageBoxImage.Warning);
-                        });
+                        MessageBox.Show((string)Application.Current.Resources["DuplicateUniqueNameMessageStr"]);
                         return;
                     }
-                    ThreadPoolManager.QueueDatabaseWrite(async ()=>
-                    {
-                        var item = new Item
-                        {
-                            Name = Name,
-                            UniqueName = uniqueName,
-                            Category = SelectedCategory,
-                            Image = Image
-                        };
-                        DbService.AddItem(item);
-                        LoggerService.Log("Created Item", $"{_currentUser.Name} Created item: {item.Name}");
-                        await Application.Current.Dispatcher.InvokeAsync(() =>
-                        {
-                            MessageBox.Show((string)Application.Current.Resources["ItemCreatedStr"], 
-                                (string)Application.Current.Resources["SuccessStr"], MessageBoxButton.OK, MessageBoxImage.Information);
-                        });
-                    });
-                });
-            }
 
+                    var item = new Item
+                    {
+                        Name = Name,
+                        UniqueName = uniqueName,
+                        Category = SelectedCategory,
+                        Image = Image,
+                        MasteryPoints = MasteryPoints
+                    };
+                    DbService.AddItem(item);
+                    LoggerService.Log("Created Item", $"{_currentUser.Name} Created item: {item.Name}");
+                    successMessage = (string)Application.Current.Resources["ItemCreatedStr"];
+                    success = true;
+                }
+            });
+            if (success)
+            {
+                MessageBox.Show(successMessage, (string)Application.Current.Resources["SuccessStr"], MessageBoxButton.OK, MessageBoxImage.Information);
+            }
             Exit();
         }
 
-        
-        private string GenerateUniqueName(string category,  string name)
+
+        private string GenerateUniqueName(string category, string name)
         {
             string baseName = $"{category}/{name}";
             string uniqueName = baseName;
             int counter = 1;
-            while (DbService.IsUniqueNameTaken(uniqueName)) 
+            while (DbService.IsUniqueNameTaken(uniqueName))
             {
-                uniqueName = $"{uniqueName}{counter}";
+                uniqueName = $"{baseName}{counter}";
                 counter++;
             }
             return uniqueName;
@@ -214,9 +206,9 @@ namespace Warframe_Progress_Tracker.ViewModel
         private void Exit() => RequestClose?.Invoke(true);
 
         public event PropertyChangedEventHandler? PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string? name = null) 
+        protected void OnPropertyChanged([CallerMemberName] string? name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 
-    
+
 }

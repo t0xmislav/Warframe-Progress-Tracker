@@ -61,12 +61,12 @@ namespace Warframe_Progress_Tracker.View
             
         }
 
-        private void UpdateProgressAsync(User user, Item item)
+        private async void UpdateProgressAsync(User user, Item item)
         {
             bool owned = OwnedCheck.IsChecked == true;
             bool mastered = MasteredCheck.IsChecked == true;
 
-            ThreadPoolManager.QueueDatabaseWrite(async () =>
+            var updated = await Task.Run(() =>
             {
                 DbService.UpdateItemProgress(
                     user.Id,
@@ -75,22 +75,20 @@ namespace Warframe_Progress_Tracker.View
                     owned
                 );
               
-                var updated = DbService.GetProgressForItem(user, item);
-                Utils.ProgressCacheUtil.StoreItemProgress(user.Id, item.Id, updated);
+                var progress = DbService.GetProgressForItem(user, item);
+                Utils.ProgressCacheUtil.StoreItemProgress(user.Id, item.Id, progress);
                 LoggerService.Log("Changed Item Progress", $"{_currentUser.Name}: Changed progress for: {item.Name} | " +
-                    $"Owned status: {updated.Owned.ToString().ToLower()} | Mastered status: {updated.Mastered.ToString().ToLower()}.");
-                await Application.Current.Dispatcher.InvokeAsync(() =>
-                {
-                        if (mastered)
-                        {
-                            DatesBlock.Text = string.Format((string)Application.Current.Resources["MasteredDateStr"], updated.DateMastered?.ToShortDateString());
-                        }   
-                        else
-                        {
-                            DatesBlock.Text = string.Empty;
-                        }
-                });
+                    $"Owned status: {progress.Owned.ToString().ToLower()} | Mastered status: {progress.Mastered.ToString().ToLower()}.");
+                return progress;
             });
+            if (mastered)
+            {
+                DatesBlock.Text = string.Format((string)Application.Current.Resources["MasteredDateStr"], updated.DateMastered?.ToShortDateString());
+            }
+            else
+            {
+                DatesBlock.Text = string.Empty;
+            }
         }
         private void EditItem_Click(object sender, RoutedEventArgs e)
         {
@@ -101,33 +99,21 @@ namespace Warframe_Progress_Tracker.View
                 editWindow.ShowDialog();
             }
         }
-        private void DeleteItem_Click(object sender, RoutedEventArgs e)
+        private async void DeleteItem_Click(object sender, RoutedEventArgs e)
         {
             if(DataContext is Model.Item item)
             {
                 var result = MessageBox.Show(string.Format((string)Application.Current.Resources["DeleteItemStr"], item.Name), (string)Application.Current.Resources["ConfirmDeleteStr"], MessageBoxButton.YesNo);
                 if(result == MessageBoxResult.Yes)
                 {
-                    ThreadPoolManager.QueueDatabaseWrite(() => {
-                        try
-                        {
-                            DbService.DeleteItem(item);
-                            LoggerService.Log("Deleted Item", $"{_currentUser.Name}: Deleted item: {item.Name}.");
-                            return Task.CompletedTask;
-                        }
-                        catch (Exception ex) 
-                        {
-                            LoggerService.Log("Delete Error", ex.ToString());
-                            return Task.CompletedTask;
-                        }
+                    await Task.Run(() => {
+                        DbService.DeleteItem(item);
+                        LoggerService.Log("Deleted Item", $"{_currentUser.Name}: Deleted item: {item.Name}.");
                     });
 
-                    Application.Current.Dispatcher.InvokeAsync(() =>
-                    {
-                        MessageBox.Show((string)Application.Current.Resources["DeleteItemSuccessStr"], (string)Application.Current.Resources["SuccessStr"], MessageBoxButton.OK, MessageBoxImage.Information);
-                        var parentListBox = FindParent<ListBox>(this);
-                        if (parentListBox?.ItemsSource is ObservableCollection<Model.CodexEntry> entries) entries.Remove(item);
-                    });
+                    var parentListBox = FindParent<ListBox>(this);
+                    if (parentListBox?.ItemsSource is ObservableCollection<Model.CodexEntry> entries) entries.Remove(item);
+                    MessageBox.Show((string)Application.Current.Resources["DeleteItemSuccessStr"], (string)Application.Current.Resources["SuccessStr"], MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
         }

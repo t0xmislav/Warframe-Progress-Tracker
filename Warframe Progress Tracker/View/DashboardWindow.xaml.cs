@@ -100,17 +100,12 @@ namespace Warframe_Progress_Tracker.View
                 {
                     var items = await ApiService.FetchItemsAsync(progress, cts.Token, uniqueNames);
 
-                    if(items.Count == 0)
+                    Application.Current.Dispatcher.Invoke(() =>
                     {
-                        dialog.UpdateMessage("NoItemsStr", new object[] { });
-                        return;
-                    }
-                    dialog.UpdateMessage("SavingItemsStr", new object[] { });
-                    ThreadPoolManager.QueueDatabaseWrite(() =>
-                    {
-                        added = DbService.SaveItems(items);
-                        return Task.CompletedTask;
+                        dialog.UpdateMessage("SavingItemsStr", new object[] { });
                     });
+
+                    added = DbService.SaveItems(items);
 
                 }, cts.Token);
                 LoggerService.Log("Item Fetching Finished", $"{_currentUser.Name}: Finished fetching node from api | Added: {added} items.");
@@ -155,12 +150,12 @@ namespace Warframe_Progress_Tracker.View
                 {
                     
                     var nodes = await WikiScraperService.ScrapeNodesAsync(progress, cts.Token);
-                    dialog.UpdateMessage("LoadingSavingNodesStr", new object[] {});
-                    ThreadPoolManager.QueueDatabaseWrite(() =>
+                    Application.Current.Dispatcher.Invoke(() =>
                     {
-                        added = DbService.SaveNodes(nodes);
-                        return Task.CompletedTask;
+                        dialog.UpdateMessage("LoadingSavingNodesStr", new object[] { });
                     });
+                    added = DbService.SaveNodes(nodes);
+                    
                 }, cts.Token);
                 LoggerService.Log("Nodes Scraped", $"{_currentUser.Name}: finished scraping nodes | Added: {added} nodes");
                 MessageBox.Show(string.Format((string)Application.Current.Resources["NodesAddedStr"], added), (string)Application.Current.Resources["DbUpdatedStr"]);
@@ -183,16 +178,33 @@ namespace Warframe_Progress_Tracker.View
         private string SelectFolder()
         {
             var dialog = new OpenFolderDialog();
+            dialog.ShowDialog();
             var folderName = dialog.FolderName;
 
             return folderName;
         }
 
-        private void GenerateReport_Click(object sender, RoutedEventArgs e)
+        private async void GenerateReport_Click(object sender, RoutedEventArgs e)
         {
             var outputPath = SelectFolder();
-            ReportGeneratorUtil.GenerateUserProgressReport(_currentUser, outputPath);
-            MessageBox.Show((string)Application.Current.Resources["ReportGeneratedStr"]);
+            if(string.IsNullOrEmpty(outputPath))
+            {
+                return;
+            }
+            var xmlPath = ReportGeneratorUtil.SaveReportXml(_currentUser);
+
+            var result = await ReportGeneratorUtil.GenerateReportAsync(xmlPath, outputPath);
+
+            if (result.Success)
+            {
+                MessageBox.Show((string)Application.Current.Resources["ReportGeneratedStr"]);
+            }
+            else
+            {
+                MessageBox.Show(string.Format((string)Application.Current.Resources["ReportGenerationFailedStr"], result.ErrorMessage), 
+                    (string)Application.Current.Resources["ErrorStr"], MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            
         }
 
 

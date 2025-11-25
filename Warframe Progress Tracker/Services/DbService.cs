@@ -82,7 +82,7 @@ namespace Warframe_Progress_Tracker.Services
             command.ExecuteNonQuery();
         }
 
-        public static async Task<int> AddCategory(String categoryName)
+        public static int AddCategory(String categoryName)
         {
             using var connection = new SqliteConnection($"Data Source={dbPath}");
             connection.Open();
@@ -131,7 +131,7 @@ namespace Warframe_Progress_Tracker.Services
             command.Parameters.AddWithValue("$masteryPoints", 
                 item.MasteryPoints > 0 ? item.MasteryPoints : MasteryCalculator.GetMasteryPoints(item.Category.DisplayName, item.UniqueName));
 
-            int rowsAffected = command.ExecuteNonQuery();
+            var rowsAffected = command.ExecuteNonQuery();
             return rowsAffected > 0;
         }
         public static int SaveItems(List<Item> items)

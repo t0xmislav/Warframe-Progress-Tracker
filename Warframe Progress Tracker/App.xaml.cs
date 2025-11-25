@@ -1,4 +1,5 @@
 ﻿using Microsoft.Playwright;
+using PdfSharp.Fonts;
 using System.Configuration;
 using System.Data;
 using System.Windows;
@@ -14,7 +15,7 @@ namespace Warframe_Progress_Tracker
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-
+            GlobalFontSettings.UseWindowsFontsUnderWindows = true;
             if (!IniFileService.Exists)
             {
                 IniFileService.Write("Account", "Language", "en");

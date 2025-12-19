@@ -29,11 +29,11 @@ namespace Warframe_Progress_Tracker.View
         private void Login_Click(object sender, RoutedEventArgs e)
         {
             var user = AuthService.Login(UsernameBox.Text, PasswordBox.Password);
-            if (user != null)
+            if (user is not null)
             {
                 MessageBox.Show(string.Format((string)Application.Current.Resources["WelcomeStr"], user.Name));
                 LoggerService.Log("User Login", $"User {user.Name} logged in");
-                var main = new DashboardWindow(user);
+                var main = new MainWindow(user);
                 main.Show();
                 this.Close();
             }

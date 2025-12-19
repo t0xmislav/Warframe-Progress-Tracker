@@ -40,19 +40,34 @@ namespace Warframe_Progress_Tracker.ViewModel
         public string SortKey
         {
             get => _sortKey;
-            set { _sortKey = value; OnPropertyChanged(); RefreshFilteredEntries(resetOffset : true, preserveLoaded: false); }
+            set { 
+                if(_sortKey == value) return;
+                _sortKey = value; 
+                OnPropertyChanged(); 
+                RefreshFilteredEntries(resetOffset : true, preserveLoaded: false); 
+            }
         }
         public string SelectedCategory
         {
             get => _selectedCategory;
-            set { _selectedCategory = value; OnPropertyChanged(); RefreshFilteredEntries(resetOffset : true, preserveLoaded : false); }
+            set { 
+                if(_selectedCategory == value) return;
+                _selectedCategory = value; 
+                OnPropertyChanged(); 
+                RefreshFilteredEntries(resetOffset : true, preserveLoaded : false); 
+            }
         }
 
         private string _nameFilter;
         public string NameFilter
         {
             get => _nameFilter;
-            set { _nameFilter = value; OnPropertyChanged(); RefreshFilteredEntries(resetOffset : true, preserveLoaded : false); }
+            set {
+                if (_nameFilter == value) return;
+                _nameFilter = value; 
+                OnPropertyChanged(); 
+                RefreshFilteredEntries(resetOffset : true, preserveLoaded : false); 
+            }
         }
 
         private List<CodexEntry> _filteredCache = new();
@@ -61,20 +76,17 @@ namespace Warframe_Progress_Tracker.ViewModel
 
         private List<Model.Item>? _allItemsSummaries = new();
         private List<Model.Node>? _allNodeSummaries = new();
-        private List<Model.CodexEntry> _allSummaries = new();
+        private List<Model.CodexEntry>? _allSummaries = new();
 
         public CodexViewModel(Model.User currentUser)
         {
-            
             CurrentUser = currentUser;
             _ = InitializeAsync();
-
         }
         public async Task InitializeAsync()
         {
             SelectedCategory = "All";
 
-            
             await LoadCodexSummariesAsync();
             
             LoadCategories();

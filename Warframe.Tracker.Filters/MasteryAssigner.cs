@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Warframe.Tracker.Filters
 {
-    public class MasteryCalculator
+    public class MasteryAssigner
     {
         //Automatically assigns mastery points based on category and unique name.
         public static int GetMasteryPoints(string category, string uniqueName)

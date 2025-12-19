@@ -34,7 +34,11 @@ namespace Warframe_Progress_Tracker.ViewModel
         public string Name
         {
             get => _name;
-            set { _name = value; OnPropertyChanged(); }
+            set {
+                if (_name != value) return;
+                _name = value; 
+                OnPropertyChanged(); 
+             }
         }
 
         public Model.Category SelectedCategory
@@ -42,6 +46,7 @@ namespace Warframe_Progress_Tracker.ViewModel
             get => _selectedCategory;
             set
             {
+                if (_selectedCategory == value) return;
                 _selectedCategory = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsNode));
@@ -51,29 +56,49 @@ namespace Warframe_Progress_Tracker.ViewModel
         public int MasteryPoints
         {
             get => _masteryPoints;
-            set { _masteryPoints = value; OnPropertyChanged(); }
+            set {
+                if (_masteryPoints != value) return;
+                _masteryPoints = value; 
+                OnPropertyChanged(); 
+            }
         }
 
         public string Planet
         {
             get => _planet;
-            set { _planet = value; OnPropertyChanged(); }
+            set {
+                if (_planet != value) return;
+                _planet = value;
+                OnPropertyChanged(); 
+            }
         }
 
         public string UniqueName
         {
             get => _uniqueName;
-            set { _uniqueName = value; OnPropertyChanged(); }
+            set {
+                if (_uniqueName != value) return;
+                _uniqueName = value; 
+                OnPropertyChanged(); 
+            }
         }
         public byte[] Image
         {
             get => _image;
-            set { _image = value; OnPropertyChanged(); }
+            set {
+                if (_image != value) return;
+                _image = value; 
+                OnPropertyChanged(); 
+            }
         }
         public BitmapImage ImagePreview
         {
             get => _imagePreview;
-            set { _imagePreview = value; OnPropertyChanged(); }
+            set {
+                if (_imagePreview == value) return;
+                _imagePreview = value; 
+                OnPropertyChanged(); 
+            }
         }
 
         public ObservableCollection<Model.Category> Categories { get; } = new();

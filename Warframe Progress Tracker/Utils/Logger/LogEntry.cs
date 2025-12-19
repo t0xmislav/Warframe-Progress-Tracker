@@ -11,5 +11,7 @@ namespace Warframe_Progress_Tracker.Utils.Logger
         public DateTime Timestamp { get; set; }
         public string Action { get; set; } = "";
         public string? Details { get; set; }
+        public string? AdminNote { get; set; }
+        public DateTime? LastModified { get; set; }
     }
 }

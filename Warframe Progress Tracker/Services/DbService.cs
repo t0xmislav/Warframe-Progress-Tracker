@@ -55,7 +55,8 @@ namespace Warframe_Progress_Tracker.Services
                     PasswordHash TEXT NOT NULL,
                     WarframeDisplayName VARCHAR(30),
                     WarframeAccountId TEXT,
-                    Platform VARCHAR(15)
+                    Platform VARCHAR(15),
+                    IsAdmin INTEGER NOT NULL DEFAULT 0
                 );
                 CREATE TABLE IF NOT EXISTS UserProgress(
                     ItemId INTEGER NOT NULL,
@@ -129,7 +130,7 @@ namespace Warframe_Progress_Tracker.Services
             command.Parameters.AddWithValue("$categoryId", categoryId);
             command.Parameters.AddWithValue("$image", item.Image ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("$masteryPoints", 
-                item.MasteryPoints > 0 ? item.MasteryPoints : MasteryCalculator.GetMasteryPoints(item.Category.DisplayName, item.UniqueName));
+                item.MasteryPoints > 0 ? item.MasteryPoints : MasteryAssigner.GetMasteryPoints(item.Category.DisplayName, item.UniqueName));
 
             var rowsAffected = command.ExecuteNonQuery();
             return rowsAffected > 0;
@@ -555,6 +556,120 @@ namespace Warframe_Progress_Tracker.Services
             var items = GetAllItems();
             var nodes = GetAllNodes();
             return (items, nodes);
+        }
+
+        public static bool SetAdminStatus(int userId, bool isAdmin)
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                UPDATE Users
+                SET IsAdmin = $isAdmin
+                WHERE Id = $id;
+            ";
+            cmd.Parameters.AddWithValue("$id", userId);
+            cmd.Parameters.AddWithValue("$isAdmin", isAdmin ? 1 : 0);
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
+        }
+
+        public static User? GetUserById(int userId)
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = "SELECT Id, Username, PasswordHash, WarframeDisplayName, WarframeAccountId, Platform, IsAdmin FROM Users WHERE Id = $id;";
+            cmd.Parameters.AddWithValue("$id", userId);
+
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                return new User
+                {
+                    Id = reader.GetInt32(0),
+                    Name = reader.GetString(1),
+                    PasswordHash = reader.GetString(2),
+                    WarframeDisplayName = reader.IsDBNull(3) ? null : reader.GetString(3),
+                    WarframeAccountId = reader.IsDBNull(4) ? null : reader.GetString(4),
+                    Platform = reader.IsDBNull(5) ? null : reader.GetString(5),
+                    IsAdmin = reader.GetInt32(6) == 1
+                };
+            }
+            return null;
+        }
+        public static bool AddUser(string username, string passwordHash, bool isAdmin)
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText =
+                @"
+                    INSERT INTO Users (Username, PasswordHash, IsAdmin)
+                    VALUES ($username, $passwordHash, $IsAdmin)";
+            command.Parameters.AddWithValue("$username", username);
+            command.Parameters.AddWithValue("$passwordHash", passwordHash);
+            command.Parameters.AddWithValue("$IsAdmin", isAdmin);
+            int rowsAffected = command.ExecuteNonQuery();
+            return rowsAffected > 0;
+        }
+        public static bool IsUsernameTaken(string username)
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = "SELECT COUNT(*) FROM Users WHERE Username = $username;";
+            cmd.Parameters.AddWithValue("$username", username);
+            long count = (long)cmd.ExecuteScalar();
+            return count > 0;
+        }
+        public static User? Login(string username, string password)
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = "SELECT Id, Username, PasswordHash, IsAdmin FROM Users WHERE username = $username;";
+            cmd.Parameters.AddWithValue("$username", username);
+
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                var storedHash = reader.GetString(2);
+                if (storedHash == AuthService.HashPassword(password))
+                {
+                    return new User
+                    {
+                        Id = reader.GetInt32(0),
+                        Name = reader.GetString(1),
+                        PasswordHash = storedHash,
+                        IsAdmin = reader.GetInt32(3) == 1
+                    };
+                }
+            }
+            return null;
+        }
+        public static bool SetUserWfAccount(int userId, string displayName, string platform)
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                UPDATE Users
+                SET WarframeDisplayName = $displayName,
+                    Platform = $platform
+                WHERE Id = $id;
+            ";
+            cmd.Parameters.AddWithValue("$displayName", displayName);
+            cmd.Parameters.AddWithValue("$platform", platform);
+            cmd.Parameters.AddWithValue("$id", userId);
+
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
     }
 }

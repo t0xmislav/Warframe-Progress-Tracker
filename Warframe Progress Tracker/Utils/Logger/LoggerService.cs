@@ -17,6 +17,23 @@ namespace Warframe_Progress_Tracker.Utils.Logger
 
         private static readonly List<LogEntry> _entries = new();
 
+        static LoggerService()
+        {
+            try
+            {
+                var existing = LoadLogs();
+                lock (_lock)
+                {
+                    if (existing?.Count > 0)
+                        _entries.AddRange(existing);
+                }
+            }
+            catch
+            {
+                // ignore - start with empty list if loading fails
+            }
+        }
+
         public static void Log(string action, string? details = null)
         {
             Task.Run(() =>
@@ -34,17 +51,93 @@ namespace Warframe_Progress_Tracker.Utils.Logger
                 }
             });
         }
-        public static void SaveToFile() 
+        public static void SaveToFile()
         {
-            var options = new JsonSerializerOptions { WriteIndented = true };
-            File.AppendAllText(logFilePath, JsonSerializer.Serialize(_entries, options));
+            lock (_lock)
+            {
+                try
+                {
+                    var options = new JsonSerializerOptions { WriteIndented = true };
+                    var json = JsonSerializer.Serialize(_entries, options);
+                    var tempPath = logFilePath + ".tmp";
+                    File.WriteAllText(tempPath, json, Encoding.UTF8);
+                    File.Copy(tempPath, logFilePath, true);
+                    File.Delete(tempPath);
+                }
+                catch
+                {
+                    // swallow exceptions to avoid crashing the app from logging failures
+                }
+            }
         }
+        
         public static List<LogEntry> LoadLogs() 
         {
             if(!File.Exists(logFilePath)) return new List<LogEntry>();
 
             var json = File.ReadAllText(logFilePath);
             return JsonSerializer.Deserialize<List<LogEntry>>(json) ?? new List<LogEntry>();
+        }
+
+        public static bool EditLog(int index, string adminNote)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    var logs = LoadLogs();
+                    if (index < 0 || index >= logs.Count) return false;
+
+                    logs[index].AdminNote = adminNote;
+                    logs[index].LastModified = DateTime.Now;
+                       
+                    var options = new JsonSerializerOptions { WriteIndented = true };
+                    File.WriteAllText(logFilePath, JsonSerializer.Serialize(logs, options));
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+
+        public static bool DeleteLog(int index)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    var logs = LoadLogs();
+                    if (index < 0 || index >= logs.Count) return false;
+
+                    logs.RemoveAt(index);
+                    
+                    var options = new JsonSerializerOptions { WriteIndented = true };
+                    File.WriteAllText(logFilePath, JsonSerializer.Serialize(logs, options));
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+
+        public static bool DeleteAllLogs()
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    File.WriteAllText(logFilePath, JsonSerializer.Serialize(new List<LogEntry>(), new JsonSerializerOptions { WriteIndented = true }));
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
         }
 
         public static void LogItemChanges(Item oldItem, Item newItem, User user)

@@ -19,10 +19,10 @@ namespace Warframe_Progress_Tracker.View
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class DashboardWindow : Window
+    public partial class MainWindow : Window
     {
         private readonly Model.User _currentUser;
-        public DashboardWindow(Model.User user)
+        public MainWindow(Model.User user)
         {
             InitializeComponent();
             _currentUser = user;
@@ -75,6 +75,10 @@ namespace Warframe_Progress_Tracker.View
         {
             var createWindow = new CreateEntryWindow(_currentUser);
             createWindow.ShowDialog();
+        }
+        private void OpenLogView_Click(object sender, RoutedEventArgs e)
+        {
+            MainContent.Content = new LogView(_currentUser);
         }
         private async void PopulateDb_Click(object sender, RoutedEventArgs e)
         {
@@ -193,15 +197,15 @@ namespace Warframe_Progress_Tracker.View
             }
             var xmlPath = ReportGeneratorUtil.SaveReportXml(_currentUser);
 
-            var result = await ReportGeneratorUtil.GenerateReportAsync(xmlPath, outputPath);
+            var (result, message) = await ReportGeneratorUtil.GenerateReportAsync(xmlPath, outputPath);
 
-            if (result.Success)
+            if (result)
             {
                 MessageBox.Show((string)Application.Current.Resources["ReportGeneratedStr"]);
             }
             else
             {
-                MessageBox.Show(string.Format((string)Application.Current.Resources["ReportGenerationFailedStr"], result.ErrorMessage), 
+                MessageBox.Show(string.Format((string)Application.Current.Resources["ReportGenerationFailedStr"] + message), 
                     (string)Application.Current.Resources["ErrorStr"], MessageBoxButton.OK, MessageBoxImage.Error);
             }
             

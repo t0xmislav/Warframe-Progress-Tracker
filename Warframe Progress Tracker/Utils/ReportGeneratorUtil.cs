@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
-using PdfSharp.Drawing;
-using PdfSharp.Pdf;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
 using Warframe_Progress_Tracker.Utils.Logger;
@@ -16,6 +9,7 @@ namespace Warframe_Progress_Tracker.Utils
 {
     public class ReportGeneratorUtil
     {
+        /*
         public static void GenerateUserProgressReport(User user, string outputPath)
         {
             PdfDocument document = new PdfDocument();
@@ -29,9 +23,9 @@ namespace Warframe_Progress_Tracker.Utils
             double totalItems = 0;
             double totalMastered = 0;
 
-            double y = 50;
+            double y = XUnitPt.FromPoint(50);
             gfx.DrawString($"User Progress report for {user.Name}", titleFont, XBrushes.Black, new XPoint(50, y));
-            y += 40;
+            y += XUnitPt.FromPoint(40);
             var categories = DbService.GetCategories();
 
             foreach (var category in categories) 
@@ -46,17 +40,17 @@ namespace Warframe_Progress_Tracker.Utils
                 double completionPercentage = items.Count == 0 ? 0 : (double)masteredCount / items.Count * 100;
 
                 gfx.DrawString($"Category: {category.DisplayName}", categoryFont, XBrushes.Black, new XPoint(50, y));
-                y += 15;
+                y += XUnitPt.FromPoint(15);
                 gfx.DrawString($"Mastered: {masteredCount}", textFont, XBrushes.Black, new XPoint(50, y));
-                y += 15;
+                y += XUnitPt.FromPoint(15);
                 gfx.DrawString($"Completion: {completionPercentage:F2}%", textFont, XBrushes.Black, new XPoint(50, y));
-                y += 25;
+                y += XUnitPt.FromPoint(25);
 
-                if(y > page.Height - XUnit.FromPoint(100))
+                if(y > page.Height - XUnitPt.FromPoint(100))
                 {
                     page = document.AddPage();
                     gfx = XGraphics.FromPdfPage(page);
-                    y = 50;
+                    y = XUnitPt.FromPoint(50);
                 }
             }
             var nodes = DbService.GetAllNodes();
@@ -67,14 +61,14 @@ namespace Warframe_Progress_Tracker.Utils
             totalMastered += normalCleared + spCleared;
             double completionNormalNodes = nodes.Count == 0 ? 0 : (double)normalCleared / nodes.Count * 100;
             gfx.DrawString("Category: Normal Nodes", categoryFont, XBrushes.Black, new XPoint(50, y));
-            y += 15;
+            y += XUnitPt.FromPoint(15);
             gfx.DrawString($"Cleared: {normalCleared}", textFont, XBrushes.Black, new XPoint(50, y));
-            y += 15;
+            y += XUnitPt.FromPoint(15);
             gfx.DrawString($"Completion: {completionNormalNodes:F2}%", textFont, XBrushes.Black, new XPoint(50, y));
-            y += 25;
+            y += XUnitPt.FromPoint(25);
 
 
-            if (y > page.Height - XUnit.FromPoint(100))
+            if (y > page.Height - XUnitPt.FromPoint(100))
             {
                 page = document.AddPage();
                 gfx = XGraphics.FromPdfPage(page);
@@ -95,12 +89,13 @@ namespace Warframe_Progress_Tracker.Utils
             outputPath = Path.Combine(outputPath, $"Report {user.Name}-{timestamp}.pdf");
             document.Save(outputPath);
             LoggerService.Log("Report generated", $"{user.Name} generated report to folder: {outputPath}");
-        }
+        }*/
         public static string SaveReportXml(User user)
         {
             var categories = DbService.GetCategories();
             var progress = new List<XElement>();
             foreach (var category in categories) {
+                if(category.DisplayName.Equals("Node")) continue;
                 var items = DbService.GetItemByCategory(category);
                 var mastered = items.Count(i => DbService.GetProgressForItem(user, i)?.Mastered == true);
                 progress.Add(new XElement("Category",
@@ -118,21 +113,23 @@ namespace Warframe_Progress_Tracker.Utils
                 new XAttribute("Mastered", DbService.GetAllNodes().Count(n => DbService.GetProgressForNode(user, n)?.ClearedSteelPath == true))));
             var doc = new XDocument(
                 new XElement("Report",
-                new XAttribute("User", user.Name)),
+                new XAttribute("User", user.Name),
                 new XElement("Categories", progress)
-            );
+            ));
             var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "progress.xml");
             doc.Save(path);
+            LoggerService.Log("Progress Xml created", $"{user.Name} created Xml progress file");
             return path;
         }
         public static async Task<(bool Success, string? pdfPath)> GenerateReportAsync(string xmlPath, string pdfPath)
         {
-            string workerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ExternalTools", "ReportWorker.exe");
+            string workerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ReportWorker", "ReportWorker.exe");
+           
             var process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = "ReportWorker.exe",
+                    FileName = workerPath,
                     Arguments = $"\"{xmlPath}\" \"{pdfPath}\"",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -144,7 +141,10 @@ namespace Warframe_Progress_Tracker.Utils
             string output = await process.StandardOutput.ReadToEndAsync();
             string errors = await process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();
-            if(process.ExitCode == 0)
+
+            Debug.WriteLine($"ReportWorker Output: {output}");
+            Debug.WriteLine($"ReportWorker Errors: {errors}");
+            if (process.ExitCode == 0)
             {
                 LoggerService.Log("Report generated", errors);
                 return (true, output.Trim());

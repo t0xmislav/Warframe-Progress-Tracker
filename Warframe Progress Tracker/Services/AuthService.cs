@@ -11,79 +11,31 @@ namespace Warframe_Progress_Tracker.Services
 {
     internal class AuthService
     {
-        private static string HashPassword(string password)
+        public static string HashPassword(string password)
         {
             using var sha = SHA256.Create();
             var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
             return Convert.ToBase64String(bytes);
         }
 
-        public static bool Register(string username, string password)
+        public static bool Register(string username, string password, bool isAdmin = false)
         {
-            using var connection = new SqliteConnection($"Data Source={DbService.GetDbPath()}");
-            connection.Open();
-
-            var cmd = connection.CreateCommand();
-            cmd.CommandText = @"
-                INSERT INTO Users (Username, PasswordHash)
-                VALUES ($username, $passwordHash);";
-            cmd.Parameters.AddWithValue("$username", username);
-            cmd.Parameters.AddWithValue("$passwordHash", HashPassword(password));
-
-            try
-            {
-                cmd.ExecuteNonQuery();
-                return true;
-            }
-            catch (SqliteException e)
+            if(DbService.IsUsernameTaken(username))
             {
                 return false;
             }
+            var hashedPassword = HashPassword(password);
+            return DbService.AddUser(username, hashedPassword, isAdmin);
         }
 
         public static User? Login(string username, string password)
         {
-            using var connection = new SqliteConnection($"Data Source={DbService.GetDbPath()}");
-            connection.Open();
-
-            var cmd = connection.CreateCommand();
-            cmd.CommandText = "SELECT Id, Username, PasswordHash FROM Users WHERE username = $username;";
-            cmd.Parameters.AddWithValue("$username", username);
-
-            using var reader = cmd.ExecuteReader();
-            if (reader.Read())
-            {
-                var storedHash = reader.GetString(2);
-                if (storedHash == HashPassword(password))
-                {
-                    return new User
-                    {
-                        Id = reader.GetInt32(0),
-                        Name = reader.GetString(1),
-                        PasswordHash = storedHash
-                    };
-                }
-            }
-            return null;
+            return DbService.Login(username, password);
         }
         //Attempts to link warframe account, but the api doesn't seem to recognize a lot of accounts, so it just sets the display name and platform.
         public static void LinkWarframeAccount(int userId, string displayName, string platform)
         {
-            using var connection = new SqliteConnection($"Data Source={DbService.GetDbPath()}");
-            connection.Open();
-
-            var cmd = connection.CreateCommand();
-            cmd.CommandText = @"
-                UPDATE Users
-                SET WarframeDisplayName = $displayName,
-                    Platform = $platform
-                WHERE Id = $id;
-            ";
-            cmd.Parameters.AddWithValue("$displayName", displayName);
-            cmd.Parameters.AddWithValue("$platform", platform);
-            cmd.Parameters.AddWithValue("$id", userId);
-
-            cmd.ExecuteNonQuery();
+            DbService.SetUserWfAccount(userId, displayName, platform);
         }
     }
 }

@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Background="{DynamicResource PrimaryBackgroundBrush}"
         Foreground="{DynamicResource PrimaryForegroundBrush}"
-        Title="CreateEntryWindow" Height="450" Width="400">
+        Title="Create Codex Entry" Height="450" Width="400">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>

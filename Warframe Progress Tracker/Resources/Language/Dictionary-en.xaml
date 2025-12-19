@@ -98,6 +98,11 @@
     <System:String x:Key="ReportGenerationFailedStr">Failed generating report.</System:String>
     <System:String x:Key="FinishedItemFetchStr">Finished fetching items.</System:String>
     <System:String x:Key="CancellingStr">Cancelling...</System:String>
-
-    
+    <System:String x:Key="LogStr">Logs</System:String>
+    <System:String x:Key="ViewLogStr">View Logs</System:String>
+    <System:String x:Key="LogDateStr">Date</System:String>
+    <System:String x:Key="LogActionStr">Action</System:String>
+    <System:String x:Key="LogDetailsStr">Details</System:String>
+    <System:String x:Key="LogNoteStr">Admin Note</System:String>
+    <System:String x:Key="LogModifiedDateStr">Last Modified</System:String>
 </ResourceDictionary>

@@ -44,7 +44,7 @@ namespace Warframe_Progress_Tracker.Services
                 {
                     progress?.Report(("ProcessedItemsStr", new object[] { count }));
                 }
-                var masteryPoints = MasteryCalculator.GetMasteryPoints(category, uniqueName);
+                var masteryPoints = MasteryAssigner.GetMasteryPoints(category, uniqueName);
                 var imageName = (string)item["imageName"];
                 byte[] imageBytes = null;
                 //TODO Multithread image saving

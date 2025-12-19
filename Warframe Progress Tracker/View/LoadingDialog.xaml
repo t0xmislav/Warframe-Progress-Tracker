@@ -9,7 +9,7 @@
         Background="{DynamicResource PrimaryBackgroundBrush}"
         Foreground="{DynamicResource PrimaryForegroundBrush}"
         ResizeMode="NoResize"
-        Title="LoadingDialog" Height="170" Width="350"
+        Title="Loading" Height="170" Width="350"
         ShowInTaskbar="False" Topmost="True">
     <Border Padding="5">
         <Grid RenderTransformOrigin="0.5,0.5">

@@ -1,4 +1,4 @@
-﻿<Window x:Class="Warframe_Progress_Tracker.View.DashboardWindow"
+﻿<Window x:Class="Warframe_Progress_Tracker.View.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Background="{DynamicResource PrimaryBackgroundBrush}"
         Foreground="{DynamicResource PrimaryForegroundBrush}"
-        Title="MainWindow" Height="600" Width="900"
+        Title="Dashboard" Height="600" Width="900"
     xmlns:System="clr-namespace:System;assembly=System.Runtime">
 
     <DockPanel>
@@ -32,7 +32,10 @@
                 <MenuItem Header="{DynamicResource FetchMissionsStr}" Click="PopulateNodes_Click"/>
                 <MenuItem Header="{DynamicResource GenerateReportStr}" Click="GenerateReport_Click"/>
             </MenuItem>
-            
+            <MenuItem Header="{DynamicResource LogStr}">
+                <MenuItem Header="{DynamicResource ViewLogStr}" Click="OpenLogView_Click"/>
+            </MenuItem>
+
         </Menu>
         
         <ContentControl x:Name="MainContent"/>

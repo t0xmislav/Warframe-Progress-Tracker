@@ -3,10 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Warframe.Tracker.Filters;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Utils;
 using Warframe_Progress_Tracker.View;
@@ -56,6 +56,7 @@ namespace Warframe_Progress_Tracker.Services
                     WarframeDisplayName VARCHAR(30),
                     WarframeAccountId TEXT,
                     Platform VARCHAR(15),
+                    Image BLOB,
                     IsAdmin INTEGER NOT NULL DEFAULT 0
                 );
                 CREATE TABLE IF NOT EXISTS UserProgress(
@@ -129,8 +130,7 @@ namespace Warframe_Progress_Tracker.Services
             command.Parameters.AddWithValue("$name", item.Name);
             command.Parameters.AddWithValue("$categoryId", categoryId);
             command.Parameters.AddWithValue("$image", item.Image ?? (object)DBNull.Value);
-            command.Parameters.AddWithValue("$masteryPoints", 
-                item.MasteryPoints > 0 ? item.MasteryPoints : MasteryAssigner.GetMasteryPoints(item.Category.DisplayName, item.UniqueName));
+            command.Parameters.AddWithValue("$masteryPoints", item.MasteryPoints);
 
             var rowsAffected = command.ExecuteNonQuery();
             return rowsAffected > 0;
@@ -587,16 +587,19 @@ namespace Warframe_Progress_Tracker.Services
             using var reader = cmd.ExecuteReader();
             if (reader.Read())
             {
-                return new User
+                using (Aes myAes = Aes.Create())
                 {
-                    Id = reader.GetInt32(0),
-                    Name = reader.GetString(1),
-                    PasswordHash = reader.GetString(2),
-                    WarframeDisplayName = reader.IsDBNull(3) ? null : reader.GetString(3),
-                    WarframeAccountId = reader.IsDBNull(4) ? null : reader.GetString(4),
-                    Platform = reader.IsDBNull(5) ? null : reader.GetString(5),
-                    IsAdmin = reader.GetInt32(6) == 1
-                };
+                    return new User
+                    {
+                        Id = reader.GetInt32(0),
+                        Name = reader.GetString(1),
+                        PasswordHash = reader.GetString(2),
+                        WarframeDisplayName = reader.IsDBNull(3) ? null : reader.GetString(3),
+                        WarframeAccountId = reader.IsDBNull(4) ? null : AesEncryptionUtil.Decrypt(reader.GetString(4)),
+                        Platform = reader.IsDBNull(5) ? null : reader.GetString(5),
+                        IsAdmin = reader.GetInt32(6) == 1
+                    };
+                }
             }
             return null;
         }
@@ -632,27 +635,29 @@ namespace Warframe_Progress_Tracker.Services
             connection.Open();
 
             var cmd = connection.CreateCommand();
-            cmd.CommandText = "SELECT Id, Username, PasswordHash, IsAdmin FROM Users WHERE username = $username;";
+            cmd.CommandText = "SELECT Id, Username, PasswordHash, WarframeDisplayName, " +
+                "WarframeAccountId, Platform, IsAdmin FROM Users WHERE Username = $username";
             cmd.Parameters.AddWithValue("$username", username);
-
             using var reader = cmd.ExecuteReader();
             if (reader.Read())
             {
-                var storedHash = reader.GetString(2);
-                if (storedHash == AuthService.HashPassword(password))
+                var passwordHash = reader.GetString(2);
+                if (!AuthService.VerifyPassword(password, passwordHash))
+                    return null;
+                return new User
                 {
-                    return new User
-                    {
-                        Id = reader.GetInt32(0),
-                        Name = reader.GetString(1),
-                        PasswordHash = storedHash,
-                        IsAdmin = reader.GetInt32(3) == 1
-                    };
-                }
+                    Id = reader.GetInt32(0),
+                    Name = reader.GetString(1),
+                    PasswordHash = reader.GetString(2),
+                    WarframeDisplayName = reader.IsDBNull(3) ? null : reader.GetString(3),
+                    WarframeAccountId = reader.IsDBNull(4) ? null : AesEncryptionUtil.Decrypt(reader.GetString(4)),
+                    Platform = reader.IsDBNull(5) ? null : reader.GetString(5),
+                    IsAdmin = reader.GetInt32(6) == 1
+                };
             }
             return null;
         }
-        public static bool SetUserWfAccount(int userId, string displayName, string platform)
+        public static bool SetUserWfAccount(int userId, string displayName, string accountId, string platform)
         {
             using var connection = new SqliteConnection($"Data Source={dbPath}");
             connection.Open();
@@ -661,10 +666,12 @@ namespace Warframe_Progress_Tracker.Services
             cmd.CommandText = @"
                 UPDATE Users
                 SET WarframeDisplayName = $displayName,
+                    WarframeAccountId = $accountId,
                     Platform = $platform
                 WHERE Id = $id;
             ";
             cmd.Parameters.AddWithValue("$displayName", displayName);
+            cmd.Parameters.AddWithValue("$accountId", AesEncryptionUtil.Encrypt(accountId));
             cmd.Parameters.AddWithValue("$platform", platform);
             cmd.Parameters.AddWithValue("$id", userId);
 

@@ -13,8 +13,9 @@ namespace Warframe_Progress_Tracker.Model
     {
         public string Planet { get; set; }
         
-        public byte[] Image { get; set; }
-        private BitmapImage _cachedImage;
+        public byte[]? Image { get; set; }
+
+        private BitmapImage? _cachedImage;
         public BitmapImage ImageBitmap
         {
             get

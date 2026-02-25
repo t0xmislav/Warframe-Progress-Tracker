@@ -5,5 +5,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+	<Target Name="CopyToAppPlugins" AfterTargets="Build">
+		<ItemGroup>
+			<_dll Include="$(TargetPath)" />
+		</ItemGroup>
+		<MakeDir Directories="$(SolutionDir)Warframe Progress Tracker\bin\$(Configuration)\net8.0-windows\Plugins" Condition="Exists('$(SolutionDir)')" />
+		<Copy SourceFiles="@(_dll)" DestinationFolder="$(SolutionDir)Warframe Progress Tracker\bin\$(Configuration)\net8.0-windows\Plugins" SkipUnchangedFiles="true" Condition="Exists('$(SolutionDir)')" />
+	</Target>
 
 </Project>

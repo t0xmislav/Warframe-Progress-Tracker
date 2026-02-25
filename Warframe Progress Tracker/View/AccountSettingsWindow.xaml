@@ -17,6 +17,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="120"/>
@@ -46,7 +47,9 @@
             <ComboBoxItem Content="Dark" Tag="Dark"/>
 
         </ComboBox>
-        <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+        <TextBlock Text="{DynamicResource SpeedStr}" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"/>
+        <TextBox x:Name="SpeedLimitTextBox" Grid.Row="4" Grid.Column="1" Width="120"/>
+        <StackPanel Grid.Row="5" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
             <Button Content="{DynamicResource SaveStr}" Width="100" Margin="5" Click="Save_Click"/>
             <Button Content="{DynamicResource AccountCancelStr}" Width="100" Margin="5" Click="Cancel_Click"/>
         </StackPanel>

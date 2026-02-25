@@ -78,14 +78,70 @@ namespace Warframe_Progress_Tracker.View
             _currentMessageArgs = args;
             _currentMessageKey = resourceKey;
             Dispatcher.Invoke(() => {
+                if(resourceKey == "DownloadingImageProgressStr" && args != null && args.Length >= 2)
+                {
+                    double progressFrac = -1;
+                    try
+                    {
+                        if (args[1] is double d)
+                            progressFrac = d;
+                        else if (args[1] is int i)
+                            progressFrac = i / 100.0;
+                        else if (args[1] is float f)
+                            progressFrac = f;
+                        else if(double.TryParse(args[1].ToString(), out double parsed))
+                            progressFrac = parsed;
+                    }
+                    catch
+                    {
+                        progressFrac = -1;
+                    }
+                    if (progressFrac >= 0)
+                    {
+                        MainProgressBar.IsIndeterminate = false;
+                        MainProgressBar.Value = Math.Max(0.0, Math.Min(1.0, progressFrac));
+                    }
+                    else
+                    {
+                        MainProgressBar.IsIndeterminate = true;
+                    }
+                    
+                    var displayArgs = new object[args.Length];
+                    Array.Copy(args, displayArgs, args.Length);
+                    if(progressFrac >= 0)
+                    {
+                        displayArgs[1] = $"{progressFrac:P0}";
+                    }
+                    try
+                    {
+                        var res = (string)Application.Current.Resources[resourceKey];
+                        MessageBlock.Text = string.Format(res, displayArgs);
+                    }
+                    catch
+                    {
+                        MessageBlock.Text = args.Length > 0 ? args[0]?.ToString() ?? "" : string.Empty;
+                    }
+                    return;
+                }
                 var text = string.Format((string)Application.Current.Resources[resourceKey], args);
                 MessageBlock.Text = text;
+                MainProgressBar.IsIndeterminate = true;
             });
         }
         protected override void OnClosed(EventArgs e)
         {
             LanguageManager.LanguageChanged -= OnLanguageChanged;
             base.OnClosed(e);
+        }
+
+        public void UpdateProgress(double fraction)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                fraction = Math.Max(0.0, Math.Min(1.0, fraction));
+                MainProgressBar.IsIndeterminate = false;
+                MainProgressBar.Value = fraction;
+            });
         }
     }
 }

@@ -10,7 +10,7 @@ using System.Windows.Navigation;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
 using Warframe_Progress_Tracker.Utils;
-using Warframe.Tracker.Mastery;
+using Warframe.Tracker.MasteryRank;
 
 namespace Warframe_Progress_Tracker.ViewModel
 {

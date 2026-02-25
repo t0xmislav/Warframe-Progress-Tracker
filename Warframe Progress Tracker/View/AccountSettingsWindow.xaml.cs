@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -33,17 +34,19 @@ namespace Warframe_Progress_Tracker.View
                 string savedPlatform = IniFileService.Read("Account", "Platform", _user.Platform);
                 string savedLanguage = IniFileService.Read("Account", "Language", "en");
                 string savedTheme = IniFileService.Read("Account", "Theme", "Light");
-
+                string savedSpeedLimit = IniFileService.Read("Download", "SpeedLimit", "Unlimited");
                 DisplayNameBox.Text = savedName;
                 PlatformBox.SelectedItem = PlatformBox.Items.OfType<ComboBoxItem>().FirstOrDefault(i => (string)i.Content == savedPlatform);
 
                 LanguageBox.SelectedItem = LanguageBox.Items.OfType<ComboBoxItem>().FirstOrDefault(i => (string)(i.Tag ?? i.Content) == savedLanguage);
                 ThemeBox.SelectedItem = ThemeBox.Items.OfType<ComboBoxItem>().FirstOrDefault(i => (string)i.Content == savedTheme);
+                SpeedLimitTextBox.Text = savedSpeedLimit;
             }
             else
             {
                 DisplayNameBox.Text = _user.WarframeDisplayName ?? "";
                 PlatformBox.SelectedItem = _user.Platform ?? "pc";
+                SpeedLimitTextBox.Text = "0";
             }
         }
 
@@ -59,8 +62,19 @@ namespace Warframe_Progress_Tracker.View
             string platform = ((ComboBoxItem)PlatformBox.SelectedItem).Content.ToString();
             string lang = ((ComboBoxItem)LanguageBox.SelectedItem).Tag.ToString();
             string theme = ((ComboBoxItem)ThemeBox.SelectedItem).Content.ToString();
+            string speedLimitText = SpeedLimitTextBox.Text.Trim();
+            if(string.IsNullOrEmpty(speedLimitText)) speedLimitText = "0";
 
-            AuthService.LinkWarframeAccount(_user.Id, displayName, platform);
+            if(!Regex.IsMatch(speedLimitText, @"^\d+$"))
+            {
+                MessageBox.Show((string)System.Windows.Application.Current.Resources["InvalidSpeedLimitStr"], 
+                    (string)System.Windows.Application.Current.Resources["InvalidInputStr"], 
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var success = AuthService.LinkWarframeAccount(_user.Id, displayName, platform);
+
             LanguageManager.SetLanguage(lang);
             ThemeManager.ApplyTheme(theme);
 
@@ -68,6 +82,7 @@ namespace Warframe_Progress_Tracker.View
             IniFileService.Write("Account", "Platform", platform);
             IniFileService.Write("Account", "Language", lang);
             IniFileService.Write("Account", "Theme", theme);
+            IniFileService.Write("Download", "SpeedLimit", speedLimitText);
             LoggerService.Log("Settings Changed", $"{_user.Name} changed settings");
             MessageBox.Show(string.Format((string)System.Windows.Application.Current.Resources["SettingsUpdatedStr"]));
         }

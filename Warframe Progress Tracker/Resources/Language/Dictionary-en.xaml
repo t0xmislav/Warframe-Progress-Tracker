@@ -105,4 +105,11 @@
     <System:String x:Key="LogDetailsStr">Details</System:String>
     <System:String x:Key="LogNoteStr">Admin Note</System:String>
     <System:String x:Key="LogModifiedDateStr">Last Modified</System:String>
+    <System:String x:Key="SpeedStr">Download Speed Limit</System:String>
+    <System:String x:Key="DownloadingImageProgressStr">Downloading image for {0} {1}</System:String>
+    <System:String x:Key="InvalidSpeedLimitStr">Speed limit must be a non-negative number (0 = unlimited).</System:String>
+    <System:String x:Key="ProfileFetchFailedStr">No Warframe profile found.</System:String>
+    <System:String x:Key="ProfileFetchErrorStr">Failed to link to a Warframe account.</System:String>
+    
+    
 </ResourceDictionary>

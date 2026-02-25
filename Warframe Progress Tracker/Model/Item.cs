@@ -12,8 +12,8 @@ namespace Warframe_Progress_Tracker.Model
     public class Item : CodexEntry
     {
         public string UniqueName { get; set; }
-        public byte[] Image { get; set; }
-        private BitmapImage _cachedImage;
+        public byte[]? Image { get; set; }
+        private BitmapImage? _cachedImage;
         public BitmapImage ImageBitmap
         {
             get

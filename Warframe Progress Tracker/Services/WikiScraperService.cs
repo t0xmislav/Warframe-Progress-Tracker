@@ -1,8 +1,10 @@
 ﻿using HtmlAgilityPack;
+using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -12,6 +14,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Documents;
 using Warframe_Progress_Tracker.Utils;
+using Warframe_Progress_Tracker.Utils.Logger;
 
 namespace Warframe_Progress_Tracker.Services
 {
@@ -53,8 +56,8 @@ namespace Warframe_Progress_Tracker.Services
 
             var doc = new HtmlAgilityPack.HtmlDocument();
             doc.LoadHtml(html);
-
-            var planetLinks = doc.DocumentNode.SelectNodes("//table[contains(@class,'wikitable')]//tr/td[1]//a[@href]")
+            //Select the table of planets(2nd table on the page) and get all links in the first column
+            var planetLinks = doc.DocumentNode.SelectNodes("//table[2]//tr/td[1]//a[@href]")
                 .Select(a => wikiUrl + a.GetAttributeValue("href", ""))
                 .Distinct()
                 .ToList();
@@ -66,8 +69,37 @@ namespace Warframe_Progress_Tracker.Services
                 var planetHtml = await page.ContentAsync();
                 var planetDoc = new HtmlAgilityPack.HtmlDocument();
                 planetDoc.LoadHtml(planetHtml);
+                //Get the planet name from the title tag, which is usually in the format "Planet - Warframe Wiki"
                 var planetName = planetDoc.DocumentNode.SelectSingleNode("//title").InnerText.Trim();
+                //Remove " - Warframe Wiki" suffix from title if present
                 planetName = Regex.Replace(planetName, @"\s*-\s*Warframe Wiki\s*$", "", RegexOptions.IgnoreCase).Trim();
+                IProgress<double>? imgProgress = new Progress<double>(p => progress?.Report(("DownloadingImageProgressStr", 
+                    new object[] { planetName, (int)(p * 100) })));
+                int speedLimitKB = 0;
+                int.TryParse(IniFileService.Read("Download", "SpeedLimit", "0"), out speedLimitKB);
+                int speedLimitBytes = Math.Max(0, speedLimitKB) * 1024;
+                byte[]? planetImgData = null;
+                //Select the image in the infobox, which is usually the first image in a span inside the infobox div
+                var imgNode = planetDoc.DocumentNode.SelectSingleNode("//*[@id=\"mw-content-text\"]/div[contains(@class, 'mw-content-ltr')]/div[contains(@class, 'infobox')]/span//img");
+                //Get the src attribute of the image node, which is the relative image url
+                var planetImgUrl = imgNode != null ? imgNode.GetAttributeValue("src", null) : null;
+                //Prepend wikiurl to the image url
+                planetImgUrl = wikiUrl + planetImgUrl;
+                Debug.WriteLine($"ImageUrl: {planetImgUrl}");
+                try
+                {
+                    planetImgData = await PlaywrightDownloadUtil.DownloadDataAsync(planetImgUrl, page, 
+                        imgProgress, speedLimitBytes, cancellationToken);
+                }
+                catch(OperationCanceledException)
+                {
+                    LoggerService.Log("Download Canceled", "Canceled image download while scraping nodes");
+                }catch(Exception ex)
+                {
+                    Debug.WriteLine($"Downloading image failed for {planetImgUrl} with error {ex.Message}");
+                    LoggerService.Log("Download Failed", $"Failed to download image for {planetName} with error {ex.Message}");
+                }
+
                 var nodeTables = planetDoc.DocumentNode.SelectNodes("//table[contains(@class,'wikitable')]");
                 if (nodeTables == null) continue;
                 progress?.Report(("LoadingPlanetNodesStr", new object[] { planetName }));
@@ -101,7 +133,8 @@ namespace Warframe_Progress_Tracker.Services
                         {
                             Name = nodeName,
                             MasteryPoints = masteryXp,
-                            Planet = planetName
+                            Planet = planetName,
+                            Image = planetImgData
                         });
                         System.Diagnostics.Debug.WriteLine("Node Created?");
                     }

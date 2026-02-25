@@ -7,7 +7,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Warframe Progress Tracker",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Warframe.Tracker.Filters", "Warframe.Tracker.Filters\Warframe.Tracker.Filters.csproj", "{82F7F4D5-E9A4-4F5C-A49C-DADBB38149E2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Warframe.Tracker.Mastery", "Mastery\Warframe.Tracker.Mastery.csproj", "{4D575195-0A6E-44A0-A73B-55F33ED3730A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Warframe.Tracker.MasteryRank", "Warframe.Tracker.MasteryRank\Warframe.Tracker.MasteryRank.csproj", "{22121AED-AC9A-410E-BFB9-5F313BD1A999}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReportWorker", "ReportGenerator\ReportWorker\ReportWorker.csproj", "{97929B22-4C03-57CE-F14E-9B9F990338E4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +25,14 @@ Global
 		{82F7F4D5-E9A4-4F5C-A49C-DADBB38149E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{82F7F4D5-E9A4-4F5C-A49C-DADBB38149E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{82F7F4D5-E9A4-4F5C-A49C-DADBB38149E2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4D575195-0A6E-44A0-A73B-55F33ED3730A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4D575195-0A6E-44A0-A73B-55F33ED3730A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4D575195-0A6E-44A0-A73B-55F33ED3730A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4D575195-0A6E-44A0-A73B-55F33ED3730A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22121AED-AC9A-410E-BFB9-5F313BD1A999}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22121AED-AC9A-410E-BFB9-5F313BD1A999}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22121AED-AC9A-410E-BFB9-5F313BD1A999}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22121AED-AC9A-410E-BFB9-5F313BD1A999}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97929B22-4C03-57CE-F14E-9B9F990338E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97929B22-4C03-57CE-F14E-9B9F990338E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97929B22-4C03-57CE-F14E-9B9F990338E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97929B22-4C03-57CE-F14E-9B9F990338E4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

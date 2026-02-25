@@ -24,7 +24,7 @@ namespace Warframe_Progress_Tracker.View
         public LoginWindow()
         {
             InitializeComponent();
-            DbService.InitializeDatabase();
+            
         }
         private void Login_Click(object sender, RoutedEventArgs e)
         {

@@ -56,7 +56,6 @@ namespace Warframe_Progress_Tracker.Services
                     WarframeDisplayName VARCHAR(30),
                     WarframeAccountId TEXT,
                     Platform VARCHAR(15),
-                    Image BLOB,
                     IsAdmin INTEGER NOT NULL DEFAULT 0
                 );
                 CREATE TABLE IF NOT EXISTS UserProgress(

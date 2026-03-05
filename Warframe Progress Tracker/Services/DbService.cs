@@ -147,6 +147,71 @@ namespace Warframe_Progress_Tracker.Services
             }
             return count;
         }
+        public static int SaveItemsBatch(List<Item> items)
+        {
+            if(items == null || items.Count == 0) return 0;
+            int count = 0;
+
+            using var connection = new SqliteConnection($"Data source={dbPath}");
+            connection.Open();
+
+            using var transaction = connection.BeginTransaction();
+            try
+            {
+                using var getCategoryCmd = connection.CreateCommand();
+                getCategoryCmd.CommandText = "SELECT Id FROM Categories WHERE DisplayName = $name;";
+                var paramCatName = getCategoryCmd.Parameters.Add("$name", SqliteType.Text);
+
+                using var insertCategoryCmd = connection.CreateCommand();
+                insertCategoryCmd.CommandText = "INSERT INTO Categories (DisplayName) VALUES ($name);";
+                var paramInsertCatName = insertCategoryCmd.Parameters.Add("$name", SqliteType.Text);
+
+                using var insertItemCmd = connection.CreateCommand();
+                insertItemCmd.CommandText =
+                    @"
+                    INSERT OR IGNORE INTO Items (UniqueName, Name, CategoryId, Image, MasteryPoints)
+                    VALUES ($uniqueName, $name, $categoryId, $image, $masteryPoints)";
+                var paramUniqueName = insertItemCmd.Parameters.Add("$uniqueName", SqliteType.Text);
+                var paramName = insertItemCmd.Parameters.Add("$name", SqliteType.Text);
+                var paramCategoryId = insertItemCmd.Parameters.Add("$categoryId", SqliteType.Integer);
+                var paramImage = insertItemCmd.Parameters.Add("$image", SqliteType.Blob);
+                var paramMasteryPoints = insertItemCmd.Parameters.Add("$masteryPoints", SqliteType.Integer);
+
+                foreach(var item in items)
+                {
+                    paramCatName.Value = item.Category.DisplayName;
+                    var catIdObj = getCategoryCmd.ExecuteScalar();
+                    int categoryId;
+                    if (catIdObj is null)
+                    {
+                        paramInsertCatName.Value = item.Category.DisplayName;
+                        insertCategoryCmd.ExecuteNonQuery();
+                        using var lastIdCmd = connection.CreateCommand();
+                        lastIdCmd.CommandText = "SELECT last_insert_rowId()";
+                        categoryId = Convert.ToInt32(lastIdCmd.ExecuteScalar());
+                    }
+                    else
+                    {
+                        categoryId = Convert.ToInt32(catIdObj);
+                    }
+                    paramUniqueName.Value = item.UniqueName ?? "";
+                    paramName.Value = item.Name ?? "";
+                    paramCategoryId.Value = categoryId;
+                    paramImage.Value = item.Image ?? (object)DBNull.Value;
+                    paramMasteryPoints.Value = item.MasteryPoints;
+
+                    var rowsAffected = insertItemCmd.ExecuteNonQuery();
+                    if (rowsAffected > 0) count += rowsAffected;
+                }
+                transaction.Commit();
+            }catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+
+            return count;
+        }
         public static bool ItemExists(string uniqueName)
         {
             using var connection = new SqliteConnection($"Data source={dbPath}");

@@ -18,7 +18,10 @@ namespace Warframe_Progress_Tracker.Services
     {
         private static readonly HttpClient httpClient = new HttpClient();
 
-        public static async Task<List<Model.Item>> FetchItemsAsync(IProgress<(string key, object[] args)>? progress, CancellationToken cancellationToken = default, HashSet<string>? existingUniqueNames = null)
+        private static readonly int BatchSize = 50;
+
+        public static async Task<List<Model.Item>> FetchItemsAsync(IProgress<(string key, object[] args)>? progress, 
+            CancellationToken cancellationToken = default, HashSet<string>? existingUniqueNames = null)
         {
             progress?.Report(("LoadingFetchingItemsStr", new object[] { }));
 
@@ -26,7 +29,7 @@ namespace Warframe_Progress_Tracker.Services
             var jsonArray = JArray.Parse(response);
             var items = new List<Model.Item>();
             int count = 0;
-            System.Diagnostics.Debug.WriteLine("After Fetch.");
+
             foreach (var item in jsonArray)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -90,15 +93,43 @@ namespace Warframe_Progress_Tracker.Services
                         System.Diagnostics.Debug.WriteLine($"Downloading image failed for {imageUrl} with error {ex.Message}");
                     }
                 }
-                items.Add(new Model.Item
+                var parsed = new Model.Item
                 {
                     Name = (String)item["name"],
                     UniqueName = (String)item["uniqueName"],
                     Category = new Model.Category {DisplayName = category},
                     MasteryPoints = masteryPoints,
                     Image = imageBytes
-                });
-     
+                };
+                items.Add(parsed);
+                count++;
+                if(items.Count >= BatchSize)
+                {
+                    try
+                    {
+                        DbService.SaveItemsBatch(items);
+                        items.Clear();
+                        progress.Report(("SavingItemsStr", new object[] { }));
+                    }
+                    catch
+                    {
+                        LoggerService.Log("DbSaveFailed", $"Saving items batch failed, retrying individually");
+                    }
+                }
+                
+            }
+            if (items.Count > 0)
+            {
+                try
+                {
+                    DbService.SaveItemsBatch(items);
+                    items.Clear();
+                    progress.Report(("SavingItemsStr", new object[] { }));
+                }
+                catch
+                {
+                    LoggerService.Log("DbSaveFailed", $"Saving items batch failed, retrying individually");
+                }
             }
             progress?.Report(("FinishedItemFetchStr", new object[] {}));
             return items;

@@ -16,16 +16,7 @@ namespace Warframe_Progress_Tracker.Model
         public string? WarframeDisplayName { get; set; }
         public string? WarframeAccountId { get; set; }
         public string? Platform {  get; set; }
-        private BitmapImage? _cachedImage;
-        public BitmapImage ImageBitmap
-        {
-            get
-            {
-                if (_cachedImage == null && Image != null)
-                    _cachedImage = ImageUtil.BytesToImage(Image);
-                return _cachedImage;
-            }
-        }
+
         public bool IsAdmin { get; set; } = false;
 
 

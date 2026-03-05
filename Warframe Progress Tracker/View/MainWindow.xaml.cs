@@ -100,7 +100,8 @@ namespace Warframe_Progress_Tracker.View
             {
                 var uniqueNames = DbService.GetAllUniqueItemNames();
                 int added = 0;
-                await Task.Run(async () =>
+                await ApiService.FetchItemsAsync(progress, cts.Token, uniqueNames);
+                /*await Task.Run(async () =>
                 {
                     var items = await ApiService.FetchItemsAsync(progress, cts.Token, uniqueNames);
 
@@ -111,9 +112,9 @@ namespace Warframe_Progress_Tracker.View
 
                     added = DbService.SaveItems(items);
 
-                }, cts.Token);
+                }, cts.Token);*/
                 LoggerService.Log("Item Fetching Finished", $"{_currentUser.Name}: Finished fetching node from api | Added: {added} items.");
-                MessageBox.Show(string.Format((string)Application.Current.Resources["ItemsAddedStr"], added), (string)Application.Current.Resources["DbUpdatedStr"]);
+                MessageBox.Show((string)Application.Current.Resources["ItemsAddedStr"], (string)Application.Current.Resources["DbUpdatedStr"]);
             }
             catch (OperationCanceledException)
             {

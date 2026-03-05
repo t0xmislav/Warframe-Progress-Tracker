@@ -66,7 +66,7 @@
     <System:String x:Key="FetchItemsLoadingStr">Fetching items from API, please wait...</System:String>
     <System:String x:Key="NoItemsStr">No new items found</System:String>
     <System:String x:Key="SavingItemsStr">Saving items to database...</System:String>
-    <System:String x:Key="ItemsAddedStr">{0} new items added</System:String>
+    <System:String x:Key="ItemsAddedStr">Finished fetching items and saving to database.</System:String>
     <System:String x:Key="FetchItemsCancelled">Fetching items cancelled by user.</System:String>
     <System:String x:Key="FetchItemsErrorStr">Error while fetching items.</System:String>
     <System:String x:Key="MasteredDateStr">Mastered: {0}</System:String>

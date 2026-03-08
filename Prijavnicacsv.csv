@@ -1,0 +1,146 @@
+﻿NAPREDNE TEHNIKE PROGRAMIRANJA,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Prijavnica za projekt,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Opće informacije o projektu,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"Kratki opis projekta gdje je potrebno navesti:
+Ovaj projekt je namijenjen za …
+Aplikacija može biti korisna ili primijenjena za ..
+Zadatak ili problem koji se rješava je …
+Obavezno je navesti:
+Aplikacija je pisana u programskom jeziku (i razvojnom okruženju) …
+Aplikacija koristi bazu podataka … (koju implementaciju: MS Access, MySQL, PostgreSQL, itd)
+Ključne funkcionalnosti aplikacije po korisničkim ulogama odnosno vrstama korisnika su:
+- obični ili neregistrirani korisnik: ...
+- administrator: ...
+- registrirani korisnik: ...
+- korisnik s posebnim ovlastima: ...
+
+Važno! Prijavnica se nastavniku šalje na pregled i odobrenje samo ukoliko suma bodova po odabranim funkcionalnostima iznosi minimalno 51 bod!",,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Funkcionalnosti aplikacije,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Svaka funkcionalnost treba biti odabrana i implementirana na način da je barem minimalno korisna u rješavanju problematike kojom se bavi vaša aplikacija. One funkcionalnosti koje ne doprinose izvornoj namjeni aplikacije ili njenim dijelovima neće biti uvažene.,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Rb.,Funkcionalnost,,,,,,,"Maks. 
+bodova",Upute,,,,,,,,,,"Opis 
+- Svaku funkcionalnost opišite sukladno navedenim uputama  sa lijeve strane! -",,,,,,,,,
+1,"Aplikacija sadrži minimalno dva nova korisnička tipa (klase) s minimalno po dva atributa i dvije metode (2 boda). U slučaju kreiranje i korištenja više klasa za ovu funkcionalnost moguće je dobiti 3 boda. U aplikaciji je potrebno demonstrirati upotrebu navedenih klasa, atributa i metoda.",,,,,,,3,"Opis treba sadržavati:
+* nazive klasa, atributa i metoda (ukoliko projekt sadrži mnogo klasa/atributa/metoda dovoljno je navesti samo 3 klase s po minimalno 2 atributa i metode)
+
+Napomena: priznaju se samo klase koje je student napisao (ne priznaju se automatski generirane klase od strane razvojnog okruženja/programskog jezika).",,,,,,,,,,,,,,,,,,,
+2,"Aplikacija sadrži minimalno tri dijaloga (forme) te demonstrira komunikaciju između minimalno dva dijaloga (npr. prijenos unesenih podataka iz jednog u drugi), 3 boda. U slučaju kreiranja i korištenja više dijaloga moguće je dobiti 4 boda.",,,,,,,4,"Opis treba sadržavati:
+* nazive dijaloga i njhovu svrhu unutar aplikacije (čemu služe)
+* primjer komunkacije između dijaloga",,,,,,,,,,,,,,,,,,,
+3,"Aplikacija podržava sučelje na barem dva jezika (npr. HRV i ENG), 3 boda. U slučaju da aplikacija ima 5 ili više prevedenih dijaloga moguće je dobiti 4 boda.",,,,,,,4,"Opis treba sadržavati:
+* koji su sve jezici podržani
+* koliko dijaloga je prevedeno
+
+Napomena: podrazumijeva se da se jezik može proizvoljno mijenjati bez izlaska iz aplikacije.",,,,,,,,,,,,,,,,,,,
+4,Za spremanje i učitavanje postavki aplikacije (minimalno 2) demonstrirati korištenje INI datoteke ili Windows registra (2 boda). U slučaju da aplikacija koristi oba pristupa (INI + Windows registar) moguće je dobiti 5 bodova.,,,,,,,5,"Za svaki od pristupa (INI i/ili Windows registar) treba opisati:
+* postavke aplikacije koji se spremaju
+
+Napomena: ukoliko se koriste oba pristupa (INI i Windows registar), oni moraju raditi s različitim postavkama aplikacije.",,,,,,,,,,,,,,,,,,,
+5,"Za spremanje i obradu podataka u aplikaciji demonstrirati korištenje XML ili JSON tipa datoteka. Potrebno je demonstrirati operacije čitanja, pisanja, uređivanja i brisanja podataka. (4 boda) U slučaju da aplikacija koristi oba pristupa (XML + JSON) moguće je dobiti 8 bodova.",,,,,,,8,"Za svaki od pristupa (XML i/ili JSON) treba opisati:
+* korištenu strukturu podataka (npr. Student koji ima ime, prezime, jmbag itd.)
+* podržane operacije nad prethodno opisanom strukturom podataka (npr. čitanje, pisanje, brisanje i izmjena)
+
+Napomena 1: u datotekama treba upravljati nizovima zapisa, ne samo jednim zapisom
+Napomena 2: ukoliko se koriste oba pristupa (XML i JSON), oni moraju obrađivati različite strukture podataka.",,,,,,,,,,,,,,,,,,,
+6,Za spremanje i obradu podataka u aplikaciji razviti i koristiti datoteku prilagođenog (binarnog) formata. Potrebno je demonstrirati operacije čitanja i pisanja podataka.,,,,,,,3,"Opis treba sadržavati:
+* korištenu strukturu podataka (npr. Student koji ima ime, prezime, jmbag itd.)
+* podržane operacije nad prethodno opisanom strukturom podataka (čitanje i/ili pisanje)
+
+Napomena 1: u datotekama treba upravljati nizovima zapisa, ne samo jednim zapisom
+Napomena 2: korištena struktura podataka ne može biti ista kao i u slučaju XML/JSON funkcionalnosti (i obrnuto).",,,,,,,,,,,,,,,,,,,
+7,"Aplikacija se spaja na bazu podataka po izboru te može izvršavati operacije čitanja, dodavanja, uređivanja i brisanja zapisa nad barem dvije tablice (4 boda). U slučaju da aplikacija koristi 3 ili više tablica nad kojima se demonstriraju opisane funkcionalnosti moguće je dobiti 6 bodova.",,,,,,,6,"Opis treba sadržavati:
+* svrha unutar aplikacije (za što se koristi baza podataka i koja je njena uloga u projektu)
+* tip baze podataka (MS Access, MS SQL Server, MySQL, Oracle…) 
+* nazive tablica i za koje od njih su podržane sve CRUD (kreiraj, čitaj, ažuriraj i briši) operacije
+
+Napomena: baza podataka ne može obrađivati podatke koji se već obrađuju korištenjem XML, JSON ili datoteke prilagođenog formata.",,,,,,,,,,,,,,,,,,,
+8,"Aplikacija ima mogućnost sortiranja zapisa učitanih iz baze podataka (1 bod), njihovog filtriranja (1 bod), te koristi barem jedan izračunati (eng. calculated) ili lookup tip polja (1 bod za svaki tip polja). Ukoliko aplikacija sadrži sve navedene stavke moguće je dobiti ukupno 5 bodova.",,,,,,,5,"Opis treba sadržavati:
+* gdje (nad kojom tablicom/tablicama) je podržana operacija sortiranja
+* gdje (nad kojom tablicom/tablicama) je podržana operacija filtriranja
+* gdje se koristi izračunato (eng. calculated) polje i što ono izračunava
+* gdje se koristi lookup polje (na što referencira i koju vrijednost ima)",,,,,,,,,,,,,,,,,,,
+9,Baza podataka sadrži barem jedno polje tipa Blob (polje s binarnim sadržajem). U aplikaciji je potrebno demonstrirati njegovo korištenje (operacije čitanja i pisanja).,,,,,,,3,"Opis treba sadržavati:
+* kakav se sadržaj nalazi u blob polju te koje od operacija su nad njim podržane unutar aplikacije",,,,,,,,,,,,,,,,,,,
+10,"Aplikacija može automatski generirati i prikazati barem jedan izvještaj (2 boda). Izvještaj je moguće spremiti u PDF formatu (+1 bod), te sadrži podatke iz barem dvije tablice koje su u odnosu master-detail (+2 boda).",,,,,,,5,"Opis treba sadržavati:
+* koji se podaci nalaze u izvještaju
+* sadrži li izvještaj podatke iz tablica koje su u odnosu master-detail, te koje su to tablice
+* u kojim je formatima moguće spremiti izvještaj",,,,,,,,,,,,,,,,,,,
+11,Aplikacija može paralelno izvršavati zadatke korištenjem dretvi. U aplikaciji je potrebno demonstrirati paralelno izvršavanje barem tri zadatka (3 boda). Ukoliko se za izvršavanje zadataka koriste dretve iz bazena dretvi (eng. Thread Pool) moguće je dobiti 5 bodova.,,,,,,,5,"Opis treba sadržavati:
+* koje se operacije izvršavaju paralelno, tj. korištenjem više dretvi
+* da li se koristi bazen dretvi 
+
+Napomena: priznat će se samo operacije gdje upotreba više dretvi (paralelno izvršavanje koda) daje bolje performanse u radu aplikacije u odnosu na izvršavanje tih istih operacija korištenjem samo jedne dretve.",,,,,,,,,,,,,,,,,,,
+12,Aplikacija demonstrira sigurno ažuriranje komponenti korisničkog sučelja iz jedne ili više dretvi korištenjem Synchronize i/ili Queue metode.,,,,,,,2,"Opis treba sadržavati:
+* što se u korisničkom sučelju ažurira iz dretve",,,,,,,,,,,,,,,,,,,
+13,"Aplikacija demonstrira korištenje barem jednog mehanizma međusobnog zaključavanja (npr. kritična sekcija ili mutex), 2 boda. U slučaju da se koriste dva različita mehanizma međusobnog zaključavanja moguće je dobiti 5 bodova.",,,,,,,5,"Za svaki korišteni mehanizam međusobnog zaključavanja treba opisati:
+* što (koji resurs aplikacije) se zaključava, te zašto je zaključavanje potrebno ",,,,,,,,,,,,,,,,,,,
+14,"Demonstrirati komunikaciju između dva procesa A i B na način da proces A kreira (poziva) proces B. Ako proces B uspješno obavi predviđeni posao obično se vraća vrijednost 0 ili neka druga cjelobrojna vrijednost u slučaju greške. Ukoliko je proces B rezultirao greškom, proces A treba ispisati odgovarajuću poruku korisniku. ",,,,,,,4,"Opis treba sadržavati:
+* što predstavlja procese A i B, te zašto proces A kreira (poziva) proces B
+* što je povratna vrijednost procesa B",,,,,,,,,,,,,,,,,,,
+15,Demonstrirati TCP klijent-poslužitelj komunikaciju u kojoj su klijent i poslužitelj implementirani u različitim aplikacijama. Potrebno je prikazati primjer u kojemu se kao zahtjev/odgovor prenose jednostavni tipovi podataka (4 boda). U slučaju i prijenosa tokova (eng. streams) moguće je dobiti 6 bodova.,,,,,,,6,"Opis treba sadržavati:
+* koji se podaci prenose u mrežnoj komunikaciji (što šalje klijent, a što vraća poslužitelj)
+* razmjenjuju li se osim jednostavnih tipova podataka u komunikaciji i tokovi podataka (eng. streams), te što se u njima nalazi",,,,,,,,,,,,,,,,,,,
+16,Demonstrirati UDP klijent-poslužitelj komunikaciju u kojoj su klijent i poslužitelj implementirani u različitim aplikacijama. Potrebno je prikazati primjer u kojemu se kao zahtjev/odgovor prenose jednostavni tipovi podataka (4 boda). U slučaju i prijenosa tokova (eng. streams) moguće je dobiti 6 bodova.,,,,,,,6,"Opis treba sadržavati:
+* koji se podaci prenose u mrežnoj komunikaciji (što šalje klijent, a što vraća poslužitelj)
+* razmjenjuju li se osim jednostavnih tipova podataka u komunikaciji i tokovi podataka (eng. streams), te što se u njima nalazi",,,,,,,,,,,,,,,,,,,
+17,Aplikacija sadrži HTTP klijent komponentu te demonstrira preuzimanje sadržaja s Interneta. Potrebno je prikazati tijek i postotak preuzimanja sadržaja te omogućiti ograničenje brzine na nekoliko proizvoljno unaprijed definiranih vrijednosti.,,,,,,,3,"Opis treba sadržavati:
+* koji sadržaj preuzima aplikacija i za što je taj sadržaj potreban
+* je li prikazan tijek i postotak preuzimanja sadržaja te postoji li ograničenje brzine prijenosa podataka",,,,,,,,,,,,,,,,,,,
+18,Aplikacija sadrži SOAP klijent komponentu pomoću koje se spaja na udaljeni (online) SOAP web servis po izboru. U aplikaciji je potrebno demonstrirati korištenje barem jedne funkcionalnosti tog web servisa.,,,,,,,3,"Opis treba sadržavati:
+* na se koji web servis spaja aplikacija (naziv i link), te koje njegove metode koristi",,,,,,,,,,,,,,,,,,,
+19,Aplikacija sadrži SOAP klijent komponentu pomoću koje se spaja na vaš lokalni SOAP web servis implementiran u zasebnoj aplikaciji. U klijent aplikaciji je potrebno demonstrirati korištenje barem dvije funkcionalnosti tog web servisa (4 boda). Ukoliko je web servis aktivan u lokalnom ili udaljenom IIS (ISAPI DLL) ili Apache web poslužitelju moguće je dobiti 7 bodova.,,,,,,,7,"Opis treba sadržavati:
+* u koju se svrhu koristi web servis te koje su njegove metode
+* je li web servis smješten na web poslužitelju (IIS, Apache ili sl.) ili u zasebnoj (desktop) aplikaciji",,,,,,,,,,,,,,,,,,,
+20,Aplikacija se spaja na udaljeni (online) REST web servis po izboru. U aplikaciji je potrebno demonstrirati korištenje barem jednog resursa tog web servisa.,,,,,,,3,"Opis treba sadržavati:
+* na koji se web servis spaja aplikacija (naziv i link), te koje njegove resurse koristi",,,,,,,,,,,,,,,,,,,
+21,Aplikacija sadrži REST klijent komponentu pomoću koje se spaja na vaš REST web servis implementiran u zasebnoj aplikaciji. U aplikaciji je potrebno demonstrirati korištenje barem dva resursa tog servisa s barem jednom metodom po resursu (4 boda). Ukoliko je web servis aktivan u lokalnom ili udaljenom IIS (ISAPI DLL) ili Apache web poslužitelju moguće je dobiti 7 bodova.,,,,,,,7,"Opis treba sadržavati:
+* u koju se svrhu koristi web servis
+* koje resurse te koje metode nudi nad svakim od resursa (GET, PUT, …)
+* je li web servis smješten na web poslužitelju (IIS, Apache ili sl.) ili u zasebnoj (desktop) aplikaciji",,,,,,,,,,,,,,,,,,,
+22,Vaš implementirani REST servis podržava autentifikaciju i autorizaciju korisnika. Na primjeru dva korisnika i dva resursa demonstrirati kako jedan od korisnika može pristupiti jednom resursu a ne može (zbog nedostatka ovlasti) pristupiti drugom resursu. ,,,,,,,4,"Opis treba sadržavati:
+* na koji se način provodi autentifikacija i autorizacija, te koje ovlasti ima svaki od korisnika",,,,,,,,,,,,,,,,,,,
+23,Aplikacija ima mogućnosti šifriranja i dešifriranja sadržaja korištenjem simetričnog kriptografskog algoritma (npr. AES).,,,,,,,2,"Opis treba sadržavati:
+* koji se podaci šifriraju i dešifriraju u aplikaciji
+
+Napomena: lozinke se ne šifriraju!",,,,,,,,,,,,,,,,,,,
+24,Aplikacija ima mogućnosti šifriranja i dešifriranja sadržaja korištenjem asimetričnog kriptografskog algoritma (npr. RSA).,,,,,,,3,"Opis treba sadržavati:
+* koji se podaci šifriraju i dešifriraju u aplikaciji
+
+Napomena: lozinke se ne šifriraju!",,,,,,,,,,,,,,,,,,,
+25,"Aplikacija koristi barem jednu funkciju sažimanja (npr. SHA-256), 2 boda. Ukoliko se pri sažimanju koristi fiksna (svugdje ista) ""sol"" moguće je dobiti 3 boda, a za korištenje promjenjive ""soli"" moguće je dobiti 4 boda. Promjenjiva ""sol"" se treba generirati korištenjem nekog pravila, pri čemu nije dopušteno spremanje ""soli"" u bazu podataka/datoteku i sl. Za korištenje ""papra"" moguće je dobiti dodatna 3 boda, pri čemu je potrebno demonstrirati provjeru ispravnog ""papra"" kroz cijeli niz mogućih vrijednosti za taj ""papar"".",,,,,,,7,"Opis treba sadržavati:
+* što se sažima
+* koristi li se ""sol"", te je li fiksna ili promjenjiva
+* ako je ""sol"" promjenjiva, na koji način (po kojem pravilu) se generira
+* da li se koristi ""papar"" i na koji način se vrši njegova provjera",,,,,,,,,,,,,,,,,,,
+26,Aplikacija ima mogućnost digitalnog potpisivanja sadržaja. U aplikaciji je potrebno demonstrirati verifikaciju autora i primljenog sadržaja pomoću digitalnog potpisa.,,,,,,,4,"Opis treba sadržavati:
+* zašto se koristi digitalni potpis i što se njime potpisuje
+* u kojem se trenutku događa potpisivanje, a kada verifikacija digitalnog potpisa",,,,,,,,,,,,,,,,,,,
+27,"Aplikacija koristi programski kod implementiran u statičkoj biblioteci (minimalno dvije funkcije), 3 boda. U slučaju da biblioteka sadrži barem jednu klasu sa barem jednom metodom moguće je dobiti 4 boda.",,,,,,,4,"Opis treba sadržavati:
+* koje se funkcije/klase/metode nalaze u statičkoj biblioteci
+* u koju se svrhu koriste navedene funkcije/klase/metode",,,,,,,,,,,,,,,,,,,
+28,"Aplikacija koristi programski kod implementiran u dinamičkoj biblioteci (minimalno dvije funkcije), 3 boda. Način povezivanja aplikacije i dinamičke biblioteke je proizvoljan. U slučaju da biblioteka sadrži barem jednu klasu moguće je dobiti 5 bodova.",,,,,,,5,"Opis treba sadržavati:
+* koje se funkcije/klase/metode nalaze u dinamičkoj biblioteci
+* u koju se svrhu koriste navedene funkcije/klase/metode",,,,,,,,,,,,,,,,,,,
+29,Aplikacija koristi barem jedan DLL dijalog (2 boda). U slučaju da aplikacija koristi barem dva DLL dijaloga moguće je dobiti 3 boda.,,,,,,,3,"Opis treba sadržavati:
+* koji se dijalozi nalaze u dinamičkoj biblioteci, te u koju svrhu se koriste",,,,,,,,,,,,,,,,,,,
+30,Aplikacija koristi barem jedan resurs smješten u dinamičkoj biblioteci.,,,,,,,2,"Opis treba sadržavati:
+* koji se resursi nalaze u dinamičkoj biblioteci, te u koju svrhu se koriste",,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Dodatne funkcionalnosti (prijedlozi studenata),,,,,,,,,,,,,,,,,,,,,,,,,,,,
+31,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+32,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+33,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+34,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+35,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+…,,,,,,,,,,,,,,,,,,,,,,,,,,,,

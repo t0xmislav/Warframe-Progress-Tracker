@@ -110,6 +110,8 @@
     <System:String x:Key="InvalidSpeedLimitStr">Speed limit must be a non-negative number (0 = unlimited).</System:String>
     <System:String x:Key="ProfileFetchFailedStr">No Warframe profile found.</System:String>
     <System:String x:Key="ProfileFetchErrorStr">Failed to link to a Warframe account.</System:String>
-    
-    
+    <System:String x:Key="SnapshotPluginLoadFailedStr">Failed loading the Snapshot plugin window.</System:String>
+    <System:String x:Key="SnapshotPluginMissingStr">Snapshot plugin not found.</System:String>
+    <System:String x:Key="ErrorStr">Error!</System:String>
+    <System:String x:Key="OpenSnapshotPlugin">Open snapshot plugin</System:String>
 </ResourceDictionary>

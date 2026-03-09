@@ -11,7 +11,7 @@ using System.Xml.Linq;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace CodexSnapshotPlugin
+namespace Warframe.Tracker.CodexSnapshotPlugin
 {
     public static class CodexSnapshotPlugin
     {
@@ -25,23 +25,23 @@ namespace CodexSnapshotPlugin
                 WindowStartupLocation = WindowStartupLocation.CenterScreen,
             };
 
-            var grid = new System.Windows.Controls.Grid
+            var grid = new Grid
             {
                 Margin = new Thickness(10)
             };
-            grid.RowDefinitions.Add(new System.Windows.Controls.RowDefinition { Height = GridLength.Auto });
-            grid.RowDefinitions.Add(new System.Windows.Controls.RowDefinition { Height = GridLength.Auto });
-            grid.RowDefinitions.Add(new System.Windows.Controls.RowDefinition { Height = GridLength.Auto });
-            grid.RowDefinitions.Add(new System.Windows.Controls.RowDefinition());
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition());
 
-            var exportButton = new System.Windows.Controls.Button
+            var exportButton = new Button
             {
                 Content = "Export Codex Snapshot",
                 Margin = new Thickness(0, 0, 0, 10),
                 Width = 140,
             };
 
-            var importButton = new System.Windows.Controls.Button
+            var importButton = new Button
             {
                 Content = "Import Codex Snapshot",
                 Margin = new Thickness(0, 0, 0, 10),
@@ -69,7 +69,7 @@ namespace CodexSnapshotPlugin
 
             exportButton.Click += async (_, __) => await ExportClickAsync(window);
             importButton.Click += async (_, __) => await ImportClickAsync(window);
-
+            window.Content = grid;
             return window;
         }
         private static async Task ExportClickAsync(Window owner)
@@ -188,7 +188,6 @@ namespace CodexSnapshotPlugin
                 var items = doc.Root.Element("Items")?.Elements("Item") ?? Enumerable.Empty<XElement>();
                 var nodes = doc.Root.Element("Nodes")?.Elements("Node") ?? Enumerable.Empty<XElement>();
 
-                // Ask user if they want to import
                 var res = MessageBox.Show(owner, $"Snapshot signature OK.\nItems: {items.Count()} Nodes: {nodes.Count()}\nImport into database?", "Import", MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (res != MessageBoxResult.Yes) return;
 
@@ -303,7 +302,6 @@ namespace CodexSnapshotPlugin
             if (pi != null && pi.CanWrite) pi.SetValue(obj, Convert.ChangeType(value, pi.PropertyType));
         }
 
-        // RSA key storage: store DPAPI-protected private key bytes in plugin folder
         private static RSA LoadOrCreateRsaPrivateKey()
         {
             var plugins = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
@@ -322,6 +320,7 @@ namespace CodexSnapshotPlugin
                 }
                 catch
                 {
+
                 }
             }
 

@@ -62,36 +62,32 @@ namespace Warframe_Progress_Tracker.View
         {
             var normalCleared = ClearedNormalCheck.IsChecked == true;
             var steelPathCleared = ClearedSteelCheck.IsChecked == true;
-            
-            var updated = await Task.Run(() =>
+
+            try
             {
-                DbService.UpdateNodeProgress(
-                    user.Id,
-                    node.Id,
-                    normalCleared,
-                    steelPathCleared
-                );
-                var progress = DbService.GetProgressForNode(user, node);
-                Utils.ProgressCacheUtil.StoreNodeProgress(user.Id, node.Id, progress);
-                LoggerService.Log("Changed Node Progress", $"{_currentUser.Name}: Changed progress for: {node.Name} | " +
-                    $"Normal clear status: {progress.ClearedNormal.ToString().ToLower()} | Steel Path clear status: {progress.ClearedSteelPath.ToString().ToLower()}.");
-                return progress;
-             });
-            if (normalCleared)
-            {
-                NormalDateBlock.Text = string.Format((string)Application.Current.Resources["NormalClearedDateStr"], updated.DateNormalClear?.ToShortDateString());
+                var updated = await node.UpdateProgressAsync(user, normalCleared, steelPathCleared);
+
+                if (normalCleared)
+                {
+                    NormalDateBlock.Text = string.Format((string)Application.Current.Resources["NormalClearedDateStr"], updated.DateNormalClear?.ToShortDateString());
+                }
+                else
+                {
+                    NormalDateBlock.Text = string.Empty;
+                }
+                if (steelPathCleared)
+                {
+                    SteelDateBlock.Text = string.Format((string)Application.Current.Resources["SPClearedDateStr"], updated.DateSteelPathClear?.ToShortDateString());
+                }
+                else
+                {
+                    SteelDateBlock.Text = string.Empty;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                NormalDateBlock.Text = string.Empty;
-            }
-            if (steelPathCleared)
-            {
-                SteelDateBlock.Text = string.Format((string)Application.Current.Resources["SPClearedDateStr"], updated.DateSteelPathClear?.ToShortDateString());
-            }
-            else
-            {
-                SteelDateBlock.Text = string.Empty;
+                LoggerService.Log("UpdateNodeProgressFailed", $"Failed to update progress for {node.Name}: {ex.Message}");
+                MessageBox.Show((string)Application.Current.Resources["UpdateProgressErrorStr"], (string)Application.Current.Resources["ErrorStr"], MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
         }

@@ -5,7 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using Warframe_Progress_Tracker.Services;
 using Warframe_Progress_Tracker.Utils;
+using Warframe_Progress_Tracker.Utils.Logger;
 
 namespace Warframe_Progress_Tracker.Model
 {
@@ -39,7 +41,26 @@ namespace Warframe_Progress_Tracker.Model
         {
             return ProgressCacheUtil.GetNodeProgress(user.Id, Id);
         }
+        public async Task<NodeProgress> UpdateProgressAsync(User user, bool clearedNormal, bool clearedSp)
+        {
+            return await Task.Run(() =>
+            {
+                DbService.UpdateNodeProgress(
+                    user.Id,
+                    this.Id,
+                    clearedNormal,
+                    clearedSp
+                );
 
+                var progress = DbService.GetProgressForNode(user, this) ?? new NodeProgress { User = user, Node = this };
+
+                ProgressCacheUtil.StoreNodeProgress(user.Id, this.Id, progress);
+
+                LoggerService.Log("Changed Node Progress", $"{user.Name}: Changed progress for: {this.Name} | Normal clear: {progress.ClearedNormal.ToString().ToLower()} | Steel Path clear: {progress.DateSteelPathClear.ToString().ToLower()}.");
+
+                return progress;
+            });
+        }
         public string GetDisplayName()
         {
             return $"{Planet}/{Name}";

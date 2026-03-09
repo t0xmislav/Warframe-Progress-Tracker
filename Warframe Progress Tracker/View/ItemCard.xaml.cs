@@ -66,28 +66,23 @@ namespace Warframe_Progress_Tracker.View
             bool owned = OwnedCheck.IsChecked == true;
             bool mastered = MasteredCheck.IsChecked == true;
 
-            var updated = await Task.Run(() =>
+            try
             {
-                DbService.UpdateItemProgress(
-                    user.Id,
-                    item.Id,
-                    mastered,
-                    owned
-                );
-              
-                var progress = DbService.GetProgressForItem(user, item);
-                Utils.ProgressCacheUtil.StoreItemProgress(user.Id, item.Id, progress);
-                LoggerService.Log("Changed Item Progress", $"{_currentUser.Name}: Changed progress for: {item.Name} | " +
-                    $"Owned status: {progress.Owned.ToString().ToLower()} | Mastered status: {progress.Mastered.ToString().ToLower()}.");
-                return progress;
-            });
-            if (mastered)
-            {
-                DatesBlock.Text = string.Format((string)Application.Current.Resources["MasteredDateStr"], updated.DateMastered?.ToShortDateString());
+                var updated = await item.UpdateProgressAsync(user, owned, mastered);
+
+                if (mastered)
+                {
+                    DatesBlock.Text = string.Format((string)Application.Current.Resources["MasteredDateStr"], updated.DateMastered?.ToShortDateString());
+                }
+                else
+                {
+                    DatesBlock.Text = string.Empty;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                DatesBlock.Text = string.Empty;
+                LoggerService.Log("UpdateProgressFailed", $"Failed to update progress for {item.Name}: {ex.Message}");
+                MessageBox.Show((string)Application.Current.Resources["UpdateProgressErrorStr"], (string)Application.Current.Resources["ErrorStr"], MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         private void EditItem_Click(object sender, RoutedEventArgs e)

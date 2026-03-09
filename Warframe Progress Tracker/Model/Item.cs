@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using Warframe_Progress_Tracker.Services;
 using Warframe_Progress_Tracker.Utils;
+using Warframe_Progress_Tracker.Utils.Logger;
 
 namespace Warframe_Progress_Tracker.Model
 {
@@ -39,6 +40,26 @@ namespace Warframe_Progress_Tracker.Model
         {
             var progress = ProgressCacheUtil.GetItemProgress(user.Id, Id);
             return progress?.Owned ?? false;
+        }
+        public async Task<ItemProgress> UpdateProgressAsync(User user, bool owned, bool mastered)
+        {
+            return await Task.Run(() =>
+            {
+                DbService.UpdateItemProgress(
+                    user.Id,
+                    this.Id,
+                    mastered,
+                    owned
+                );
+
+                var progress = DbService.GetProgressForItem(user, this) ?? new ItemProgress { User = user, Item = this };
+
+                ProgressCacheUtil.StoreItemProgress(user.Id, this.Id, progress);
+
+                LoggerService.Log("Changed Item Progress", $"{user.Name}: Changed progress for: {this.Name} | Owned: {progress.Owned.ToString().ToLower()} | Mastered: {progress.Mastered.ToString().ToLower()}.");
+
+                return progress;
+            });
         }
         public Item Clone()
         {

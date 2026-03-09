@@ -114,9 +114,9 @@ namespace Warframe_Progress_Tracker.ViewModel
         {
             _currentUser = currentUser;
             LoadCategories();
-            ChangeImageCommand = new Utils.RelayCommand(_ => ChangeImage());
-            SaveCommand = new Utils.RelayCommand(_ => Save(), _ => CanSave());
-            ExitCommand = new Utils.RelayCommand(_ => Exit());
+            ChangeImageCommand = new RelayCommand(_ => ChangeImage());
+            SaveCommand = new RelayCommand(_ => Save(), _ => CanSave());
+            ExitCommand = new RelayCommand(_ => Exit());
         }
         private bool CanSave()
         {

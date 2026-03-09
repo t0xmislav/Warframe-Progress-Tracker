@@ -31,6 +31,7 @@
                 <MenuItem Header="{DynamicResource PopulateItemsStr}" Click="PopulateDb_Click"/>
                 <MenuItem Header="{DynamicResource FetchMissionsStr}" Click="PopulateNodes_Click"/>
                 <MenuItem Header="{DynamicResource GenerateReportStr}" Click="GenerateReport_Click"/>
+                <MenuItem Header="{DynamicResource OpenSnapshotPlugin}" Click="OpenSnapshotPlugin_Click"/>
             </MenuItem>
             <MenuItem Header="{DynamicResource LogStr}">
                 <MenuItem Header="{DynamicResource ViewLogStr}" Click="OpenLogView_Click"/>

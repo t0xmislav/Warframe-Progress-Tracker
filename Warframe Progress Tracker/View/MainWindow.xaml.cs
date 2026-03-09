@@ -216,7 +216,7 @@ namespace Warframe_Progress_Tracker.View
         private void OpenSnapshotPlugin_Click(object sender, RoutedEventArgs e)
         {
             var pluginsFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
-            var dllPath = Path.Combine(pluginsFolder, "Warframe.Tracker.CodexSnapshotPlugin.dll");
+            var dllPath = Path.Combine(pluginsFolder, "CodexSnapshotPlugin.dll");
             if(!File.Exists(dllPath))
             {
                 MessageBox.Show((string)Application.Current.Resources["SnapshotPluginMissingStr"], (string)Application.Current.Resources["ErrorStr"], MessageBoxButton.OK, MessageBoxImage.Error);
@@ -235,7 +235,7 @@ namespace Warframe_Progress_Tracker.View
                     return;
                 }
 
-                var mi = type.GetMethod("Initialize", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                var mi = type.GetMethod("CreateDialog", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
                 if(mi is null)
                 {
                     MessageBox.Show((string)Application.Current.Resources["SnapshotPluginLoadFailedStr"],
@@ -244,7 +244,7 @@ namespace Warframe_Progress_Tracker.View
                     return;
                 }
 
-                var win = mi.Invoke(null, new object[] { _currentUser }) as Window;
+                var win = mi.Invoke(null, new object[] { }) as Window;
                 if(win is null)
                 {
                     MessageBox.Show((string)Application.Current.Resources["SnapshotPluginLoadFailedStr"],

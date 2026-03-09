@@ -235,7 +235,7 @@ namespace Warframe_Progress_Tracker.Services
             long exists = (long)checkCmd.ExecuteScalar();
             return exists != 0;
         }
-        public static bool AddNode(Model.Node node)
+        public static bool AddNode(Node node)
         {
             var categoryId = AddCategory("Node");
             using var connection = new SqliteConnection($"Data source={dbPath}");

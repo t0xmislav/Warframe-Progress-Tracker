@@ -76,38 +76,95 @@ namespace Warframe.Tracker.CodexSnapshotPlugin
         {
             try
             {
+                // Determine logged-in user from host (owner.Owner)
+                var hostUser = TryGetLoggedInUser(owner);
+                if (hostUser == null)
+                {
+                    MessageBox.Show(owner, "Could not determine logged-in user from host. Open plugin from the main window while logged in.", "User not found", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var userIdProp = hostUser.GetType().GetProperty("Id");
+                var userNameProp = hostUser.GetType().GetProperty("Name");
+                var userId = (int)(userIdProp?.GetValue(hostUser) ?? 0);
+                var userName = (string?)(userNameProp?.GetValue(hostUser) ?? "(unknown)");
+
                 var dlg = new Microsoft.Win32.SaveFileDialog
                 {
                     Filter = "XML Snapshot|*.xml",
-                    FileName = $"CodexSnapshot-{DateTime.UtcNow:yyyyMMdd-HHmmss}.xml"
+                    FileName = $"CodexProgress-{userName}-{DateTime.UtcNow:yyyyMMdd-HHmmss}.xml"
                 };
                 if (dlg.ShowDialog(owner) != true) return;
                 var path = dlg.FileName;
 
-                // Collect codex data via reflection: call DbService.GetAllItems & GetAllNodes
+                // Get items & nodes from host
                 var (items, nodes) = GetCodexSummariesViaReflection();
 
-                // Build XML
-                var doc = new XDocument(new XElement("CodexSnapshot",
+                // Build progress entries by calling DbService.GetProgressForItem and GetProgressForNode via reflection
+                var asmTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a =>
+                {
+                    try { return a.GetTypes(); } catch { return Array.Empty<Type>(); }
+                });
+                var dbType = asmTypes.FirstOrDefault(t => t.FullName == "Warframe_Progress_Tracker.Services.DbService");
+                if (dbType == null)
+                {
+                    MessageBox.Show(owner, "Host DbService not found. Cannot export.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                var getProgressItem = dbType.GetMethod("GetProgressForItem", BindingFlags.Public | BindingFlags.Static);
+                var getProgressNode = dbType.GetMethod("GetProgressForNode", BindingFlags.Public | BindingFlags.Static);
+
+                var doc = new XDocument(new XElement("CodexProgressSnapshot",
                     new XAttribute("Generated", DateTime.UtcNow.ToString("o")),
-                    new XElement("Items",
-                        items.Select(it =>
-                            new XElement("Item",
-                                new XAttribute("UniqueName", (string)SafeGetProp(it, "UniqueName") ?? ""),
-                                new XAttribute("Name", (string)SafeGetProp(it, "Name") ?? ""),
-                                new XAttribute("Category", ((object)SafeGetProp(it, "Category") is object cat) ? (string)SafeGetProp(SafeGetProp(it, "Category"), "DisplayName") ?? "" : ""),
-                                new XAttribute("MasteryPoints", SafeGetProp(it, "MasteryPoints")?.ToString() ?? "0")
-                            )
-                        )
+                    new XElement("User",
+                        new XAttribute("Id", userId),
+                        new XAttribute("Name", userName)
                     ),
-                    new XElement("Nodes",
+                    new XElement("ItemProgress",
+                        items.Select(it =>
+                        {
+                            try
+                            {
+                                var progress = getProgressItem?.Invoke(null, new object[] { hostUser, it });
+                                // Extract properties from progress object via reflection
+                                var owned = GetBoolProp(progress, "Owned");
+                                var mastered = GetBoolProp(progress, "Mastered");
+                                var dateOwned = GetDateTimeProp(progress, "DateOwned");
+                                var dateMastered = GetDateTimeProp(progress, "DateMastered");
+                                var unique = (string?)SafeGetProp(it, "UniqueName") ?? "";
+                                return new XElement("Item",
+                                    new XAttribute("UniqueName", unique),
+                                    new XAttribute("Owned", owned ? "1" : "0"),
+                                    new XAttribute("Mastered", mastered ? "1" : "0"),
+                                    new XAttribute("DateOwned", dateOwned?.ToString("o") ?? ""),
+                                    new XAttribute("DateMastered", dateMastered?.ToString("o") ?? "")
+                                );
+                            }
+                            catch { return null; }
+                        }).Where(x => x != null)
+                    ),
+                    new XElement("NodeProgress",
                         nodes.Select(n =>
-                            new XElement("Node",
-                                new XAttribute("Name", (string)SafeGetProp(n, "Name") ?? ""),
-                                new XAttribute("Planet", (string)SafeGetProp(n, "Planet") ?? ""),
-                                new XAttribute("MasteryPoints", SafeGetProp(n, "MasteryPoints")?.ToString() ?? "0")
-                            )
-                        )
+                        {
+                            try
+                            {
+                                var progress = getProgressNode?.Invoke(null, new object[] { hostUser, n });
+                                var clearedNormal = GetBoolProp(progress, "ClearedNormal");
+                                var clearedSP = GetBoolProp(progress, "ClearedSteelPath");
+                                var dateNormal = GetDateTimeProp(progress, "DateNormalClear");
+                                var dateSP = GetDateTimeProp(progress, "DateSteelPathClear");
+                                var nodeName = (string?)SafeGetProp(n, "Name") ?? "";
+                                return new XElement("Node",
+                                    new XAttribute("Name", nodeName),
+                                    new XAttribute("ClearedNormal", clearedNormal ? "1" : "0"),
+                                    new XAttribute("ClearedSteelPath", clearedSP ? "1" : "0"),
+                                    new XAttribute("DateNormalClear", dateNormal?.ToString("o") ?? ""),
+                                    new XAttribute("DateSteelPathClear", dateSP?.ToString("o") ?? "")
+                                );
+                            }
+                            catch { return null; }
+                        }).Where(x => x != null)
                     )
                 ));
 
@@ -125,18 +182,24 @@ namespace Warframe.Tracker.CodexSnapshotPlugin
                 var pubPath = path + ".pub";
                 await File.WriteAllBytesAsync(pubPath, pubBytes);
 
-                MessageBox.Show(owner, $"Snapshot saved to:\n{path}\nSignature: {sigPath}\nPublic key: {pubPath}", "Export complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(owner, $"Progress snapshot saved for {userName}:\n{path}\nSignature: {sigPath}\nPublic key: {pubPath}", "Export complete", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
                 MessageBox.Show(owner, $"Export failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
         private static async Task ImportClickAsync(Window owner)
         {
             try
             {
+                var hostUser = TryGetLoggedInUser(owner);
+                if (hostUser == null)
+                {
+                    MessageBox.Show(owner, "Could not determine logged-in user from host. Open plugin from the main window while logged in.", "User not found", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                var userId = (int)(hostUser.GetType().GetProperty("Id")?.GetValue(hostUser) ?? 0);
                 var dlg = new Microsoft.Win32.OpenFileDialog
                 {
                     Filter = "XML Snapshot|*.xml",
@@ -153,7 +216,6 @@ namespace Warframe.Tracker.CodexSnapshotPlugin
                     return;
                 }
 
-                // Ask for public key if not found
                 if (!File.Exists(pubPath))
                 {
                     var ask = MessageBox.Show(owner, "Public key not found next to snapshot. Select public key file?", "Public key", MessageBoxButton.YesNo, MessageBoxImage.Question);
@@ -183,38 +245,66 @@ namespace Warframe.Tracker.CodexSnapshotPlugin
                     return;
                 }
 
-                // Optional: load data into DB (reflective)
                 var doc = XDocument.Load(path);
-                var items = doc.Root.Element("Items")?.Elements("Item") ?? Enumerable.Empty<XElement>();
-                var nodes = doc.Root.Element("Nodes")?.Elements("Node") ?? Enumerable.Empty<XElement>();
+                var itemsXml = doc.Root.Element("ItemProgress")?.Elements("Item") ?? Enumerable.Empty<XElement>();
+                var nodesXml = doc.Root.Element("NodeProgress")?.Elements("Node") ?? Enumerable.Empty<XElement>();
 
-                var res = MessageBox.Show(owner, $"Snapshot signature OK.\nItems: {items.Count()} Nodes: {nodes.Count()}\nImport into database?", "Import", MessageBoxButton.YesNo, MessageBoxImage.Question);
-                if (res != MessageBoxResult.Yes) return;
+                // Retrieve items and nodes to map unique names / names to ids
+                var (items, nodes) = GetCodexSummariesViaReflection();
+                var itemByUnique = items.ToDictionary(it => (string?)SafeGetProp(it, "UniqueName") ?? "", it => it);
+                var nodeByName = nodes.ToDictionary(n => (string?)SafeGetProp(n, "Name") ?? "", n => n);
 
-                // Build object lists and call DbService SaveItems/SaveNodes via reflection
-                // We will construct minimal POCOs by using host's Item/Node types if available, else skip.
-                var (itemList, nodeList) = BuildObjectsForImport(items, nodes);
-
-                // Use reflection to call DbService.SaveItems and SaveNodes if present
-                var dbType = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes()).FirstOrDefault(t => t.FullName == "Warframe_Progress_Tracker.Services.DbService");
-                if (dbType != null)
+                // Reflection helpers for DbService update methods
+                var asmTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a =>
                 {
-                    var saveItemsMethod = dbType.GetMethod("SaveItems", BindingFlags.Public | BindingFlags.Static);
-                    var saveNodesMethod = dbType.GetMethod("SaveNodes", BindingFlags.Public | BindingFlags.Static);
-                    if (saveItemsMethod != null && itemList != null && itemList.Count > 0)
-                    {
-                        saveItemsMethod.Invoke(null, new object[] { itemList });
-                    }
-                    if (saveNodesMethod != null && nodeList != null && nodeList.Count > 0)
-                    {
-                        saveNodesMethod.Invoke(null, new object[] { nodeList });
-                    }
-                    MessageBox.Show(owner, "Imported snapshot into database (if host methods found).", "Import complete", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                else
+                    try { return a.GetTypes(); } catch { return Array.Empty<Type>(); }
+                });
+                var dbType = asmTypes.FirstOrDefault(t => t.FullName == "Warframe_Progress_Tracker.Services.DbService");
+                if (dbType == null)
                 {
-                    MessageBox.Show(owner, "Host DbService not found. Import skipped.", "Import", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(owner, "Host DbService not found. Cannot import.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
                 }
+
+                var updateItemMethod = dbType.GetMethod("UpdateItemProgress", BindingFlags.Public | BindingFlags.Static);
+                var updateNodeMethod = dbType.GetMethod("UpdateNodeProgress", BindingFlags.Public | BindingFlags.Static);
+                int appliedItems = 0, appliedNodes = 0;
+
+                // Apply item progress
+                foreach (var xe in itemsXml)
+                {
+                    var unique = (string?)xe.Attribute("UniqueName") ?? "";
+                    if (!itemByUnique.TryGetValue(unique, out var itemObj)) continue;
+                    var itemId = (int)(itemObj.GetType().GetProperty("Id")?.GetValue(itemObj) ?? 0);
+                    var owned = ((string?)xe.Attribute("Owned") ?? "0") == "1";
+                    var mastered = ((string?)xe.Attribute("Mastered") ?? "0") == "1";
+                    // call UpdateItemProgress(userId, itemId, mastered, owned)
+                    try
+                    {
+                        updateItemMethod?.Invoke(null, new object[] { userId, itemId, mastered, owned });
+                        appliedItems++;
+                    }
+                    catch { /* ignore per-row errors */ }
+                }
+
+                // Apply node progress
+                foreach (var xe in nodesXml)
+                {
+                    var name = (string?)xe.Attribute("Name") ?? "";
+                    if (!nodeByName.TryGetValue(name, out var nodeObj)) continue;
+                    var nodeId = (int)(nodeObj.GetType().GetProperty("Id")?.GetValue(nodeObj) ?? 0);
+                    var clearedNormal = ((string?)xe.Attribute("ClearedNormal") ?? "0") == "1";
+                    var clearedSP = ((string?)xe.Attribute("ClearedSteelPath") ?? "0") == "1";
+                    // call UpdateNodeProgress(userId, nodeId, clearedNormal, clearedSP)
+                    try
+                    {
+                        updateNodeMethod?.Invoke(null, new object[] { userId, nodeId, clearedNormal, clearedSP });
+                        appliedNodes++;
+                    }
+                    catch { }
+                }
+
+                MessageBox.Show(owner, $"Import complete. Applied item progress: {appliedItems}, node progress: {appliedNodes}", "Import complete", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
@@ -235,67 +325,64 @@ namespace Warframe.Tracker.CodexSnapshotPlugin
             var getItems = dbType.GetMethod("GetAllItems", BindingFlags.Public | BindingFlags.Static);
             var getNodes = dbType.GetMethod("GetAllNodes", BindingFlags.Public | BindingFlags.Static);
 
-            var items = getItems != null ? (getItems.Invoke(null, null) as System.Collections.IEnumerable) : null;
-            var nodes = getNodes != null ? (getNodes.Invoke(null, null) as System.Collections.IEnumerable) : null;
+            var items = getItems != null ? (getItems.Invoke(null, null) as IEnumerable) : null;
+            var nodes = getNodes != null ? (getNodes.Invoke(null, null) as IEnumerable) : null;
 
             return (items?.Cast<object>().ToArray() ?? Array.Empty<object>(), nodes?.Cast<object>().ToArray() ?? Array.Empty<object>());
         }
 
-        // Build minimal host-compatible object lists for SaveItems/SaveNodes invoke
-        private static (IList itemList, IList nodeList) BuildObjectsForImport(IEnumerable<XElement> itemsXml, IEnumerable<XElement> nodesXml)
+        private static object? TryGetLoggedInUser(Window pluginWindow)
         {
-            // Try to locate host Item and Node types
-            var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => {
-                try { return a.GetTypes(); } catch { return Array.Empty<Type>(); }
-            }).ToArray();
-
-            var itemType = types.FirstOrDefault(t => t.FullName == "Warframe_Progress_Tracker.Model.Item");
-            var categoryType = types.FirstOrDefault(t => t.FullName == "Warframe_Progress_Tracker.Model.Category");
-            var nodeType = types.FirstOrDefault(t => t.FullName == "Warframe_Progress_Tracker.Model.Node");
-
-            IList itemList = null;
-            IList nodeList = null;
-
-            if (itemType != null && categoryType != null)
+            try
             {
-                var listType = typeof(List<>).MakeGenericType(itemType);
-                itemList = (IList)Activator.CreateInstance(listType)!;
-                foreach (var xe in itemsXml)
-                {
-                    var instance = Activator.CreateInstance(itemType)!;
-                    SetProp(instance, "Name", (string?)xe.Attribute("Name") ?? "");
-                    SetProp(instance, "UniqueName", (string?)xe.Attribute("UniqueName") ?? "");
-                    SetProp(instance, "MasteryPoints", int.Parse((string?)xe.Attribute("MasteryPoints") ?? "0"));
-                    var categoryInstance = Activator.CreateInstance(categoryType)!;
-                    SetProp(categoryInstance, "DisplayName", (string?)xe.Attribute("Category") ?? "");
-                    SetProp(instance, "Category", categoryInstance);
-                    itemList.Add(instance);
-                }
-            }
+                var host = pluginWindow?.Owner;
+                if (host == null) return null;
 
-            if (nodeType != null)
-            {
-                var listType = typeof(List<>).MakeGenericType(nodeType);
-                nodeList = (IList)Activator.CreateInstance(listType)!;
-                foreach (var xe in nodesXml)
+                // Try non-public field _currentUser (MainWindow implementation)
+                var field = host.GetType().GetField("_currentUser", BindingFlags.Instance | BindingFlags.NonPublic);
+                if (field != null)
                 {
-                    var instance = Activator.CreateInstance(nodeType)!;
-                    SetProp(instance, "Name", (string?)xe.Attribute("Name") ?? "");
-                    SetProp(instance, "Planet", (string?)xe.Attribute("Planet") ?? "");
-                    SetProp(instance, "MasteryPoints", int.Parse((string?)xe.Attribute("MasteryPoints") ?? "0"));
-                    nodeList.Add(instance);
+                    var val = field.GetValue(host);
+                    if (val != null) return val;
                 }
-            }
 
-            return (itemList ?? new ArrayList(), nodeList ?? new ArrayList());
+                // Try public property CurrentUser
+                var prop = host.GetType().GetProperty("CurrentUser", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (prop != null)
+                {
+                    var val = prop.GetValue(host);
+                    if (val != null) return val;
+                }
+
+            }
+            catch { }
+            return null;
         }
-
         private static object SafeGetProp(object obj, string prop)
         {
             var pi = obj.GetType().GetProperty(prop);
             return pi?.GetValue(obj) ?? "";
         }
-
+        private static bool GetBoolProp(object? obj, string prop)
+        {
+            if (obj == null) return false;
+            var pi = obj.GetType().GetProperty(prop);
+            if (pi == null) return false;
+            var val = pi.GetValue(obj);
+            if (val is bool b) return b;
+            if (val is int i) return i != 0;
+            return false;
+        }
+        private static DateTime? GetDateTimeProp(object? obj, string prop)
+        {
+            if (obj == null) return null;
+            var pi = obj.GetType().GetProperty(prop);
+            if (pi == null) return null;
+            var val = pi.GetValue(obj);
+            if (val is DateTime dt) return dt;
+            if (val is string s && DateTime.TryParse(s, out var parsed)) return parsed;
+            return null;
+        }
         private static void SetProp(object obj, string prop, object value)
         {
             var pi = obj.GetType().GetProperty(prop);

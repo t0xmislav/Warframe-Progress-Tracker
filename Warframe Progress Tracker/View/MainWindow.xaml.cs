@@ -216,52 +216,7 @@ namespace Warframe_Progress_Tracker.View
         private void OpenSnapshotPlugin_Click(object sender, RoutedEventArgs e)
         {
             var pluginsFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
-            var dllPath = Path.Combine(pluginsFolder, "CodexSnapshotPlugin.dll");
-            if(!File.Exists(dllPath))
-            {
-                MessageBox.Show((string)Application.Current.Resources["SnapshotPluginMissingStr"], (string)Application.Current.Resources["ErrorStr"], MessageBoxButton.OK, MessageBoxImage.Error);
-                LoggerService.Log(dllPath, $"{_currentUser.Name}: Failed to load snapshot plugin | Reason: DLL not found");
-                return;
-            }
-            try
-            {
-                var asm = AssemblyLoadContext.Default.LoadFromAssemblyPath(dllPath);
-                var type = asm.GetType("Warframe.Tracker.CodexSnapshotPlugin.CodexSnapshotPlugin");
-                if(type is null)
-                {
-                    MessageBox.Show((string)Application.Current.Resources["SnapshotPluginLoadFailedStr"], 
-                        (string)Application.Current.Resources["ErrorStr"], MessageBoxButton.OK, MessageBoxImage.Error);
-                    LoggerService.Log(dllPath, $"{_currentUser.Name}: Failed to load snapshot plugin | Reason: Plugin class not found");
-                    return;
-                }
-
-                var mi = type.GetMethod("CreateDialog", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                if(mi is null)
-                {
-                    MessageBox.Show((string)Application.Current.Resources["SnapshotPluginLoadFailedStr"],
-                        (string)Application.Current.Resources["ErrorStr"], MessageBoxButton.OK, MessageBoxImage.Error);
-                    LoggerService.Log(dllPath, $"{_currentUser.Name}: Failed to load snapshot plugin | Reason: Initialize method not found");
-                    return;
-                }
-
-                var win = mi.Invoke(null, new object[] { }) as Window;
-                if(win is null)
-                {
-                    MessageBox.Show((string)Application.Current.Resources["SnapshotPluginLoadFailedStr"],
-                        (string)Application.Current.Resources["ErrorStr"], MessageBoxButton.OK, MessageBoxImage.Error);
-                    LoggerService.Log(dllPath, $"{_currentUser.Name}: Failed to load snapshot plugin | Reason: Initialize method did not return a Window");
-                    return;
-                }
-
-                win.Owner = Application.Current.MainWindow;
-                win.ShowDialog();
-            }
-            catch(Exception ex)
-            {
-                MessageBox.Show($"{(string)Application.Current.Resources["SnapshotPluginLoadFailedStr"]} {ex.Message}",
-                    (string)Application.Current.Resources["ErrorStr"], MessageBoxButton.OK, MessageBoxImage.Error);
-                LoggerService.Log("Snapshot Plugin Load Failed", $"{_currentUser.Name}: Failed to load snapshot plugin | Exception: {ex}");
-            }
+            PluginLoader.LoadSnapshotWindow(pluginsFolder, _currentUser);
         }
 
     }

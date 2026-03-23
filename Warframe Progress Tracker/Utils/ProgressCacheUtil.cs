@@ -44,7 +44,7 @@ namespace Warframe_Progress_Tracker.Utils
             }
         }
 
-        public static Model.ItemProgress? GetItemProgress(int userId, int itemId) 
+        public static ItemProgress? GetItemProgress(int userId, int itemId) 
         {
             _lock.EnterReadLock();
             try
@@ -70,7 +70,7 @@ namespace Warframe_Progress_Tracker.Utils
             }
         }
 
-        public static Model.NodeProgress? GetNodeProgress(int userId, int nodeId) 
+        public static NodeProgress? GetNodeProgress(int userId, int nodeId) 
         {
             _lock.EnterReadLock();
             try

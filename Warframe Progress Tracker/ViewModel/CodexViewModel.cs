@@ -1,23 +1,12 @@
-﻿using Microsoft.Data.Sqlite;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Input;
-using System.Windows.Threading;
-using System.Xml.Linq;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
 using Warframe_Progress_Tracker.Utils;
-using Warframe_Progress_Tracker.View;
+using Warframe_Progress_Tracker.Utils.Logger;
 
 namespace Warframe_Progress_Tracker.ViewModel
 {
@@ -26,12 +15,8 @@ namespace Warframe_Progress_Tracker.ViewModel
         public ObservableCollection<CodexEntry> FilteredEntries { get; } = new();
         public ObservableCollection<string> Categories { get; } = new();
         public User CurrentUser { get; }
-        public ICollectionView ItemsView { get; }
 
         private const int BatchSize = 25;
-
-        private string _selectedCategory;
-        
 
         private int _offset = 0;
         private bool _isLoading = false;
@@ -47,6 +32,7 @@ namespace Warframe_Progress_Tracker.ViewModel
                 RefreshFilteredEntries(resetOffset : true, preserveLoaded: false); 
             }
         }
+        private string _selectedCategory;
         public string SelectedCategory
         {
             get => _selectedCategory;
@@ -66,19 +52,33 @@ namespace Warframe_Progress_Tracker.ViewModel
                 if (_nameFilter == value) return;
                 _nameFilter = value; 
                 OnPropertyChanged(); 
-                RefreshFilteredEntries(resetOffset : true, preserveLoaded : false); 
+
+                DebounceFilter();
             }
         }
+        private string _clearFilter = "All";
+        public string ClearFilter
+        {
+            get => _clearFilter;
+            set
+            {
+                if (_clearFilter == value) return;
+                _clearFilter = value;
+                OnPropertyChanged();
 
+                _ = RecomputeAndRefreshAsync(resetOffset: true, token: CancellationToken.None);
+            }
+        }
         private List<CodexEntry> _filteredCache = new();
         private List<CodexEntry> _sortedCache = new();
-        private readonly Dictionary<int, DateTime> _masteryCacheDate = new();
 
-        private List<Model.Item>? _allItemsSummaries = new();
-        private List<Model.Node>? _allNodeSummaries = new();
-        private List<Model.CodexEntry>? _allSummaries = new();
+        private List<CodexEntry>? _allSummaries = new();
+        private readonly object _cacheLock = new();
 
-        public CodexViewModel(Model.User currentUser)
+        private CancellationTokenSource? _filterCts;
+        private readonly TimeSpan _filterDebounceDelay = TimeSpan.FromMilliseconds(300);
+
+        public CodexViewModel(User currentUser)
         {
             CurrentUser = currentUser;
             _ = InitializeAsync();
@@ -86,11 +86,12 @@ namespace Warframe_Progress_Tracker.ViewModel
         public async Task InitializeAsync()
         {
             SelectedCategory = "All";
+            ClearFilter = "All";
 
             await LoadCodexSummariesAsync();
             
             LoadCategories();
-            RefreshFilteredEntries(resetOffset : true);
+            await RecomputeAndRefreshAsync(resetOffset: true, token: CancellationToken.None);
         }
         public async Task LoadNextBatchAsync()
         {
@@ -100,14 +101,40 @@ namespace Warframe_Progress_Tracker.ViewModel
             try
             {
                 Debug.WriteLine("Trying refresh...");
-                RefreshFilteredEntries(resetOffset : false);
+                List<CodexEntry> snapshotSorted;
+                int startOffset;
+                lock (_cacheLock)
+                {
+                    if(_sortedCache == null || _sortedCache.Count == 0)
+                    {
+                        _filteredCache = ApplyFilters(_allSummaries).ToList();
+                        _sortedCache = ApplySorting(_filteredCache).ToList();
+                    }
+
+                    snapshotSorted = _sortedCache.ToList();
+                    startOffset = _offset;
+                }
+
+                var batch = await Task.Run(() =>
+                {
+                    return snapshotSorted.Skip(startOffset).Take(BatchSize).ToList();
+                });
+
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    foreach (var entry in batch)
+                        FilteredEntries.Add(entry);
+                    lock(_cacheLock)
+                    {
+                        _offset += batch.Count;
+                        _hasMore = snapshotSorted.Count > _offset;
+                    }
+                });
             }
             finally
             {
-                
                 _isLoading = false;
             }
-
         }
         private void LoadCategories()
         {
@@ -125,23 +152,27 @@ namespace Warframe_Progress_Tracker.ViewModel
         }
         private IEnumerable<CodexEntry> ApplyFilters(IEnumerable<CodexEntry> entries)
         {
+            var nameFilter = NameFilter;
+            var clearFilter = ClearFilter;
             return entries.Where(e =>
                     (SelectedCategory == "All" || e.Category.DisplayName == SelectedCategory) &&
-                    (string.IsNullOrWhiteSpace(NameFilter) || e.Name.Contains(NameFilter, StringComparison.OrdinalIgnoreCase)))
-                .ToList();
+                    (string.IsNullOrWhiteSpace(nameFilter) || e.Name.Contains(nameFilter, StringComparison.OrdinalIgnoreCase)) &&
+                    (clearFilter == "All" || (clearFilter =="Cleared" ? IsCleared(e) : !IsCleared(e)))
+                ).ToList();
         }
         private DateTime GetMasteryDate(CodexEntry entry)
         {
             return entry switch
             {
-                Item item => Utils.ProgressCacheUtil.GetItemProgress(CurrentUser.Id, item.Id)?.GetProgressDate() ?? DateTime.MinValue,
-                Node node => Utils.ProgressCacheUtil.GetNodeProgress(CurrentUser.Id, node.Id)?.GetClearedDate() ?? DateTime.MinValue,
+                Item item => ProgressCacheUtil.GetItemProgress(CurrentUser.Id, item.Id)?.GetProgressDate() ?? DateTime.MinValue,
+                Node node => ProgressCacheUtil.GetNodeProgress(CurrentUser.Id, node.Id)?.GetClearedDate() ?? DateTime.MinValue,
                             _ => DateTime.MinValue
             };
         }
         private IEnumerable<CodexEntry> ApplySorting(IEnumerable<CodexEntry> entries)
         {
-            return SortKey switch
+            var key = SortKey;
+            return key switch
             {
                 "DateMastered" => entries.OrderByDescending(GetMasteryDate),
                 _ => entries.OrderBy(e => e.Name)
@@ -158,10 +189,9 @@ namespace Warframe_Progress_Tracker.ViewModel
                 _sortedCache = ApplySorting(_filteredCache).ToList();
             }
 
+            if (!preserveLoaded && _offset == 0) FilteredEntries.Clear();
 
             var batch = _sortedCache.Skip(_offset).Take(BatchSize).ToList();
-
-            if (!preserveLoaded) FilteredEntries.Clear();
 
             foreach (var entry in batch)
                 FilteredEntries.Add(entry);
@@ -169,7 +199,71 @@ namespace Warframe_Progress_Tracker.ViewModel
             _offset += batch.Count;
             _hasMore = _filteredCache.Count > _offset;
         }
-           
+        
+        private void DebounceFilter()
+        {
+            _filterCts?.Cancel();
+            _filterCts?.Dispose();
+
+            _filterCts = new CancellationTokenSource();
+            var token = _filterCts.Token;
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await Task.Delay(_filterDebounceDelay, token);
+                    if (token.IsCancellationRequested) return;
+
+                    await RecomputeAndRefreshAsync(resetOffset: true, token);
+                }
+                catch (TaskCanceledException) { }
+                catch(Exception ex)
+                {
+                    LoggerService.Log("Error in debounce", $"An error occurred during debounce: {ex}");
+                    Debug.WriteLine($"Error in debounce: {ex}");
+                }
+            }, CancellationToken.None);
+        }
+
+        private async Task RecomputeAndRefreshAsync(bool resetOffset, CancellationToken token)
+        {
+            List<CodexEntry> snapshotAll;
+            lock (_cacheLock)
+            {
+                snapshotAll = _allSummaries?.ToList() ?? new List<CodexEntry>();
+            }
+
+            var filtered = await Task.Run(() => 
+            {
+                token.ThrowIfCancellationRequested();
+                return ApplyFilters(snapshotAll).ToList();
+            }, token);
+
+            var sorted = await Task.Run(() =>
+            {
+                token.ThrowIfCancellationRequested();
+                return ApplySorting(filtered).ToList();
+            }, token);
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                lock (_cacheLock)
+                {
+                    _filteredCache = filtered;
+                    _sortedCache = sorted;
+                    _offset = 0;
+                    _hasMore = _sortedCache.Count > 0;
+                }
+
+                FilteredEntries.Clear();
+                var batch = _sortedCache.Take(BatchSize).ToList();
+                foreach (var entry in batch)
+                    FilteredEntries.Add(entry);
+
+                _offset = batch.Count;
+                _hasMore = _filteredCache.Count > _offset;
+            });
+        }
         public async Task LoadCodexSummariesAsync()
         {
             List<Item>? items = null;
@@ -183,16 +277,23 @@ namespace Warframe_Progress_Tracker.ViewModel
             });
             Application.Current.Dispatcher.Invoke(() =>
             {
-
-                _allItemsSummaries = items;
-                _allNodeSummaries = nodes;
-
                 _allSummaries.Clear();
-                _allSummaries.AddRange(items);
-                _allSummaries.AddRange(nodes);
+                if(items is not null) _allSummaries.AddRange(items);
+                if(nodes is not null) _allSummaries.AddRange(nodes);
             });
         }
-
+        private bool IsCleared(CodexEntry entry)
+        {
+            if (entry is Item it)
+            {
+                return it.IsMastered(CurrentUser);
+            }
+            if (entry is Node nd)
+            {
+                return nd.IsNormalCleared(CurrentUser) || nd.IsSpCleared(CurrentUser);
+            }
+            return false;
+        }   
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string propName = "") =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));

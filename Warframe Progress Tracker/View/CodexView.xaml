@@ -34,6 +34,14 @@
                                  Content="{DynamicResource CodexSortDateStr}"/>
                 </StackPanel>
             </GroupBox>
+
+            <GroupBox Header="{DynamicResource CodexClearFilterStr}" BorderBrush="Black" Margin="20,0,5,0">
+                <StackPanel Orientation="Horizontal">
+                    <RadioButton Tag="All" Checked="ClearFilter_Checked" Content="{DynamicResource AllStr}" Margin="0,0,6,0"/>
+                    <RadioButton Tag="Cleared" Checked="ClearFilter_Checked" Content="{DynamicResource ClearedStr}" Margin="0,0,6,0"/>
+                    <RadioButton Tag="Uncleared" Checked="ClearFilter_Checked" Content="{DynamicResource UnclearedStr}"/>
+                </StackPanel>
+            </GroupBox>
         </StackPanel>
 
         <ListBox x:Name="ItemsList"

@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Navigation;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
 using Warframe_Progress_Tracker.Utils;
@@ -25,7 +19,6 @@ namespace Warframe_Progress_Tracker.ViewModel
         private int _totalMastered;
         private readonly object _totalMasteredLock = new();
 
-        private bool isRefreshing = false;
         private readonly TimeSpan _refreshInterval = TimeSpan.FromSeconds(10);
         public DashboardViewModel(User currentUser) 
         {

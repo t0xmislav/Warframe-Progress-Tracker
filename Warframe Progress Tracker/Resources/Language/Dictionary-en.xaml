@@ -114,4 +114,9 @@
     <System:String x:Key="SnapshotPluginMissingStr">Snapshot plugin not found.</System:String>
     <System:String x:Key="ErrorStr">Error!</System:String>
     <System:String x:Key="OpenSnapshotPlugin">Open snapshot plugin</System:String>
+    <System:String x:Key="CodexClearFilterStr">Clear filter</System:String>
+    <System:String x:Key="AllStr">All</System:String>
+    <System:String x:Key="ClearedStr">Cleared</System:String>
+    <System:String x:Key="UnclearedStr">Uncleared</System:String>
+    
 </ResourceDictionary>

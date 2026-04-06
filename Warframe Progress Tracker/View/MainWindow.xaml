@@ -31,12 +31,14 @@
                 <MenuItem Header="{DynamicResource PopulateItemsStr}" Click="PopulateDb_Click"/>
                 <MenuItem Header="{DynamicResource FetchMissionsStr}" Click="PopulateNodes_Click"/>
                 <MenuItem Header="{DynamicResource GenerateReportStr}" Click="GenerateReport_Click"/>
-                <MenuItem Header="{DynamicResource OpenSnapshotPlugin}" Click="OpenSnapshotPlugin_Click"/>
             </MenuItem>
             <MenuItem Header="{DynamicResource LogStr}">
                 <MenuItem Header="{DynamicResource ViewLogStr}" Click="OpenLogView_Click"/>
             </MenuItem>
-
+            <MenuItem Header="Progress">
+                <MenuItem Header="Export Progress..." Click="ExportProgress_Click"/>
+                <MenuItem Header="Import Progress..." Click="ImportProgress_Click"/>
+            </MenuItem>
         </Menu>
         
         <ContentControl x:Name="MainContent"/>

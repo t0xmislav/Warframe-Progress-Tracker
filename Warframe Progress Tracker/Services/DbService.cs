@@ -489,6 +489,31 @@ namespace Warframe_Progress_Tracker.Services
             }
             return set;
         }
+        public static bool SetItemProgress(int userId, int itemId, bool mastered, bool owned, DateTime? dateOwned, DateTime? dateMastered)
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                INSERT INTO UserProgress (UserId, ItemId, Owned, Mastered, DateOwned, DateMastered)
+                VALUES ($userId, $nodeId, $owned, $mastered, $ownedDate, $masteredDate)
+                ON CONFLICT(UserId, ItemId) DO UPDATE SET
+                    Owned = $owned,
+                    Mastered = $mastered,
+                    DateOwned = $ownedDate,
+                    DateMastered = $masteredDate;
+                
+                ";
+            cmd.Parameters.AddWithValue("$userId", userId);
+            cmd.Parameters.AddWithValue("$nodeId", itemId);
+            cmd.Parameters.AddWithValue("$owned", owned ? 1 : 0);
+            cmd.Parameters.AddWithValue("$mastered", mastered ? 1 : 0);
+            cmd.Parameters.AddWithValue("$ownedDate", owned ? dateOwned.Value.ToString("o") : (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("$masteredDate", mastered ? dateMastered.Value.ToString("o") : (object)DBNull.Value);
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
+        }
         public static bool UpdateItemProgress(int userId, int itemId, bool mastered, bool owned)
         {
             using var connection = new SqliteConnection($"Data Source={dbPath}");
@@ -512,6 +537,31 @@ namespace Warframe_Progress_Tracker.Services
             cmd.Parameters.AddWithValue("$ownedDate", owned ? DateTime.UtcNow.ToString("o") : (object)DBNull.Value);
             cmd.Parameters.AddWithValue("$masteredDate", mastered ? DateTime.UtcNow.ToString("o") : (object)DBNull.Value);
             int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
+        }
+        public static bool SetNodeProgress(int userId, int nodeId, bool cleared, bool clearedSteelPath, DateTime? dateNormalCleared, DateTime? dateSteelPathCleared)
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                INSERT INTO NodeProgress (UserId, NodeId, ClearedNormal, ClearedSteelPath, DateNormalClear, DateSteelPathClear)
+                VALUES ($userId, $nodeId, $cleared, $clearedSteelPath, $dateNormalClear, $dateSteelPathClear)
+                ON CONFLICT(UserId, NodeId) DO UPDATE SET
+                    ClearedNormal = $cleared,
+                    ClearedSteelPath = $clearedSteelPath,
+                    DateNormalClear = $dateNormalClear,
+                    DateSteelPathClear = $dateSteelPathClear;
+                ";
+            cmd.Parameters.AddWithValue("$userId", userId);
+            cmd.Parameters.AddWithValue("$nodeId", nodeId);
+            cmd.Parameters.AddWithValue("$clearedSteelPath", clearedSteelPath ? 1 : 0);
+            cmd.Parameters.AddWithValue("$cleared", cleared ? 1 : 0);
+            cmd.Parameters.AddWithValue("$dateNormalClear", cleared ? dateNormalCleared.Value.ToString("o") : (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("$dateSteelPathClear", clearedSteelPath ? dateSteelPathCleared.Value.ToString("o") : (object)DBNull.Value);
+            int rowsAffected = cmd.ExecuteNonQuery();
+
             return rowsAffected > 0;
         }
         public static bool UpdateNodeProgress(int userId, int nodeId, bool cleared, bool clearedSteelPath)

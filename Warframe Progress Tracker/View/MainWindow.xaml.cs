@@ -212,12 +212,51 @@ namespace Warframe_Progress_Tracker.View
             }
             
         }
-
-        private void OpenSnapshotPlugin_Click(object sender, RoutedEventArgs e)
+        private async void ExportProgress_Click(object sender, RoutedEventArgs e)
         {
-            var pluginsFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
-            PluginLoader.LoadSnapshotWindow(pluginsFolder, _currentUser);
+            try
+            {
+                var xml = XmlUtil.GenerateUserProgressXml(_currentUser);
+                var (success, pdfPath) = await RsaUtil.ExportProgressWithSignature(xml);
+                if (success)
+                    MessageBox.Show($"Progress exported successfully:\n{pdfPath}", "Export Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Export failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
+
+        private void ImportProgress_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var dlg = new OpenFileDialog { Filter = "XML Progress|*.xml" };
+                if (dlg.ShowDialog() != true) return;
+
+                var (verified, xml) = RsaUtil.VerifyProgressFile(dlg.FileName);
+                if (!verified)
+                {
+                    MessageBox.Show("Signature verification failed.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                Console.WriteLine("Verified XML:\n" + xml);
+                var success = RsaUtil.ApplyProgressSnapshot(xml);
+                if (!success)
+                {
+                    ProgressCacheUtil.PreloadUserProgress(_currentUser); // Refresh cache to ensure consistency
+                    MessageBox.Show("Failed to apply progress snapshot.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                // Parse and apply XML to database
+                MessageBox.Show("Progress imported successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Import failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        
 
     }
 }

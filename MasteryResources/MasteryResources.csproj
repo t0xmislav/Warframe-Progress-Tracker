@@ -1,0 +1,128 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\IconRank1.png" />
+    <None Remove="Resources\IconRank10.png" />
+    <None Remove="Resources\IconRank11.png" />
+    <None Remove="Resources\IconRank12.png" />
+    <None Remove="Resources\IconRank13.png" />
+    <None Remove="Resources\IconRank14.png" />
+    <None Remove="Resources\IconRank15.png" />
+    <None Remove="Resources\IconRank16.png" />
+    <None Remove="Resources\IconRank17.png" />
+    <None Remove="Resources\IconRank18.png" />
+    <None Remove="Resources\IconRank19.png" />
+    <None Remove="Resources\IconRank2.png" />
+    <None Remove="Resources\IconRank20.png" />
+    <None Remove="Resources\IconRank21.png" />
+    <None Remove="Resources\IconRank22.png" />
+    <None Remove="Resources\IconRank23.png" />
+    <None Remove="Resources\IconRank24.png" />
+    <None Remove="Resources\IconRank25.png" />
+    <None Remove="Resources\IconRank26.png" />
+    <None Remove="Resources\IconRank27.png" />
+    <None Remove="Resources\IconRank28.png" />
+    <None Remove="Resources\IconRank29.png" />
+    <None Remove="Resources\IconRank3.png" />
+    <None Remove="Resources\IconRank30.png" />
+    <None Remove="Resources\IconRank31.png" />
+    <None Remove="Resources\IconRank32.png" />
+    <None Remove="Resources\IconRank33.png" />
+    <None Remove="Resources\IconRank34.png" />
+    <None Remove="Resources\IconRank35.png" />
+    <None Remove="Resources\IconRank36.png" />
+    <None Remove="Resources\IconRank37.png" />
+    <None Remove="Resources\IconRank38.png" />
+    <None Remove="Resources\IconRank39.png" />
+    <None Remove="Resources\IconRank4.png" />
+    <None Remove="Resources\IconRank40.png" />
+    <None Remove="Resources\IconRank41.png" />
+    <None Remove="Resources\IconRank42.png" />
+    <None Remove="Resources\IconRank43.png" />
+    <None Remove="Resources\IconRank44.png" />
+    <None Remove="Resources\IconRank45.png" />
+    <None Remove="Resources\IconRank46.png" />
+    <None Remove="Resources\IconRank47.png" />
+    <None Remove="Resources\IconRank48.png" />
+    <None Remove="Resources\IconRank49.png" />
+    <None Remove="Resources\IconRank5.png" />
+    <None Remove="Resources\IconRank50.png" />
+    <None Remove="Resources\IconRank51.png" />
+    <None Remove="Resources\IconRank6.png" />
+    <None Remove="Resources\IconRank7.png" />
+    <None Remove="Resources\IconRank8.png" />
+    <None Remove="Resources\IconRank9.png" />
+    <None Remove="Resources\LegendaryIcon.png" />
+    <None Remove="Resources\Unranked.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\IconRank1.png" />
+    <EmbeddedResource Include="Resources\IconRank10.png" />
+    <EmbeddedResource Include="Resources\IconRank11.png" />
+    <EmbeddedResource Include="Resources\IconRank12.png" />
+    <EmbeddedResource Include="Resources\IconRank13.png" />
+    <EmbeddedResource Include="Resources\IconRank14.png" />
+    <EmbeddedResource Include="Resources\IconRank15.png" />
+    <EmbeddedResource Include="Resources\IconRank16.png" />
+    <EmbeddedResource Include="Resources\IconRank17.png" />
+    <EmbeddedResource Include="Resources\IconRank18.png" />
+    <EmbeddedResource Include="Resources\IconRank19.png" />
+    <EmbeddedResource Include="Resources\IconRank2.png" />
+    <EmbeddedResource Include="Resources\IconRank20.png" />
+    <EmbeddedResource Include="Resources\IconRank21.png" />
+    <EmbeddedResource Include="Resources\IconRank22.png" />
+    <EmbeddedResource Include="Resources\IconRank23.png" />
+    <EmbeddedResource Include="Resources\IconRank24.png" />
+    <EmbeddedResource Include="Resources\IconRank25.png" />
+    <EmbeddedResource Include="Resources\IconRank26.png" />
+    <EmbeddedResource Include="Resources\IconRank27.png" />
+    <EmbeddedResource Include="Resources\IconRank28.png" />
+    <EmbeddedResource Include="Resources\IconRank29.png" />
+    <EmbeddedResource Include="Resources\IconRank3.png" />
+    <EmbeddedResource Include="Resources\IconRank30.png" />
+    <EmbeddedResource Include="Resources\IconRank31.png" />
+    <EmbeddedResource Include="Resources\IconRank32.png" />
+    <EmbeddedResource Include="Resources\IconRank33.png" />
+    <EmbeddedResource Include="Resources\IconRank34.png" />
+    <EmbeddedResource Include="Resources\IconRank35.png" />
+    <EmbeddedResource Include="Resources\IconRank36.png" />
+    <EmbeddedResource Include="Resources\IconRank37.png" />
+    <EmbeddedResource Include="Resources\IconRank38.png" />
+    <EmbeddedResource Include="Resources\IconRank39.png" />
+    <EmbeddedResource Include="Resources\IconRank4.png" />
+    <EmbeddedResource Include="Resources\IconRank40.png" />
+    <EmbeddedResource Include="Resources\IconRank41.png" />
+    <EmbeddedResource Include="Resources\IconRank42.png" />
+    <EmbeddedResource Include="Resources\IconRank43.png" />
+    <EmbeddedResource Include="Resources\IconRank44.png" />
+    <EmbeddedResource Include="Resources\IconRank45.png" />
+    <EmbeddedResource Include="Resources\IconRank46.png" />
+    <EmbeddedResource Include="Resources\IconRank47.png" />
+    <EmbeddedResource Include="Resources\IconRank48.png" />
+    <EmbeddedResource Include="Resources\IconRank49.png" />
+    <EmbeddedResource Include="Resources\IconRank5.png" />
+    <EmbeddedResource Include="Resources\IconRank50.png" />
+    <EmbeddedResource Include="Resources\IconRank51.png" />
+    <EmbeddedResource Include="Resources\IconRank6.png" />
+    <EmbeddedResource Include="Resources\IconRank7.png" />
+    <EmbeddedResource Include="Resources\IconRank8.png" />
+    <EmbeddedResource Include="Resources\IconRank9.png" />
+    <EmbeddedResource Include="Resources\LegendaryIcon.png" />
+    <EmbeddedResource Include="Resources\Unranked.png" />
+  </ItemGroup>
+	<Target Name="CopyToAppPlugins" AfterTargets="Build">
+		<ItemGroup>
+			<_dll Include="$(TargetPath)" />
+		</ItemGroup>
+		<MakeDir Directories="$(SolutionDir)Warframe Progress Tracker\bin\$(Configuration)\net8.0-windows\Plugins" Condition="Exists('$(SolutionDir)')" />
+		<Copy SourceFiles="@(_dll)" DestinationFolder="$(SolutionDir)Warframe Progress Tracker\bin\$(Configuration)\net8.0-windows\Plugins" SkipUnchangedFiles="true" Condition="Exists('$(SolutionDir)')" />
+	</Target>
+</Project>

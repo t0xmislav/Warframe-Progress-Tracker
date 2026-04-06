@@ -52,6 +52,14 @@ namespace Warframe_Progress_Tracker.View
                 vm.SortKey = sortKey;
             }
         }
+
+        private void ClearFilter_Checked(object sender, RoutedEventArgs e)
+        {
+            if (sender is RadioButton radioButton && radioButton.Tag is string clearTag && DataContext is CodexViewModel vm)
+            {
+                vm.ClearFilter = clearTag;
+            }
+        }
         private async void ItemsList_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             var sv = e.OriginalSource as ScrollViewer;

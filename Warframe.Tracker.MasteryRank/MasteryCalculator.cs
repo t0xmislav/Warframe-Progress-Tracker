@@ -21,9 +21,9 @@ namespace Warframe.Tracker.MasteryRank
             {
                 return PerRankMultiplier * (long)rank * rank;
             }
-            int legendaryIndex = rank - MaxNormalRank;
+            int legendaryRank = rank - MaxNormalRank;
 
-            return LegendaryBase + LegendaryPerRank * (legendaryIndex - 1);
+            return LegendaryBase + (LegendaryPerRank * legendaryRank);
         }
 
         public static long CumulativePointsForRank(int rank)
@@ -32,21 +32,13 @@ namespace Warframe.Tracker.MasteryRank
             long total = 0;
             if (rank <= MaxNormalRank)
             {
-                long n = rank;
-                long sumSquares = n * (n + 1) * (2 * n + 1) / 6;
-                total = PerRankMultiplier * sumSquares;
+                total = PerRankMultiplier * (rank * rank);
                 return total;
             }
 
-            long sumSquares30 = MaxNormalRank * (MaxNormalRank + 1) * (2 * MaxNormalRank + 1) / 6;
-            total = PerRankMultiplier * sumSquares30;
+            int legendaryRank = rank - MaxNormalRank;
 
-            int legendaryCount = rank - MaxNormalRank;
-
-            for (int i = 1; i < legendaryCount; i++)
-            {
-                total += LegendaryBase + LegendaryPerRank * (i - 1);
-            }
+            total = LegendaryBase + (LegendaryPerRank * legendaryRank);
             return total;
 
         }
@@ -56,28 +48,23 @@ namespace Warframe.Tracker.MasteryRank
 
             int rank = 0;
             long cumulative = 0;
-
-            while (true)
+            long pointsForNextRank = 0;
+            long pointsForCurrentRank = 0;
+            if (totalPoints >= LegendaryBase)
             {
-                int nextRank = rank + 1;
-                long pointsForNextRank = PointsForRank(nextRank);
-                long nextCumulative = cumulative + pointsForNextRank;
-                if (totalPoints < nextCumulative)
-                {
-                    long pointsIntoRank = totalPoints - cumulative;
-                    double percent = pointsForNextRank == 0 ? 1.0 : (double)pointsIntoRank / pointsForNextRank;
-                    return (rank, pointsIntoRank, pointsForNextRank, percent);
-
-                }
-                rank = nextRank;
-                cumulative = nextCumulative;
-                if (rank > 50)
-                {
-                    //safety break
-                    throw new InvalidOperationException("Rank calculation exceeded reasonable limits.");
-                }
+                rank = (int)(totalPoints / LegendaryPerRank) + MaxNormalRank;
             }
-            return (rank, 0, PointsForRank(rank + 1), 0.0);
+            else
+            {
+                rank = (int)Math.Sqrt(totalPoints / PerRankMultiplier);
+            }
+            pointsForCurrentRank = PointsForRank(rank);
+            pointsForNextRank = PointsForRank(rank + 1);
+            long pointsIntoRank = totalPoints - pointsForCurrentRank;
+            double percent = pointsForNextRank > pointsForCurrentRank
+                ? (double)pointsIntoRank / (pointsForNextRank - pointsForCurrentRank) * 100
+                : 0.0;
+            return (rank, pointsIntoRank, pointsForNextRank, percent);
         }
     }
 }

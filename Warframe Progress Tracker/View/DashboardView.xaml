@@ -11,6 +11,7 @@
         <DockPanel Margin="20">
             <StackPanel DockPanel.Dock="Top" Margin="0,0,0,20">
                 <TextBlock Text="{DynamicResource DashboardTotalStr}" FontSize="16" FontWeight="Bold"/>
+                <Image Source="{Binding MasteryRankImage, Mode=OneWay}" Height="64" Width="64" Margin="0,5,0,0"/>
                 <TextBlock Text="{Binding TotalRankText, Mode=OneWay}" FontSize="14" Margin="0,5,0,0"/>
                 <ProgressBar Value="{Binding TotalProgressPercentage, Mode=OneWay}" Height="20" Margin="0,5,0,20" Maximum="1"/>
                 <TextBlock Text="{Binding TotalProgressPercentageText, Mode=OneWay}" HorizontalAlignment="Right" FontStyle="Italic"/>

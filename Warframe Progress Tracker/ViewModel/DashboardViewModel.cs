@@ -5,6 +5,7 @@ using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
 using Warframe_Progress_Tracker.Utils;
 using Warframe.Tracker.MasteryRank;
+using System.Windows.Media.Imaging;
 
 namespace Warframe_Progress_Tracker.ViewModel
 {
@@ -15,7 +16,17 @@ namespace Warframe_Progress_Tracker.ViewModel
         public string TotalProgressPercentageText { get; private set; }
         public string TotalRankText { get; private set; }
         private readonly User _currentUser;
-
+        private BitmapImage? _masteryRankImage;
+        public BitmapImage? MasteryRankImage
+        {
+            get => _masteryRankImage;
+            private set
+            {
+                if (_masteryRankImage == value) return;
+                _masteryRankImage = value;
+                OnPropertyChanged();
+            }
+        }
         private int _totalMastered;
         private readonly object _totalMasteredLock = new();
 
@@ -108,7 +119,11 @@ namespace Warframe_Progress_Tracker.ViewModel
             await Task.WhenAll(tasks);
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
-                TotalRankText = $"Current Rank: {MasteryCalculator.GetRankFromPoints(totalMasteryPoints).Rank}";
+                var rankInfo = MasteryCalculator.GetRankFromPoints(totalMasteryPoints);
+                TotalRankText = $"Current Rank: {rankInfo.Rank}";
+
+                MasteryRankImage = MasteryResourceLoader.GetMasteryRankImage(rankInfo.Rank);
+
                 CategoryProgresses.Clear();
                 foreach (var cp in categoryProgressResults) CategoryProgresses.Add(cp);
 

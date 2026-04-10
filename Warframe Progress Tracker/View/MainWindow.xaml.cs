@@ -51,6 +51,10 @@ namespace Warframe_Progress_Tracker.View
         }
         private void Logout_Click(object sender, RoutedEventArgs e)
         {
+            if(MainContent?.Content is DashboardView dv)
+            {
+                dv.Stop();
+            }
             var loginWindow = new LoginWindow();
             loginWindow.Show();
             this.Close();

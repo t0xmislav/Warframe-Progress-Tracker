@@ -118,5 +118,9 @@
     <System:String x:Key="AllStr">All</System:String>
     <System:String x:Key="ClearedStr">Cleared</System:String>
     <System:String x:Key="UnclearedStr">Uncleared</System:String>
+    <System:String x:Key="DeleteAccountStr">Delete Account</System:String>
+    <System:String x:Key="DeleteAccountConfirmationStr">Are you sure you want to delete your account?</System:String>
+    <System:String x:Key="AccountDeletedStr">Account deleted successfully</System:String>
+    <System:String x:Key="AccountDeletionFailedStr">Failed deleting account</System:String>
     
 </ResourceDictionary>

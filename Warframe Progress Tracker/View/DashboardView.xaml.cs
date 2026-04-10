@@ -31,5 +31,13 @@ namespace Warframe_Progress_Tracker.View
             DataContext = _vm;
             
         }
+        public void Stop()
+        {
+            try
+            {
+                _vm?.Stop();
+            }
+            catch { }
+        }
     }
 }

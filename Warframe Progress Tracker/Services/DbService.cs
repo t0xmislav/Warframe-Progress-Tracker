@@ -66,8 +66,8 @@ namespace Warframe_Progress_Tracker.Services
                     DateOwned TEXT,
                     DateMastered TEXT,
                     PRIMARY KEY(UserId, ItemId),
-                    FOREIGN KEY(ItemId) REFERENCES Items(Id),
-                    FOREIGN KEY(UserId) REFERENCES Users(Id)
+                    FOREIGN KEY(ItemId) REFERENCES Items(Id) ON DELETE CASCADE,
+                    FOREIGN KEY(UserId) REFERENCES Users(Id) ON DELETE CASCADE
                 );
                 CREATE TABLE IF NOT EXISTS NodeProgress(
                     NodeId INTEGER NOT NULL,
@@ -77,8 +77,8 @@ namespace Warframe_Progress_Tracker.Services
                     DateNormalClear TEXT,
                     DateSteelPathClear TEXT,
                     PRIMARY KEY(UserId, NodeId),
-                    FOREIGN KEY(UserId) REFERENCES Users(Id),
-                    FOREIGN KEY(NodeId) REFERENCES Nodes(Id)
+                    FOREIGN KEY(UserId) REFERENCES Users(Id) ON DELETE CASCADE,
+                    FOREIGN KEY(NodeId) REFERENCES Nodes(Id) ON DELETE CASCADE
                 );";
             command.ExecuteNonQuery();
         }
@@ -614,6 +614,40 @@ namespace Warframe_Progress_Tracker.Services
 
             cmd.Parameters.AddWithValue("$id", node.Id);
             cmd.ExecuteNonQuery();
+        }
+
+        public static bool DeleteUser(User user)
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            using var transaction = connection.BeginTransaction();
+            try
+            {
+                using var delUserProgress = connection.CreateCommand();
+                delUserProgress.CommandText = @"DELETE FROM UserProgress WHERE UserId = $id;";
+                delUserProgress.Parameters.AddWithValue("$id", user.Id);
+                delUserProgress.ExecuteNonQuery();
+
+                using var delNodeProgress = connection.CreateCommand();
+                delNodeProgress.CommandText = @"DELETE FROM NodeProgress WHERE UserId = $id;";
+                delNodeProgress.Parameters.AddWithValue("$id", user.Id);
+                delNodeProgress.ExecuteNonQuery();
+
+                var delUser = connection.CreateCommand();
+                delUser.CommandText = @"DELETE FROM Users WHERE Id = $id;";
+                delUser.Parameters.AddWithValue("$id", user.Id);
+
+                int rowsAffected = delUser.ExecuteNonQuery();
+
+                transaction.Commit();
+                return rowsAffected > 0;
+            }
+            catch
+            {
+                try { transaction.Rollback(); } catch { }
+                return false;
+            }
         }
         public static bool IsItemsTableEmpty()
         {

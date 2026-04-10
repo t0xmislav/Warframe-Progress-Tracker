@@ -43,8 +43,6 @@ namespace Warframe_Progress_Tracker.Utils
             return (true, path);
         }
 
-        // Verifies xmlPath by checking xmlPath.sig and xmlPath.pub (or supplied pubKeyPath).
-        // Returns (verified, xmlContentIfVerified)
         public static (bool Verified, string? Xml) VerifyProgressFile(string xmlPath, string? pubKeyPath = null)
         {
             try

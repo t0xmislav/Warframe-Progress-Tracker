@@ -36,7 +36,7 @@ namespace Warframe_Progress_Tracker.View
         //Cloned as to not actively change the item in the codex view while editing
         public Item EditableItem { get; }
 
-        public ItemEditWindow(Model.Item item, User user)
+        public ItemEditWindow(Item item, User user)
         {
             InitializeComponent();
             _item = item;

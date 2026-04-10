@@ -63,12 +63,12 @@ namespace Warframe_Progress_Tracker.View
             string lang = ((ComboBoxItem)LanguageBox.SelectedItem).Tag.ToString();
             string theme = ((ComboBoxItem)ThemeBox.SelectedItem).Content.ToString();
             string speedLimitText = SpeedLimitTextBox.Text.Trim();
-            if(string.IsNullOrEmpty(speedLimitText)) speedLimitText = "0";
+            if (string.IsNullOrEmpty(speedLimitText)) speedLimitText = "0";
 
-            if(!Regex.IsMatch(speedLimitText, @"^\d+$"))
+            if (!Regex.IsMatch(speedLimitText, @"^\d+$"))
             {
-                MessageBox.Show((string)System.Windows.Application.Current.Resources["InvalidSpeedLimitStr"], 
-                    (string)System.Windows.Application.Current.Resources["InvalidInputStr"], 
+                MessageBox.Show((string)System.Windows.Application.Current.Resources["InvalidSpeedLimitStr"],
+                    (string)System.Windows.Application.Current.Resources["InvalidInputStr"],
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
@@ -95,6 +95,39 @@ namespace Warframe_Progress_Tracker.View
                 return;
             }
             this.Close();
+        }
+
+        private async void DeleteAccount_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show(string.Format((string)Application.Current.Resources["DeleteAccountConfirmationStr"]),
+                string.Format((string)Application.Current.Resources["DeleteAccountStr"]), MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
+            {
+                return;
+            }
+            try
+            {
+                var success = await Task.Run(() => DbService.DeleteUser(_user));
+
+                if (success)
+                {
+                    LoggerService.Log("Account Deleted", $"{_user.Name} deleted their account");
+                    MessageBox.Show((string)Application.Current.Resources["AccountDeletedStr"]);
+
+                    var loginWindow = new LoginWindow();
+                    loginWindow.Show();
+                    Application.Current.MainWindow?.Close();
+                    this.Close();
+                }
+                else
+                {
+                    MessageBox.Show((string)Application.Current.Resources["AccountDeletionFailedStr"]);
+                }
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Log("Account Deletion Failed", $"Error deleting account for {_user.Name}: {ex.Message}");
+                MessageBox.Show((string)Application.Current.Resources["AccountDeletionFailedStr"]);
+            }
         }
     }
 }

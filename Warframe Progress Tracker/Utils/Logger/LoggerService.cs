@@ -30,7 +30,6 @@ namespace Warframe_Progress_Tracker.Utils.Logger
             }
             catch
             {
-                // ignore - start with empty list if loading fails
             }
         }
 
@@ -66,7 +65,6 @@ namespace Warframe_Progress_Tracker.Utils.Logger
                 }
                 catch
                 {
-                    // swallow exceptions to avoid crashing the app from logging failures
                 }
             }
         }

@@ -30,22 +30,43 @@ namespace Warframe_Progress_Tracker.ViewModel
         private int _totalMastered;
         private readonly object _totalMasteredLock = new();
 
+        private CancellationTokenSource _cts = new();
+
         private readonly TimeSpan _refreshInterval = TimeSpan.FromSeconds(10);
         public DashboardViewModel(User currentUser) 
         {
             _currentUser = currentUser;
 
-            _ = PeriodicRefreshLoop();
+            _ = PeriodicRefreshLoop(_cts.Token);
         }
 
-        private async Task PeriodicRefreshLoop()
+        private async Task PeriodicRefreshLoop(CancellationToken cancellationToken)
         {
-            while (true)
+            try
             {
-                ThreadPoolManager.QueueDatabaseRead(RefreshDasboardProgressAsync);
+                while (true)
+                {
+                    ThreadPoolManager.QueueDatabaseRead(RefreshDasboardProgressAsync);
 
-                await Task.Delay(_refreshInterval);
+                    await Task.Delay(_refreshInterval);
+                }
             }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in periodic refresh loop: {ex.Message}");
+            }
+        }
+
+        public void Stop()
+        {
+            try
+            {
+                _cts.Cancel();
+            }
+            catch { }
         }
         private async Task RefreshDasboardProgressAsync()
         {

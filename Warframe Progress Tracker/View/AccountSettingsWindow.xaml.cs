@@ -112,10 +112,11 @@ namespace Warframe_Progress_Tracker.View
                 {
                     LoggerService.Log("Account Deleted", $"{_user.Name} deleted their account");
                     MessageBox.Show((string)Application.Current.Resources["AccountDeletedStr"]);
-
+                    var mainWindow = Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
+                    
                     var loginWindow = new LoginWindow();
                     loginWindow.Show();
-                    Application.Current.MainWindow?.Close();
+                    mainWindow?.Close();
                     this.Close();
                 }
                 else

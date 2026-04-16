@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
 using System.Text;
 using System.Threading.Tasks;
@@ -51,14 +52,11 @@ namespace Warframe_Progress_Tracker.View
         }
         private void Logout_Click(object sender, RoutedEventArgs e)
         {
-            if(MainContent?.Content is DashboardView dv)
-            {
-                dv.Stop();
-            }
             var loginWindow = new LoginWindow();
             loginWindow.Show();
             this.Close();
         }
+        
         private void OpenDashboard_Click(object sender, RoutedEventArgs e)
         {
             MainContent.Content = new DashboardView(_currentUser);

@@ -44,11 +44,11 @@ namespace Warframe_Progress_Tracker.ViewModel
         {
             try
             {
-                while (true)
+                while (!cancellationToken.IsCancellationRequested)
                 {
                     ThreadPoolManager.QueueDatabaseRead(RefreshDasboardProgressAsync);
 
-                    await Task.Delay(_refreshInterval);
+                    await Task.Delay(_refreshInterval, cancellationToken);
                 }
             }
             catch (OperationCanceledException)

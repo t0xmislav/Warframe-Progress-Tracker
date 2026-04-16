@@ -29,15 +29,9 @@ namespace Warframe_Progress_Tracker.View
             _currentUser = user;
             _vm = new DashboardViewModel(_currentUser);
             DataContext = _vm;
-            
+            Unloaded += (s, e) => _vm.Stop();
+
         }
-        public void Stop()
-        {
-            try
-            {
-                _vm?.Stop();
-            }
-            catch { }
-        }
+
     }
 }

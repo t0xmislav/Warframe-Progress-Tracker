@@ -180,24 +180,28 @@ namespace Warframe_Progress_Tracker.ViewModel
         }
         private void RefreshFilteredEntries(bool resetOffset = false, bool preserveLoaded = true)
         {
-            if (resetOffset)
+            var batch = new List<CodexEntry>();
+            lock (_cacheLock)
             {
-                _offset = 0;
-                if (!preserveLoaded) FilteredEntries.Clear();
+                if (resetOffset)
+                {
 
-                _filteredCache = ApplyFilters(_allSummaries).ToList();
-                _sortedCache = ApplySorting(_filteredCache).ToList();
+                    _offset = 0;
+                    if (!preserveLoaded) FilteredEntries.Clear();
+
+                    _filteredCache = ApplyFilters(_allSummaries).ToList();
+                    _sortedCache = ApplySorting(_filteredCache).ToList();
+                }
+
+                if (!preserveLoaded && _offset == 0) FilteredEntries.Clear();
+
+                batch = _sortedCache.Skip(_offset).Take(BatchSize).ToList();
+                _offset += batch.Count;
+                _hasMore = _filteredCache.Count > _offset;
             }
 
-            if (!preserveLoaded && _offset == 0) FilteredEntries.Clear();
-
-            var batch = _sortedCache.Skip(_offset).Take(BatchSize).ToList();
-
             foreach (var entry in batch)
-                FilteredEntries.Add(entry);
-            
-            _offset += batch.Count;
-            _hasMore = _filteredCache.Count > _offset;
+                    FilteredEntries.Add(entry);
         }
         
         private void DebounceFilter()

@@ -11,8 +11,8 @@ namespace Warframe_Progress_Tracker.Utils
 {
     public static class ProgressCacheUtil
     {
-        private static readonly Dictionary<(int userId, int itemId), Model.ItemProgress> _itemProgressCache = new Dictionary<(int, int), Model.ItemProgress>();
-        private static readonly Dictionary<(int userId, int nodeId), Model.NodeProgress> _nodeProgressCache = new Dictionary<(int, int), Model.NodeProgress>();
+        private static readonly Dictionary<(int userId, int itemId), ItemProgress> _itemProgressCache = new Dictionary<(int, int), Model.ItemProgress>();
+        private static readonly Dictionary<(int userId, int nodeId), NodeProgress> _nodeProgressCache = new Dictionary<(int, int), Model.NodeProgress>();
         private static readonly ReaderWriterLockSlim _lock = new();
 
         public static void PreloadUserProgress(User user)
@@ -31,7 +31,7 @@ namespace Warframe_Progress_Tracker.Utils
                 if (progress is not null) StoreNodeProgress(user.Id, node.Id, progress);
             }
         }
-        public static void StoreItemProgress(int userId, int itemId, Model.ItemProgress itemProgress) {
+        public static void StoreItemProgress(int userId, int itemId, ItemProgress itemProgress) {
             if (itemProgress == null) return;
             _lock.EnterWriteLock();
             try
@@ -57,7 +57,7 @@ namespace Warframe_Progress_Tracker.Utils
             }
         }
 
-        public static void StoreNodeProgress(int userId, int nodeId, Model.NodeProgress nodeProgress) {
+        public static void StoreNodeProgress(int userId, int nodeId, NodeProgress nodeProgress) {
             if (nodeProgress == null) return;
             _lock.EnterWriteLock();
             try

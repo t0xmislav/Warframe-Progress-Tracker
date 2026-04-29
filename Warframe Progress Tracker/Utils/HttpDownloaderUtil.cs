@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.IO;
 using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Warframe_Progress_Tracker.Utils
 {
     public static class HttpDownloaderUtil
     {
-        private static readonly HttpClient httpClient = new HttpClient();
+        private static readonly HttpClient httpClient = new HttpClient(new SocketsHttpHandler
+            {
+                PooledConnectionIdleTimeout = TimeSpan.FromMinutes(2),
+            });
         public static async Task<byte[]> DownloadDataAsync(string url, 
             IProgress<double>? progress = null, int speedLimitBytesPerSecond = 0, 
             CancellationToken cancellationToken = default, Uri? referer = null)
@@ -27,15 +26,18 @@ namespace Warframe_Progress_Tracker.Utils
 
             var contentLength = response.Content.Headers.ContentLength;
             using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-            using var ms = new System.IO.MemoryStream();
+            using var ms = contentLength.HasValue 
+                ? new MemoryStream((int)contentLength.Value)
+                : new MemoryStream();
 
-            var buffer = new byte[8192];
+            int bufferSize = speedLimitBytesPerSecond > 0
+                ? Math.Clamp(speedLimitBytesPerSecond, 4096, 81920)
+                : 81920;
+            var buffer = new byte[bufferSize];
             long totalRead = 0;
-            var windowStartTime = DateTime.UtcNow;
-            long windowBytesRead = 0;
 
             TokenBucketRateLimiter? limiter = speedLimitBytesPerSecond > 0 ? 
-                new TokenBucketRateLimiter(speedLimitBytesPerSecond, capacityBytes: speedLimitBytesPerSecond) 
+                new TokenBucketRateLimiter(speedLimitBytesPerSecond, bucketCapacityBytes: speedLimitBytesPerSecond) 
                 : null;
             while (true)
             {

@@ -33,7 +33,7 @@ namespace Warframe_Progress_Tracker.Utils
 
                 const rate = speed || 0;
                 const capacity = rate > 0 ? rate : 0;
-                let tokens = capacity;
+                let availableBytes = capacity;
                 let last = performance.now();
 
                 const delay = ms => new Promise(r => setTimeout(r, ms));
@@ -41,10 +41,10 @@ namespace Warframe_Progress_Tracker.Utils
                     if(rate && rate > 0) {
                         const now = performance.now();
                         const elapsed = (now - last) / 1000;
-                        tokens = Math.min(capacity, tokens + elapsed * rate);
+                        availableBytes = Math.min(capacity, availableBytes + elapsed * rate);
                         last = now;
-                        if(tokens < 1) {
-                            const needed = 1 - tokens;
+                        if(availableBytes < 1) {
+                            const needed = 1 - availableBytes;
                             await delay(Math.Ceil(needed / rate) * 1000);
                             continue;
                         }
@@ -64,11 +64,11 @@ namespace Warframe_Progress_Tracker.Utils
                         // Ignore callback errors (e.g. if page navigated or callback removed)
                     }
                     if(rate && rate > 0) {
-                        tokens -= value.byteLength;
-                        if(tokens < 0) {
-                            const deficit = -tokens;
+                        availableBytes -= value.byteLength;
+                        if(availableBytes < 0) {
+                            const deficit = -availableBytes;
                             await delay(Math.Ceil(deficit / rate) * 1000);
-                            tokens = Math.max(0, tokens); // Avoid negative tokens after delay
+                            availableBytes = Math.max(0, availableBytes); // Avoid negative availableBytes after delay
                             last = performance.now(); // Reset last after delay to avoid token miscalculation
                         }
                     }

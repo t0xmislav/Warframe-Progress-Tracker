@@ -54,7 +54,7 @@ namespace Warframe_Progress_Tracker.Services
             await page.GotoAsync($"{wikiUrl}/w/Star_Chart");
             var html = await page.ContentAsync();
 
-            var doc = new HtmlAgilityPack.HtmlDocument();
+            var doc = new HtmlDocument();
             doc.LoadHtml(html);
             //Select the table of planets(2nd table on the page) and get all links in the first column
             var planetLinks = doc.DocumentNode.SelectNodes("//table[2]//tr/td[1]//a[@href]")
@@ -67,25 +67,33 @@ namespace Warframe_Progress_Tracker.Services
                 cancellationToken.ThrowIfCancellationRequested();
                 await page.GotoAsync(planetUrl);
                 var planetHtml = await page.ContentAsync();
-                var planetDoc = new HtmlAgilityPack.HtmlDocument();
+                var planetDoc = new HtmlDocument();
                 planetDoc.LoadHtml(planetHtml);
+
                 //Get the planet name from the title tag, which is usually in the format "Planet - Warframe Wiki"
                 var planetName = planetDoc.DocumentNode.SelectSingleNode("//title").InnerText.Trim();
+
                 //Remove " - Warframe Wiki" suffix from title if present
                 planetName = Regex.Replace(planetName, @"\s*-\s*Warframe Wiki\s*$", "", RegexOptions.IgnoreCase).Trim();
+
                 IProgress<double>? imgProgress = new Progress<double>(p => progress?.Report(("DownloadingImageProgressStr", 
                     new object[] { planetName, (int)(p * 100) })));
+
                 int speedLimitKB = 0;
                 int.TryParse(IniFileService.Read("Download", "SpeedLimit", "0"), out speedLimitKB);
                 int speedLimitBytes = Math.Max(0, speedLimitKB) * 1024;
                 byte[]? planetImgData = null;
+
                 //Select the image in the infobox, which is usually the first image in a span inside the infobox div
                 var imgNode = planetDoc.DocumentNode.SelectSingleNode("//*[@id=\"mw-content-text\"]/div[contains(@class, 'mw-content-ltr')]/div[contains(@class, 'infobox')]/span//img");
+
                 //Get the src attribute of the image node, which is the relative image url
                 var planetImgUrl = imgNode != null ? imgNode.GetAttributeValue("src", null) : null;
+
                 //Prepend wikiurl to the image url
                 planetImgUrl = wikiUrl + planetImgUrl;
                 Debug.WriteLine($"ImageUrl: {planetImgUrl}");
+
                 try
                 {
                     planetImgData = await PlaywrightDownloadUtil.DownloadDataAsync(planetImgUrl, page, 
@@ -109,7 +117,7 @@ namespace Warframe_Progress_Tracker.Services
 
                     var rows = table.SelectNodes(".//tr[td]");
                     if(rows == null) continue;
-                    System.Diagnostics.Debug.WriteLine(planetName);
+                    Debug.WriteLine(planetName);
                     foreach(var row in rows)
                     {
                         var cells = row.SelectNodes("./td");
@@ -127,7 +135,7 @@ namespace Warframe_Progress_Tracker.Services
                         if (!int.TryParse(digits, System.Globalization.NumberStyles.AllowThousands | 
                             System.Globalization.NumberStyles.AllowLeadingSign, System.Globalization.CultureInfo.InvariantCulture, out int masteryXp))
                             continue;
-                        System.Diagnostics.Debug.WriteLine(masteryXp);
+                        Debug.WriteLine(masteryXp);
 
                         nodes.Add(new Model.Node
                         {
@@ -136,7 +144,7 @@ namespace Warframe_Progress_Tracker.Services
                             Planet = planetName,
                             Image = planetImgData
                         });
-                        System.Diagnostics.Debug.WriteLine("Node Created?");
+                        Debug.WriteLine("Node Created?");
                     }
                 }
             }

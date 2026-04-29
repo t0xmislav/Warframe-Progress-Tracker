@@ -36,10 +36,10 @@ namespace Warframe_Progress_Tracker.Services
                 var uniqueName = (string)item["uniqueName"];
                 if (existingUniqueNames.Contains(uniqueName)) 
                 {
-                    System.Diagnostics.Debug.WriteLine($"Item Exists {uniqueName}");
+                    Debug.WriteLine($"Item Exists {uniqueName}");
                     continue;
                 }
-                System.Diagnostics.Debug.WriteLine("populating...");
+                Debug.WriteLine("populating...");
                 var masteryReq = item["masteryReq"]?.ToObject<int?>() ?? -1;
                 var category = (string)item["category"];
                 var excludeFromCodex = item["excludeFromCodex"]?.ToObject<bool>() ?? false;
@@ -90,7 +90,7 @@ namespace Warframe_Progress_Tracker.Services
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Downloading image failed for {imageUrl} with error {ex.Message}");
+                        Debug.WriteLine($"Downloading image failed for {imageUrl} with error {ex.Message}");
                     }
                 }
                 var parsed = new Model.Item
@@ -144,9 +144,9 @@ namespace Warframe_Progress_Tracker.Services
                 using var req = new HttpRequestMessage(HttpMethod.Get, wfStatApi);
                 using var response = await httpClient.SendAsync(req, HttpCompletionOption.ResponseContentRead);
 
-                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                if (response.StatusCode == HttpStatusCode.NotFound)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Profile not found at {wfStatApi}");
+                    Debug.WriteLine($"Profile not found at {wfStatApi}");
                     LoggerService.Log("ApiFallback", $"Profile not found at {wfStatApi}");
                 }
 
@@ -213,8 +213,9 @@ namespace Warframe_Progress_Tracker.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Reading Speed limit settings failed {ex.Message}");
+                Debug.WriteLine($"Reading Speed limit settings failed {ex.Message}");
             }
+            int speedLimitBtytes = Math.Max(0, speedLimitKB) * 1024;
             IProgress<double>? imgProgress = new Progress<double>(p =>
             {
                 progress.Report(("DownloadingImageProgressStr", new object[] { name, (int)(p * 100) }));
@@ -225,7 +226,7 @@ namespace Warframe_Progress_Tracker.Services
                 return await HttpDownloaderUtil.DownloadDataAsync
                     (url,
                     imgProgress,
-                    speedLimitKB, cancellationToken);
+                    speedLimitBtytes, cancellationToken);
             }
             catch
             {

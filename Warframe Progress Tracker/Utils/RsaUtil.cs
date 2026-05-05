@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -43,15 +44,25 @@ namespace Warframe_Progress_Tracker.Utils
             return (true, path);
         }
 
-        public static (bool Verified, string? Xml) VerifyProgressFile(string xmlPath, string? pubKeyPath = null)
+        public static (bool Verified, string? Xml) VerifyProgressFile(string xmlPath)
         {
             try
             {
                 var sigPath = xmlPath + ".sig";
-                var pubPath = pubKeyPath ?? (xmlPath + ".pub");
-                if (!File.Exists(sigPath) || !File.Exists(pubPath)) return (false, null);
+                Debug.WriteLine($"Sig path, " + sigPath);
 
-                var xmlBytes = File.ReadAllBytes(xmlPath);
+                var pubPath = xmlPath + ".pub";
+
+                Debug.WriteLine($"Pub path, " + pubPath);
+                if (!File.Exists(sigPath) || !File.Exists(pubPath))
+                {
+                    Debug.WriteLine("File doesn't exist");
+                    return (false, null);
+                }
+                Debug.WriteLine("Trying to read xml text");
+                var xmlText = File.ReadAllText(xmlPath, Encoding.UTF8);
+                Debug.WriteLine("Trying to read bytes");
+                var xmlBytes = Encoding.UTF8.GetBytes(xmlText);
                 var sigBytes = File.ReadAllBytes(sigPath);
                 var pubBytes = File.ReadAllBytes(pubPath);
 
@@ -59,6 +70,7 @@ namespace Warframe_Progress_Tracker.Utils
                 rsa.ImportSubjectPublicKeyInfo(pubBytes, out _);
 
                 var ok = rsa.VerifyData(xmlBytes, sigBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+                Debug.WriteLine($"Verification result: {ok}");
                 return ok ? (true, Encoding.UTF8.GetString(xmlBytes)) : (false, null);
             }
             catch
@@ -75,26 +87,28 @@ namespace Warframe_Progress_Tracker.Utils
                 var root = doc.Root;
                 if (root is null) return false;
                 var userId = root.Element("User")?.Attribute("Id")?.Value;
+                Debug.WriteLine($" UserId: {userId}");
                 if (userId == null) return false;
                 var itemProgresses = root.Element("ItemProgress")?.Elements("Item");
                 foreach (var itemProgress in itemProgresses ?? Enumerable.Empty<XElement>())
                 {
                     var id = itemProgress.Attribute("Id")?.Value;
-                    var owned = itemProgress.Attribute("Owned")?.Value == "1";
-                    var mastered = itemProgress.Attribute("Mastered")?.Value == "1";
+                    var owned = itemProgress.Attribute("Owned")?.Value == "true";
+                    var mastered = itemProgress.Attribute("Mastered")?.Value == "true";
                     var dateOwned = DateTime.TryParse(itemProgress.Attribute("DateOwned")?.Value, out var dow) ? dow : (DateTime?)null;
                     var dateMastered = DateTime.TryParse(itemProgress.Attribute("DateMastered")?.Value, out var dm) ? dm : (DateTime?)null;
                     if (id is not null)
                     {
-                        DbService.SetItemProgress(int.Parse(userId), int.Parse(id), owned, mastered, dateOwned, dateMastered);
+                        Debug.WriteLine("Writing progress for item " + id);
+                        DbService.SetItemProgress(int.Parse(userId), int.Parse(id), mastered, owned, dateOwned, dateMastered);
                     }
                 }
                 var nodeProgresses = root.Element("NodeProgress")?.Elements("Node");
                 foreach (var nodeProgress in nodeProgresses ?? Enumerable.Empty<XElement>())
                 {
                     var id = nodeProgress.Attribute("Id")?.Value;
-                    var cleared = nodeProgress.Attribute("Cleared")?.Value == "1";
-                    var clearedSteelPath = nodeProgress.Attribute("ClearedSteelPath")?.Value == "1";
+                    var cleared = nodeProgress.Attribute("Cleared")?.Value == "true";
+                    var clearedSteelPath = nodeProgress.Attribute("ClearedSteelPath")?.Value == "true";
                     var dateNormalCleared = DateTime.TryParse(nodeProgress.Attribute("DateNormalCleared")?.Value, out var dnc) ? dnc : (DateTime?)null;
                     var dateSteelPathCleared = DateTime.TryParse(nodeProgress.Attribute("DateSteelPathCleared")?.Value, out var dspc) ? dspc : (DateTime?)null;
                     if (id is not null)

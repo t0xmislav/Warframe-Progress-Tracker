@@ -235,8 +235,9 @@ namespace Warframe_Progress_Tracker.View
             {
                 var dlg = new OpenFileDialog { Filter = "XML Progress|*.xml" };
                 if (dlg.ShowDialog() != true) return;
+                var fileName = dlg.FileName;
 
-                var (verified, xml) = RsaUtil.VerifyProgressFile(dlg.FileName);
+                var (verified, xml) = RsaUtil.VerifyProgressFile(fileName);
                 if (!verified)
                 {
                     MessageBox.Show("Signature verification failed.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -250,7 +251,7 @@ namespace Warframe_Progress_Tracker.View
                     MessageBox.Show("Failed to apply progress snapshot.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
-                // Parse and apply XML to database
+                ProgressCacheUtil.PreloadUserProgress(_currentUser); // Refresh cache after applying changes
                 MessageBox.Show("Progress imported successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)

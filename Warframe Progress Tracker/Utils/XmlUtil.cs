@@ -27,7 +27,7 @@ namespace Warframe_Progress_Tracker.Utils
                 {
                     var prog = it.getItemProgress(user);
                     return new XElement("Item",
-                        new XAttribute("id", it.Id),
+                        new XAttribute("Id", it.Id),
                         new XAttribute("UniqueName", it.UniqueName),
                         new XAttribute("Owned", prog?.Owned.ToString().ToLower() ?? "false"),
                         new XAttribute("Mastered", prog?.Mastered.ToString().ToLower() ?? "false"),
@@ -41,7 +41,7 @@ namespace Warframe_Progress_Tracker.Utils
                 {
                     var prog = DbService.GetProgressForNode(user, n);
                     return new XElement("Node",
-                        new XAttribute("id", n.Id),
+                        new XAttribute("Id", n.Id),
                         new XAttribute("Name", n.Name),
                         new XAttribute("ClearedNormal", prog?.ClearedNormal.ToString().ToLower() ?? "false"),
                         new XAttribute("ClearedSteelPath", prog?.ClearedSteelPath.ToString().ToLower() ?? "false"),

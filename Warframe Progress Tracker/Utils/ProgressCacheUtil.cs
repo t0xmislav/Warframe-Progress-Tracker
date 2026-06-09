@@ -15,9 +15,9 @@ namespace Warframe_Progress_Tracker.Utils
         private static readonly Dictionary<(int userId, int nodeId), NodeProgress> _nodeProgressCache = new Dictionary<(int, int), Model.NodeProgress>();
         private static readonly ReaderWriterLockSlim _lock = new();
 
-        public static void PreloadUserProgress(User user)
+        public static void LoadUserProgress(User user)
         {
-            Debug.WriteLine("Preloading...");
+            Debug.WriteLine("Caching user progress...");
             var items = DbService.GetAllItems();
             foreach (var item in items)
             {
@@ -76,6 +76,37 @@ namespace Warframe_Progress_Tracker.Utils
             try
             {
                 return _nodeProgressCache.TryGetValue((userId, nodeId), out var nodeProgress) ? nodeProgress : null;
+            }
+            finally
+            {
+                _lock.ExitReadLock();
+            }
+        }
+        public static Dictionary<int, ItemProgress> GetItemProgressSnapshot(int userId)
+        {
+            _lock.EnterReadLock();
+            try
+            {
+                // Copy only entries for this user into a fresh dictionary (itemId -> ItemProgress)
+                return _itemProgressCache
+                    .Where(kvp => kvp.Key.Item1 == userId)
+                    .ToDictionary(kvp => kvp.Key.Item2, kvp => kvp.Value);
+            }
+            finally
+            {
+                _lock.ExitReadLock();
+            }
+        }
+
+        public static Dictionary<int, NodeProgress> GetNodeProgressSnapshot(int userId)
+        {
+            _lock.EnterReadLock();
+            try
+            {
+                // Copy only entries for this user into a fresh dictionary (nodeId -> NodeProgress)
+                return _nodeProgressCache
+                    .Where(kvp => kvp.Key.Item1 == userId)
+                    .ToDictionary(kvp => kvp.Key.Item2, kvp => kvp.Value);
             }
             finally
             {

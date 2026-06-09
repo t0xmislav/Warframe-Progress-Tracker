@@ -27,8 +27,8 @@ namespace Warframe_Progress_Tracker
                 var demoPepper = Convert.ToBase64String(bytes);
                 Environment.SetEnvironmentVariable("WPT_PEPPER", demoPepper, EnvironmentVariableTarget.User);
 
-                Debug.WriteLine("[Startup] WPT_PEPPER not found - using demo pepper.");
-                LoggerService.Log("Security", "WPT_PEPPER not set; using demo pepper.");
+                Debug.WriteLine("[Startup] WPT_PEPPER not found - creating new pepper.");
+                LoggerService.Log("Security", "WPT_PEPPER not set; creating new pepper.");
 
             }
             else
@@ -54,7 +54,7 @@ namespace Warframe_Progress_Tracker
             AuthService.Register("admin", "admin", true);
 
             var pluginsFolder = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Plugins");
-            Debug.WriteLine($"Before loading plugin");
+            Console.WriteLine($"Before loading plugin");
             PluginLoader.LoadPlugins(pluginsFolder);
         }
     }

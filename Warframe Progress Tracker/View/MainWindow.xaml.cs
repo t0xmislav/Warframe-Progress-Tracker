@@ -1,7 +1,10 @@
-﻿using Microsoft.Win32;
+﻿using Microsoft.Playwright;
+using Microsoft.Win32;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -33,18 +36,8 @@ namespace Warframe_Progress_Tracker.View
         }
         private async void DashboardWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            await LoadUserProgress();
+            ProgressCacheUtil.LoadUserProgress(_currentUser);
             LoadDashboard();
-        }
-        private Task LoadUserProgress()
-        {
-            var tcs = new TaskCompletionSource();
-            ThreadPoolManager.QueueDatabaseRead(async () =>
-            {
-                ProgressCacheUtil.PreloadUserProgress(_currentUser);
-                tcs.SetResult();
-            });
-            return tcs.Task;
         }
         private void LoadDashboard()
         {
@@ -52,11 +45,15 @@ namespace Warframe_Progress_Tracker.View
         }
         private void Logout_Click(object sender, RoutedEventArgs e)
         {
+            
             var loginWindow = new LoginWindow();
             loginWindow.Show();
-            this.Close();
+            Application.Current.Windows.OfType<Window>().ToList().ForEach(w => {
+                if (w != loginWindow)
+                    w.Close();
+            });
         }
-        
+
         private void OpenDashboard_Click(object sender, RoutedEventArgs e)
         {
             MainContent.Content = new DashboardView(_currentUser);
@@ -72,7 +69,8 @@ namespace Warframe_Progress_Tracker.View
         }
         private void OpenCodex_Click(object sender, RoutedEventArgs e)
         {
-            MainContent.Content = new CodexView(_currentUser);
+            var codexWindow = new CodexWindow(_currentUser);
+            codexWindow.Show();
         }
         private void OpenCreateEntry_Click(object sender, RoutedEventArgs e)
         {
@@ -124,7 +122,7 @@ namespace Warframe_Progress_Tracker.View
                 dialog.SafeClose();
                 MessageBox.Show((string)Application.Current.Resources["FetchItemsCancelled"], (string)Application.Current.Resources["CancelledStr"], MessageBoxButton.OK, MessageBoxImage.Information);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 dialog.SafeClose();
                 MessageBox.Show(ex.Message, (string)Application.Current.Resources["FetchItemsErrorStr"]);
@@ -156,14 +154,14 @@ namespace Warframe_Progress_Tracker.View
 
                 await Task.Run(async () =>
                 {
-                    
+
                     var nodes = await WikiScraperService.ScrapeNodesAsync(progress, cts.Token);
                     Application.Current.Dispatcher.Invoke(() =>
                     {
                         dialog.UpdateMessage("LoadingSavingNodesStr", new object[] { });
                     });
                     added = DbService.SaveNodes(nodes);
-                    
+
                 }, cts.Token);
                 LoggerService.Log("Nodes Scraped", $"{_currentUser.Name}: finished scraping nodes | Added: {added} nodes");
                 MessageBox.Show(string.Format((string)Application.Current.Resources["NodesAddedStr"], added), (string)Application.Current.Resources["DbUpdatedStr"]);
@@ -195,7 +193,7 @@ namespace Warframe_Progress_Tracker.View
         private async void GenerateReport_Click(object sender, RoutedEventArgs e)
         {
             var outputPath = SelectFolder();
-            if(string.IsNullOrEmpty(outputPath))
+            if (string.IsNullOrEmpty(outputPath))
             {
                 return;
             }
@@ -209,17 +207,17 @@ namespace Warframe_Progress_Tracker.View
             }
             else
             {
-                MessageBox.Show(string.Format((string)Application.Current.Resources["ReportGenerationFailedStr"] + message), 
+                MessageBox.Show(string.Format((string)Application.Current.Resources["ReportGenerationFailedStr"] + message),
                     (string)Application.Current.Resources["ErrorStr"], MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            
+
         }
         private async void ExportProgress_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 var xml = XmlUtil.GenerateUserProgressXml(_currentUser);
-                var (success, pdfPath) = await RsaUtil.ExportProgressWithSignature(xml);
+                var (success, pdfPath) = await RsaUtil.SignPorgressSnapshot(xml);
                 if (success)
                     MessageBox.Show($"Progress exported successfully:\n{pdfPath}", "Export Complete", MessageBoxButton.OK, MessageBoxImage.Information);
             }
@@ -237,21 +235,21 @@ namespace Warframe_Progress_Tracker.View
                 if (dlg.ShowDialog() != true) return;
                 var fileName = dlg.FileName;
 
-                var (verified, xml) = RsaUtil.VerifyProgressFile(fileName);
+                var (verified, xml) = RsaUtil.VerifyProgressSnapshot(fileName);
                 if (!verified)
                 {
                     MessageBox.Show("Signature verification failed.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
                 Console.WriteLine("Verified XML:\n" + xml);
-                var success = RsaUtil.ApplyProgressSnapshot(xml);
+                var success = XmlUtil.ApplyProgressSnapshot(xml);
                 if (!success)
                 {
-                    ProgressCacheUtil.PreloadUserProgress(_currentUser); // Refresh cache to ensure consistency
+                    ProgressCacheUtil.LoadUserProgress(_currentUser); // Refresh cache to ensure consistency
                     MessageBox.Show("Failed to apply progress snapshot.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
-                ProgressCacheUtil.PreloadUserProgress(_currentUser); // Refresh cache after applying changes
+                ProgressCacheUtil.LoadUserProgress(_currentUser); // Refresh cache after applying changes
                 MessageBox.Show("Progress imported successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
@@ -259,7 +257,6 @@ namespace Warframe_Progress_Tracker.View
                 MessageBox.Show($"Import failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        
 
     }
 }

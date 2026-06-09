@@ -1,14 +1,16 @@
-﻿<UserControl x:Class="Warframe_Progress_Tracker.View.CodexView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:Warframe_Progress_Tracker.View"
-             xmlns:model="clr-namespace:Warframe_Progress_Tracker.Model"
-             xmlns:selectors="clr-namespace:Warframe_Progress_Tracker.View.TemplateSelectors"
-             mc:Ignorable="d"
-             d:DesignHeight="450" d:DesignWidth="800">
-    <UserControl.Resources>
+﻿<Window x:Class="Warframe_Progress_Tracker.View.CodexWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:Warframe_Progress_Tracker.View"
+        xmlns:model="clr-namespace:Warframe_Progress_Tracker.Model"
+        xmlns:selectors="clr-namespace:Warframe_Progress_Tracker.View.TemplateSelectors"
+        mc:Ignorable="d"
+        Title="Codex" Height="600" Width="900"
+        WindowStartupLocation="CenterOwner"
+        d:DesignHeight="450" d:DesignWidth="800">
+    <Window.Resources>
         <DataTemplate x:Key="ItemCardTemplate">
             <local:ItemCard/>
         </DataTemplate>
@@ -18,19 +20,20 @@
         <selectors:CodexTemplateSelector x:Key="CodexTemplateSelector"
                                          ItemTemplate="{StaticResource ItemCardTemplate}"
                                          NodeTemplate="{StaticResource NodeCardTemplate}"/>
-    </UserControl.Resources>
+    </Window.Resources>
+
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="10">
             <TextBlock Text="{DynamicResource CodexCategoryStr}" VerticalAlignment="Center" Margin="0,0,5,0"/>
             <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" MaxHeight="20"/>
-            
+
             <TextBlock Text="{DynamicResource CodexNameStr}" VerticalAlignment="Center" Margin="20,0,5,0"/>
             <TextBox Text="{Binding NameFilter, UpdateSourceTrigger=PropertyChanged}" MinWidth="100" MaxHeight="20"/>
             <GroupBox Header="{DynamicResource CodexSortOptionsStr}" BorderBrush="Black" Margin="20,0,5,0">
                 <StackPanel Orientation="Horizontal">
-                    <RadioButton Tag="Name" Checked="SortEntries_Checked" 
+                    <RadioButton Tag="Name" Checked="SortEntries_Checked"
                                  Content="{DynamicResource CodexSortNameStr}"/>
-                    <RadioButton Tag="DateMastered" Checked="SortEntries_Checked" 
+                    <RadioButton Tag="DateMastered" Checked="SortEntries_Checked"
                                  Content="{DynamicResource CodexSortDateStr}"/>
                 </StackPanel>
             </GroupBox>
@@ -45,7 +48,7 @@
         </StackPanel>
 
         <ListBox x:Name="ItemsList"
-                 ItemsSource="{Binding FilteredEntries}" 
+                 ItemsSource="{Binding FilteredEntries}"
                  Tag="{Binding CurrentUser}"
                  ItemTemplateSelector="{StaticResource CodexTemplateSelector}"
                  ScrollViewer.ScrollChanged="ItemsList_ScrollChanged"
@@ -63,5 +66,5 @@
             </ListBox.ItemsPanel>
         </ListBox>
     </DockPanel>
-</UserControl>
+</Window>
 

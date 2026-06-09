@@ -73,13 +73,13 @@ namespace Warframe_Progress_Tracker.View
             }
 
         }
-        private void SaveItem_Click(object sender, RoutedEventArgs e)
+        private async void SaveItem_Click(object sender, RoutedEventArgs e)
         {
             _item.Name = EditableItem.Name;
             _item.Category = SelectedCategory;
             _item.MasteryPoints = EditableItem.MasteryPoints;
             _item.Image = EditableItem.Image;
-            ThreadPoolManager.QueueDatabaseWrite(async() =>
+            await Task.Run(async() =>
             {
                 DbService.UpdateItem(_item);
                 LoggerService.LogItemChanges(_oldItem, _item, _currentUser);

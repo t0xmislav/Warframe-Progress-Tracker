@@ -6,13 +6,13 @@ using Warframe_Progress_Tracker.ViewModel;
 namespace Warframe_Progress_Tracker.View
 {
     /// <summary>
-    /// Interaction logic for CodexView.xaml
+    /// Interaction logic for CodexWindow.xaml
     /// </summary>
-    public partial class CodexView : UserControl
+    public partial class CodexWindow : Window
     {
         private readonly CodexViewModel _vm;
 
-        public CodexView(Model.User currentUser)
+        public CodexWindow(Model.User currentUser)
         {
             InitializeComponent();
             _vm = new CodexViewModel(currentUser);

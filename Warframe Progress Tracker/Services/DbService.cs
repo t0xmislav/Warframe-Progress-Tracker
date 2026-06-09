@@ -790,7 +790,7 @@ namespace Warframe_Progress_Tracker.Services
             if (reader.Read())
             {
                 var passwordHash = reader.GetString(2);
-                if (!AuthService.VerifyPassword(password, passwordHash))
+                if (!AuthService.VerifyPassword(username, password, passwordHash))
                     return null;
                 return new User
                 {

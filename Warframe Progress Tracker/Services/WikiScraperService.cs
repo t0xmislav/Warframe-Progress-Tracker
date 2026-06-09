@@ -10,6 +10,7 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Documents;
@@ -23,24 +24,6 @@ namespace Warframe_Progress_Tracker.Services
         private static string wikiUrl = "https://wiki.warframe.com";
         public static async Task<List<Model.Node>> ScrapeNodesAsync(IProgress<(string key, object[])>? progress, CancellationToken cancellationToken = default)
         {
-
-
-
-            /*
-            var web = new HtmlWeb
-            {
-                UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-            };
-            var chartDoc = await web.LoadFromWebAsync($"{wikiUrl}/w/Star_Chart");
-            System.IO.File.WriteAllText("dump.html", chartDoc.DocumentNode.OuterHtml);
-            var planetLinks = chartDoc.DocumentNode.SelectNodes("//table[contains(@class,'wikitable')]//a[@href]")
-                    .Select(a => wikiUrl + a.GetAttributeValue("href", ""))
-                    .Where(href => href.StartsWith("/wiki/"))
-                    .Select(href => wikiUrl + href)
-                    .Distinct()
-                    .ToList();
-           
-            */
             progress?.Report((("LoadingScrapingNodesStr", new object[] { })));
             var nodes = new List<Model.Node>();
             using var playwright = await Playwright.CreateAsync();
@@ -150,8 +133,6 @@ namespace Warframe_Progress_Tracker.Services
             }
             return nodes;
         }
-
         
-
     }
 }

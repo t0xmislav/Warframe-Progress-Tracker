@@ -10,7 +10,6 @@
       Background="{DynamicResource PrimaryBackgroundBrush}"
       Foreground="{DynamicResource PrimaryForegroundBrush}">
         <UserControl.Resources>
-        <utils:InverseBoolConverter x:Key="InverseBoolConverter"/>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         </UserControl.Resources>
         <Grid>

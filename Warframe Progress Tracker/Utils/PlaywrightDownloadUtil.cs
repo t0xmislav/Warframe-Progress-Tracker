@@ -99,7 +99,6 @@ namespace Warframe_Progress_Tracker.Utils
             }
             finally
             {
-                // Unexpose function not supported; function name unique so leaving it is harmless.
             }
         }
     }

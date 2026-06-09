@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
+using Warframe_Progress_Tracker.Utils.Logger;
 
 namespace Warframe_Progress_Tracker.Utils
 {
@@ -52,6 +54,52 @@ namespace Warframe_Progress_Tracker.Utils
                 )
                 ));
             return doc.ToString(SaveOptions.DisableFormatting);
+        }
+        public static bool ApplyProgressSnapshot(string xmlContent)
+        {
+            try
+            {
+                var doc = XDocument.Parse(xmlContent);
+                var root = doc.Root;
+                if (root is null) return false;
+                var userId = root.Element("User")?.Attribute("Id")?.Value;
+                Debug.WriteLine($" UserId: {userId}");
+                if (userId == null) return false;
+                var itemProgresses = root.Element("ItemProgress")?.Elements("Item");
+                foreach (var itemProgress in itemProgresses ?? Enumerable.Empty<XElement>())
+                {
+                    var id = itemProgress.Attribute("Id")?.Value;
+                    var owned = itemProgress.Attribute("Owned")?.Value == "true";
+                    var mastered = itemProgress.Attribute("Mastered")?.Value == "true";
+                    var dateOwned = DateTime.TryParse(itemProgress.Attribute("DateOwned")?.Value, out var dow) ? dow : (DateTime?)null;
+                    var dateMastered = DateTime.TryParse(itemProgress.Attribute("DateMastered")?.Value, out var dm) ? dm : (DateTime?)null;
+                    if (id is not null)
+                    {
+                        Debug.WriteLine("Writing progress for item " + id);
+                        DbService.SetItemProgress(int.Parse(userId), int.Parse(id), mastered, owned, dateOwned, dateMastered);
+                    }
+                }
+                var nodeProgresses = root.Element("NodeProgress")?.Elements("Node");
+                foreach (var nodeProgress in nodeProgresses ?? Enumerable.Empty<XElement>())
+                {
+                    var id = nodeProgress.Attribute("Id")?.Value;
+                    var cleared = nodeProgress.Attribute("Cleared")?.Value == "true";
+                    var clearedSteelPath = nodeProgress.Attribute("ClearedSteelPath")?.Value == "true";
+                    var dateNormalCleared = DateTime.TryParse(nodeProgress.Attribute("DateNormalCleared")?.Value, out var dnc) ? dnc : (DateTime?)null;
+                    var dateSteelPathCleared = DateTime.TryParse(nodeProgress.Attribute("DateSteelPathCleared")?.Value, out var dspc) ? dspc : (DateTime?)null;
+                    if (id is not null)
+                    {
+                        DbService.SetNodeProgress(int.Parse(userId), int.Parse(id), cleared, clearedSteelPath, dateNormalCleared, dateSteelPathCleared);
+                    }
+
+                }
+                return true;
+            }
+            catch
+            {
+                LoggerService.Log("Failed to apply progress snapshot", "Saving progress snapshot to database failed");
+                return false;
+            }
         }
     }
 }

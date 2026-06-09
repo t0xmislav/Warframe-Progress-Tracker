@@ -19,9 +19,7 @@ namespace Warframe_Progress_Tracker.Utils
         private const string KeyFileName = "progress_rsa.key.prot";
         private const int RsaKeySize = 2048;
 
-        // Shows SaveFileDialog, writes xml, signs it and writes .sig and .pub files.
-        // Returns (success, savedPath)
-        public static async Task<(bool Success, string? Path)> ExportProgressWithSignature(string xml)
+        public static async Task<(bool Success, string? Path)> SignPorgressSnapshot(string xml)
         {
             var dlg = new SaveFileDialog
             {
@@ -44,7 +42,7 @@ namespace Warframe_Progress_Tracker.Utils
             return (true, path);
         }
 
-        public static (bool Verified, string? Xml) VerifyProgressFile(string xmlPath)
+        public static (bool Verified, string? Xml) VerifyProgressSnapshot(string xmlPath)
         {
             try
             {
@@ -79,58 +77,13 @@ namespace Warframe_Progress_Tracker.Utils
             }
         }
 
-        public static bool ApplyProgressSnapshot(string xmlContent)
-        {
-            try
-            {
-                var doc = XDocument.Parse(xmlContent);
-                var root = doc.Root;
-                if (root is null) return false;
-                var userId = root.Element("User")?.Attribute("Id")?.Value;
-                Debug.WriteLine($" UserId: {userId}");
-                if (userId == null) return false;
-                var itemProgresses = root.Element("ItemProgress")?.Elements("Item");
-                foreach (var itemProgress in itemProgresses ?? Enumerable.Empty<XElement>())
-                {
-                    var id = itemProgress.Attribute("Id")?.Value;
-                    var owned = itemProgress.Attribute("Owned")?.Value == "true";
-                    var mastered = itemProgress.Attribute("Mastered")?.Value == "true";
-                    var dateOwned = DateTime.TryParse(itemProgress.Attribute("DateOwned")?.Value, out var dow) ? dow : (DateTime?)null;
-                    var dateMastered = DateTime.TryParse(itemProgress.Attribute("DateMastered")?.Value, out var dm) ? dm : (DateTime?)null;
-                    if (id is not null)
-                    {
-                        Debug.WriteLine("Writing progress for item " + id);
-                        DbService.SetItemProgress(int.Parse(userId), int.Parse(id), mastered, owned, dateOwned, dateMastered);
-                    }
-                }
-                var nodeProgresses = root.Element("NodeProgress")?.Elements("Node");
-                foreach (var nodeProgress in nodeProgresses ?? Enumerable.Empty<XElement>())
-                {
-                    var id = nodeProgress.Attribute("Id")?.Value;
-                    var cleared = nodeProgress.Attribute("Cleared")?.Value == "true";
-                    var clearedSteelPath = nodeProgress.Attribute("ClearedSteelPath")?.Value == "true";
-                    var dateNormalCleared = DateTime.TryParse(nodeProgress.Attribute("DateNormalCleared")?.Value, out var dnc) ? dnc : (DateTime?)null;
-                    var dateSteelPathCleared = DateTime.TryParse(nodeProgress.Attribute("DateSteelPathCleared")?.Value, out var dspc) ? dspc : (DateTime?)null;
-                    if (id is not null)
-                    {
-                        DbService.SetNodeProgress(int.Parse(userId), int.Parse(id), cleared, clearedSteelPath, dateNormalCleared, dateSteelPathCleared);
-                    }
-
-                }
-                return true;
-            }
-            catch
-            {
-                LoggerService.Log("Failed to apply progress snapshot", "Saving progress snapshot to database failed");
-                return false;
-            }
-        }
+        
         // Load existing RSA private key from protected file or create and persist a new one.
         private static RSA LoadOrCreateRsaPrivateKey()
         {
-            var plugins = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
-            Directory.CreateDirectory(plugins);
-            var keyFile = Path.Combine(plugins, KeyFileName);
+            var keys = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Keys");
+            Directory.CreateDirectory(keys);
+            var keyFile = Path.Combine(keys, KeyFileName);
 
             if (File.Exists(keyFile))
             {
@@ -144,7 +97,6 @@ namespace Warframe_Progress_Tracker.Utils
                 }
                 catch
                 {
-                    // fall through and recreate key
                 }
             }
 

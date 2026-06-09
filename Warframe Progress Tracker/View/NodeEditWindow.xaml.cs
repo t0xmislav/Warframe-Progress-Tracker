@@ -68,13 +68,13 @@ namespace Warframe_Progress_Tracker.View
             }
 
         }
-        private void SaveNode_Click(object sender, RoutedEventArgs e)
+        private async void SaveNode_Click(object sender, RoutedEventArgs e)
         {
             _node.Name = EditableNode.Name;
             _node.Planet = EditableNode.Planet;
             _node.MasteryPoints = EditableNode.MasteryPoints;
             _node.Image = EditableNode.Image;
-            ThreadPoolManager.QueueDatabaseWrite(async() =>
+            await Task.Run(async() =>
             {
                 DbService.UpdateNode(_node);
                 LoggerService.LogNodeChanges(_oldNode, _node, _currentUser);
@@ -85,7 +85,6 @@ namespace Warframe_Progress_Tracker.View
             });
             DialogResult = true;
             Close();
-                
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)

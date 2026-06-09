@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows;
 using Warframe_Progress_Tracker.Utils;
@@ -20,8 +21,10 @@ namespace Warframe_Progress_Tracker.Services
 
         private static readonly int BatchSize = 50;
 
-        public static async Task<List<Model.Item>> FetchItemsAsync(IProgress<(string key, object[] args)>? progress, 
-            CancellationToken cancellationToken = default, HashSet<string>? existingUniqueNames = null)
+        public static async Task<List<Model.Item>> FetchItemsAsync(
+            IProgress<(string key, object[] args)>? progress, 
+            CancellationToken cancellationToken = default, 
+            HashSet<string>? existingUniqueNames = null)
         {
             progress?.Report(("LoadingFetchingItemsStr", new object[] { }));
 
@@ -34,11 +37,11 @@ namespace Warframe_Progress_Tracker.Services
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var uniqueName = (string)item["uniqueName"];
-                if (existingUniqueNames.Contains(uniqueName)) 
+                /*if (existingUniqueNames.Contains(uniqueName)) 
                 {
                     Debug.WriteLine($"Item Exists {uniqueName}");
                     continue;
-                }
+                }*/
                 Debug.WriteLine("populating...");
                 var masteryReq = item["masteryReq"]?.ToObject<int?>() ?? -1;
                 var category = (string)item["category"];
@@ -234,5 +237,6 @@ namespace Warframe_Progress_Tracker.Services
                 return await client.GetByteArrayAsync(url);
             }
         }
+        
     }
 }

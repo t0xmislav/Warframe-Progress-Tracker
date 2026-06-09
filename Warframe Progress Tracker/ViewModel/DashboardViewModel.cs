@@ -1,11 +1,14 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Windows;
+using System.Windows.Media.Imaging;
+using Warframe.Tracker.MasteryRank;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
 using Warframe_Progress_Tracker.Utils;
-using Warframe.Tracker.MasteryRank;
-using System.Windows.Media.Imaging;
+using Warframe_Progress_Tracker.Utils.Logger;
 
 namespace Warframe_Progress_Tracker.ViewModel
 {
@@ -46,8 +49,8 @@ namespace Warframe_Progress_Tracker.ViewModel
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    ThreadPoolManager.QueueDatabaseRead(RefreshDasboardProgressAsync);
-
+                    await RefreshDasboardProgressAsync();
+                    
                     await Task.Delay(_refreshInterval, cancellationToken);
                 }
             }
@@ -154,40 +157,12 @@ namespace Warframe_Progress_Tracker.ViewModel
                 _totalMastered = totalMasterdLocal;
                 TotalProgressPercentage = CategoryProgresses.Sum(c => c.TotalItems) > 0
                 ? (double)_totalMastered / CategoryProgresses.Sum(c => c.TotalItems) : 0;
-                TotalProgressPercentage *= 100;
-                TotalProgressPercentageText = $"{TotalProgressPercentage:F2}%";
+                TotalProgressPercentageText = $"{TotalProgressPercentage*100:F2}%";
                 OnPropertyChanged(nameof(TotalProgressPercentageText));
                 OnPropertyChanged(nameof(TotalRankText));
             });
         }
-        /*
-        private async Task LoadItemProgressAsync()
-        {
-            var items = await Task.Run(() => DbService.GetAllItems());
-            var totalCount = items.Count;
-            var masteredCount = 0;
-
-            var groupedByCategory = items.GroupBy(i => i.Category).ToList();
-            
-            foreach(var group in groupedByCategory)
-            {
-                var mastered = group.Count(i => i.IsMastered(_currentUser));
-
-                double ratio = group.Any() ? (double)mastered / group.Count() : 0;
-                CategoryProgresses.Add(new CategoryProgress
-                {
-                    Category = group.Key,
-                    TotalItems = totalCount,
-                    MasteredItems = mastered,
-                });
-
-                masteredCount += mastered;
-
-            }
-            TotalProgressPercentageText = totalCount == 0 ? 0 : (double)masteredCount / totalCount;
-            OnPropertyChanged(nameof(TotalProgressPercentageText));
-        }
-        */
+        
         public event PropertyChangedEventHandler PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));

@@ -16,7 +16,7 @@ namespace Warframe_Progress_Tracker.Utils.Logger
         private static readonly object _lock = new();
 
         private static readonly List<LogEntry> _entries = new();
-
+        private const string LogMutexName = "WfTracker_Log_Mutex";
         static LoggerService()
         {
             try
@@ -37,24 +37,40 @@ namespace Warframe_Progress_Tracker.Utils.Logger
         {
             Task.Run(() =>
             {
-                lock (_lock)
+                var entry = new LogEntry
                 {
-                    var entry = new LogEntry
-                    {
+                        Id = Guid.NewGuid(),
                         Timestamp = DateTime.Now,
                         Action = action,
                         Details = details
-                    };
+                };
+                lock (_lock)
+                {
                     _entries.Add(entry);
-                    SaveToFile();
                 }
+
+                SaveToFile();
+                
             });
         }
-        public static void SaveToFile()
+        public static bool SaveToFile()
         {
-            lock (_lock)
+            using var mutex = new System.Threading.Mutex(false, LogMutexName);
+            bool acquired = false;
+            try
             {
                 try
+                {
+                    acquired = mutex.WaitOne(5000);
+                }catch(AbandonedMutexException)
+                {
+                    acquired = true;
+                }
+
+                if(!acquired)
+                    return false;
+
+                lock (_lock)
                 {
                     var options = new JsonSerializerOptions { WriteIndented = true };
                     var json = JsonSerializer.Serialize(_entries, options);
@@ -62,80 +78,151 @@ namespace Warframe_Progress_Tracker.Utils.Logger
                     File.WriteAllText(tempPath, json, Encoding.UTF8);
                     File.Copy(tempPath, logFilePath, true);
                     File.Delete(tempPath);
+                    return true;
                 }
-                catch
-                {
-                }
+            }
+            finally
+            {
+                if (acquired) try { mutex.ReleaseMutex();  } catch { }
             }
         }
         
         public static List<LogEntry> LoadLogs() 
         {
-            if(!File.Exists(logFilePath)) return new List<LogEntry>();
-
-            var json = File.ReadAllText(logFilePath);
-            return JsonSerializer.Deserialize<List<LogEntry>>(json) ?? new List<LogEntry>();
-        }
-
-        public static bool EditLog(int index, string adminNote)
-        {
-            lock (_lock)
+            using var mutex = new System.Threading.Mutex(false, LogMutexName);
+            bool acquired = false;
+            try
             {
                 try
                 {
-                    var logs = LoadLogs();
-                    if (index < 0 || index >= logs.Count) return false;
+                    acquired = mutex.WaitOne(5000);
+                }
+                catch (AbandonedMutexException)
+                {
+                    acquired = true;
+                }
+                if (!acquired)
+                    return new List<LogEntry>();
 
-                    logs[index].AdminNote = adminNote;
-                    logs[index].LastModified = DateTime.Now;
-                       
+                if (!File.Exists(logFilePath))
+                    return new List<LogEntry>();
+
+                var json = File.ReadAllText(logFilePath, Encoding.UTF8);
+                return JsonSerializer.Deserialize<List<LogEntry>>(json) ?? new List<LogEntry>();
+            }
+            finally
+            {
+                if (acquired) try { mutex.ReleaseMutex(); } catch { }
+            }
+
+        }
+
+        public static bool EditLog(Guid id, string adminNote)
+        {
+            using var mutex = new System.Threading.Mutex(false, LogMutexName);
+            bool acquired = false;
+            try
+            {
+                try
+                {
+                    acquired = mutex.WaitOne(5000);
+                }
+                catch (AbandonedMutexException)
+                {
+                    acquired = true;
+                }
+
+                if (!acquired) return false;
+                lock (_lock)
+                {
+                    var logs = LoadLogs();
+                    var idx = logs.FindIndex(l => l.Id == id);
+                    if (idx < 0) return false;
+
+                    logs[idx].AdminNote = adminNote;
+                    logs[idx].LastModified = DateTime.Now;
+
                     var options = new JsonSerializerOptions { WriteIndented = true };
                     File.WriteAllText(logFilePath, JsonSerializer.Serialize(logs, options));
+
+                    _entries.Clear();
+                    _entries.AddRange(logs);
                     return true;
-                }
-                catch
-                {
-                    return false;
-                }
-            }
-        }
-
-        public static bool DeleteLog(int index)
-        {
-            lock (_lock)
-            {
-                try
-                {
-                    var logs = LoadLogs();
-                    if (index < 0 || index >= logs.Count) return false;
-
-                    logs.RemoveAt(index);
                     
-                    var options = new JsonSerializerOptions { WriteIndented = true };
-                    File.WriteAllText(logFilePath, JsonSerializer.Serialize(logs, options));
-                    return true;
                 }
-                catch
-                {
-                    return false;
-                }
+            }
+            finally
+            {
+                if (acquired) try { mutex.ReleaseMutex(); } catch { }
+
             }
         }
 
+        public static bool DeleteLog(Guid id)
+        {
+            using var mutex = new System.Threading.Mutex(false, LogMutexName);
+            bool acquired = false;
+            try
+            {
+                try
+                {
+                    acquired = mutex.WaitOne(5000);
+                }
+                catch (AbandonedMutexException)
+                {
+                    acquired = true;
+                }
+                if (!acquired) return false;
+                lock (_lock)
+                {
+                    var logs = LoadLogs();
+                    var idx = logs.FindIndex(l => l.Id == id);
+
+                    if (idx < 0) return false;
+
+                    logs.RemoveAt(idx);
+
+                    var options = new JsonSerializerOptions { WriteIndented = true };
+                    File.WriteAllText(logFilePath, JsonSerializer.Serialize(logs, options));
+
+                    _entries.Clear();
+                    _entries.AddRange(logs);
+                    return true;
+                    
+                }
+            }
+            finally
+            {
+                if (acquired) try { mutex.ReleaseMutex(); } catch { }
+            }
+        }
         public static bool DeleteAllLogs()
         {
-            lock (_lock)
+            using var mutex = new System.Threading.Mutex(false, LogMutexName);
+            bool acquired = false;
+            try
             {
                 try
                 {
+                    acquired = mutex.WaitOne(5000);
+                }
+                catch (AbandonedMutexException)
+                {
+                    acquired = true;
+                }
+                if (!acquired) return false;
+                lock (_lock)
+                {
+                    _entries.Clear();
                     File.WriteAllText(logFilePath, JsonSerializer.Serialize(new List<LogEntry>(), new JsonSerializerOptions { WriteIndented = true }));
                     return true;
                 }
-                catch
-                {
-                    return false;
-                }
             }
+            finally
+            {
+                if (acquired) try { mutex.ReleaseMutex(); } catch { }
+            }
+            
         }
 
         public static void LogItemChanges(Item oldItem, Item newItem, User user)

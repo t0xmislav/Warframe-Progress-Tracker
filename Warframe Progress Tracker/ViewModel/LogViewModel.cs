@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -20,10 +21,15 @@ namespace Warframe_Progress_Tracker.ViewModel
         {
             CurrentUser = user;
             var raw = LoggerService.LoadLogs();
-            int i = 0;
             foreach (var entry in raw)
             {
-                Logs.Add(new LogRowViewModel(entry, i++, CurrentUser));
+                var rowVm = new LogRowViewModel(entry, Logs.Count, CurrentUser);
+                rowVm.Deleted += (_, id) =>
+                {
+                    var vm = Logs.FirstOrDefault(x => x.Id == id);
+                    if (vm != null) Logs.Remove(vm);
+                };
+                Logs.Add(rowVm);
             }
 
             if (CurrentUser.IsAdmin == false)

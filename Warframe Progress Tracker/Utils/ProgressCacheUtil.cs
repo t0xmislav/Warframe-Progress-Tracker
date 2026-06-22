@@ -15,6 +15,113 @@ namespace Warframe_Progress_Tracker.Utils
         private static readonly Dictionary<(int userId, int nodeId), NodeProgress> _nodeProgressCache = new Dictionary<(int, int), Model.NodeProgress>();
         private static readonly ReaderWriterLockSlim _lock = new();
 
+        private static CancellationTokenSource? _autoRefreshCts;
+        private static readonly object _autoRefreshLock = new();
+
+        public static void StartAutoRefresh(User user, TimeSpan interval)
+        {
+            if (user == null) throw new ArgumentNullException(nameof(user));
+            lock (_autoRefreshLock)
+            {
+                StopAutoRefresh();
+                _autoRefreshCts = new CancellationTokenSource();
+                var token = _autoRefreshCts.Token;
+
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        while (!token.IsCancellationRequested)
+                        {
+                            try
+                            {
+                                await LoadUserProgressAsync(user, token).ConfigureAwait(false);
+                            }
+                            catch (OperationCanceledException) { break; }
+                            catch (Exception ex)
+                            {
+                                Debug.WriteLine($"Error refreshing progress cache: {ex}");
+                            }
+
+                            try
+                            {
+                                await Task.Delay(interval, token).ConfigureAwait(false);
+                            }
+                            catch (OperationCanceledException) { break; }
+                        }
+                    }
+                    finally
+                    {
+                        lock (_autoRefreshLock)
+                        {
+                            _autoRefreshCts?.Dispose();
+                            if (_autoRefreshCts?.IsCancellationRequested == true) _autoRefreshCts = null;
+                        }
+                    }
+                }, token);
+            }
+        }
+        public static void StopAutoRefresh()
+        {
+            lock (_autoRefreshLock)
+            {
+                try
+                {
+                    _autoRefreshCts?.Cancel();
+                    _autoRefreshCts?.Dispose();
+                }
+                catch { }
+                finally
+                {
+                    _autoRefreshCts = null;
+                }
+            }
+        }
+        public static async Task LoadUserProgressAsync(User user, CancellationToken cancellationToken = default)
+        {
+            if (user == null) throw new ArgumentNullException(nameof(user));
+
+            var items = await Task.Run(() => DbService.GetAllItems(), cancellationToken).ConfigureAwait(false);
+            var nodes = await Task.Run(() => DbService.GetAllNodes(), cancellationToken).ConfigureAwait(false);
+
+            var itemSnapshot = new Dictionary<int, ItemProgress>();
+            foreach (var item in items)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var progress = await Task.Run(() => DbService.GetProgressForItem(user, item), cancellationToken).ConfigureAwait(false);
+                if (progress != null) itemSnapshot[item.Id] = progress;
+            }
+
+            var nodeSnapshot = new Dictionary<int, NodeProgress>();
+            foreach (var node in nodes)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var progress = await Task.Run(() => DbService.GetProgressForNode(user, node), cancellationToken).ConfigureAwait(false);
+                if (progress != null) nodeSnapshot[node.Id] = progress;
+            }
+
+            _lock.EnterWriteLock();
+            try
+            {
+                var itemKeysToRemove = _itemProgressCache.Keys.Where(k => k.userId == user.Id).ToList();
+                foreach (var k in itemKeysToRemove) _itemProgressCache.Remove(k);
+                foreach (var kv in itemSnapshot)
+                {
+                    _itemProgressCache[(user.Id, kv.Key)] = kv.Value;
+                }
+
+                var nodeKeysToRemove = _nodeProgressCache.Keys.Where(k => k.userId == user.Id).ToList();
+                foreach (var k in nodeKeysToRemove) _nodeProgressCache.Remove(k);
+                foreach (var kv in nodeSnapshot)
+                {
+                    _nodeProgressCache[(user.Id, kv.Key)] = kv.Value;
+                }
+            }
+            finally
+            {
+                _lock.ExitWriteLock();
+            }
+        }
         public static void LoadUserProgress(User user)
         {
             Debug.WriteLine("Caching user progress...");

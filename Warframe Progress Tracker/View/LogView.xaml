@@ -43,7 +43,17 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
+                
                 <DataGridTextColumn Header="{DynamicResource LogModifiedDateStr}" Binding="{Binding Path=LastModified, StringFormat='{}{0:G}'}" IsReadOnly="True" Width="200"/>
+                <DataGridTemplateColumn Header="" Width="70">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="{DynamicResource DeleteStr}" Command="{Binding DeleteCommand}" 
+                            Visibility="{Binding DataContext.IsAdmin, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVis}}"
+                            Width="50"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

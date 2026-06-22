@@ -8,6 +8,7 @@ namespace Warframe_Progress_Tracker.Utils.Logger
 {
     public class LogEntry
     {
+        public Guid Id { get; set;  } = Guid.NewGuid();
         public DateTime Timestamp { get; set; }
         public string Action { get; set; } = "";
         public string? Details { get; set; }

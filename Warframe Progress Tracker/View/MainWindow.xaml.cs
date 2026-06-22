@@ -36,7 +36,9 @@ namespace Warframe_Progress_Tracker.View
         }
         private async void DashboardWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            ProgressCacheUtil.LoadUserProgress(_currentUser);
+            
+            await ProgressCacheUtil.LoadUserProgressAsync(_currentUser);
+            ProgressCacheUtil.StartAutoRefresh(_currentUser, TimeSpan.FromSeconds(30));
             LoadDashboard();
         }
         private void LoadDashboard()
@@ -227,7 +229,7 @@ namespace Warframe_Progress_Tracker.View
             }
         }
 
-        private void ImportProgress_Click(object sender, RoutedEventArgs e)
+        private async void ImportProgress_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -245,11 +247,11 @@ namespace Warframe_Progress_Tracker.View
                 var success = XmlUtil.ApplyProgressSnapshot(xml);
                 if (!success)
                 {
-                    ProgressCacheUtil.LoadUserProgress(_currentUser); // Refresh cache to ensure consistency
+                    await ProgressCacheUtil.LoadUserProgressAsync(_currentUser); // Refresh cache to ensure consistency
                     MessageBox.Show("Failed to apply progress snapshot.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
-                ProgressCacheUtil.LoadUserProgress(_currentUser); // Refresh cache after applying changes
+                await ProgressCacheUtil.LoadUserProgressAsync(_currentUser); // Refresh cache after applying changes
                 MessageBox.Show("Progress imported successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)

@@ -26,7 +26,7 @@ namespace Warframe_Progress_Tracker.Utils
             if (bytesPerSecond <= 0) throw new ArgumentOutOfRangeException(nameof(bytesPerSecond));
             refillBytesPerSecond = bytesPerSecond;
             this.bucketCapacityBytes = bucketCapacityBytes > 0 ? bucketCapacityBytes : Math.Max(1, refillBytesPerSecond);
-            availableBytes = this.bucketCapacityBytes;
+            availableBytes = 0;
             lastRefillTimestamp = Stopwatch.GetTimestamp();
         }
         ///<summary>

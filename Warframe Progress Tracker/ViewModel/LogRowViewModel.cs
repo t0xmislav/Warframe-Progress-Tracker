@@ -30,7 +30,6 @@ namespace Warframe_Progress_Tracker.ViewModel
                 _adminNote = value ?? string.Empty;
                 OnPropertyChanged();
                 IsDirty = !string.Equals(OriginalAdminNote, _adminNote, StringComparison.Ordinal);
-                OnPropertyChanged();
                 _saveCommand.RaiseCanExecuteChanged();
             }
         }
@@ -82,7 +81,6 @@ namespace Warframe_Progress_Tracker.ViewModel
                     IsDirty = false;
                     OnPropertyChanged(nameof(LastModified));
 
-                    var adminName = _currentUser?.Name ?? "[unknown]";
                 }
                 else
                 {

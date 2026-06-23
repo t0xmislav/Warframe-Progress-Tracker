@@ -60,6 +60,11 @@ namespace Warframe_Progress_Tracker.View
         {
             MainContent.Content = new DashboardView(_currentUser);
         }
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+            Application.Current.Shutdown();
+        }
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
             Application.Current.Shutdown();

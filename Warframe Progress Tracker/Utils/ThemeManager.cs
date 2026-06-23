@@ -14,18 +14,25 @@ namespace Warframe_Progress_Tracker.Utils
             string themeFile = theme.ToLower() == "dark"
                 ? "/Resources/Theme/DarkTheme.xaml"
                 : "/Resources/Theme/LightTheme.xaml";
+            var mergedDicts = Application.Current.Resources.MergedDictionaries;
+            var existingTheme = mergedDicts.FirstOrDefault(d =>
+                d.Source?.OriginalString.Contains("DarkTheme") == true ||
+                d.Source?.OriginalString.Contains("LightTheme") == true);
 
             var themeDict = new ResourceDictionary
             {
                 Source = new Uri(themeFile, UriKind.Relative)
             };
-
-            var existingTheme = Application.Current.Resources.MergedDictionaries.FirstOrDefault(d => d.Source is not null && d.Source.OriginalString.Contains("Theme"));
+            
             if (existingTheme is not null)
             {
-                Application.Current.Resources.MergedDictionaries.Remove(existingTheme);
+                int index = mergedDicts.IndexOf(existingTheme);
+                mergedDicts[index] = themeDict;
             }
-            Application.Current.Resources.MergedDictionaries.Add(themeDict);
+            else
+            {
+                mergedDicts.Insert(0, themeDict);
+            }
         }
     }
 }

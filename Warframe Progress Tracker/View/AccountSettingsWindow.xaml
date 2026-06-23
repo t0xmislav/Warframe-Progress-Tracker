@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Background="{DynamicResource PrimaryBackgroundBrush}"
         Foreground="{DynamicResource PrimaryForegroundBrush}"
-        Title="Account settings" Height="200" Width="400"
+        Title="Account settings" Height="300" Width="450"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen">
     <Grid>
@@ -37,7 +37,6 @@
         <TextBlock Text="{DynamicResource LanguageStr}" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
         <ComboBox x:Name="LanguageBox" Grid.Row="2" Grid.Column="1" Width="120">
             <ComboBoxItem Content="English" Tag="en"/>
-            <ComboBoxItem Content="Croatian" Tag="hr"/>
             <ComboBoxItem Content="German" Tag="de"/>
             
         </ComboBox>

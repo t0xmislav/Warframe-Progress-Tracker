@@ -15,12 +15,19 @@ namespace Warframe_Progress_Tracker.Utils
             Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo(lang);
             Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo(lang);
 
-            Application.Current.Resources.MergedDictionaries.Clear();
-            var resDict = new ResourceDictionary()
+            var mergedDicts = Application.Current.Resources.MergedDictionaries;
+            var existing = mergedDicts.FirstOrDefault(d =>
+                d.Source?.OriginalString.Contains("Dictionary-") == true);
+
+            var newDict = new ResourceDictionary
             {
                 Source = new Uri($"/Resources/Language/Dictionary-{lang}.xaml", UriKind.Relative)
             };
-            Application.Current.Resources.MergedDictionaries.Add(resDict);
+
+            if (existing is not null)
+                mergedDicts[mergedDicts.IndexOf(existing)] = newDict;
+            else
+                mergedDicts.Insert(0, newDict);
 
             LanguageChanged?.Invoke();
         }

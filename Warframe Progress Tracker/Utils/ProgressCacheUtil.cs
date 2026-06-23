@@ -55,7 +55,7 @@ namespace Warframe_Progress_Tracker.Utils
                         lock (_autoRefreshLock)
                         {
                             _autoRefreshCts?.Dispose();
-                            if (_autoRefreshCts?.IsCancellationRequested == true) _autoRefreshCts = null;
+                            _autoRefreshCts = null;
                         }
                     }
                 }, token);
@@ -65,39 +65,28 @@ namespace Warframe_Progress_Tracker.Utils
         {
             lock (_autoRefreshLock)
             {
-                try
-                {
-                    _autoRefreshCts?.Cancel();
-                    _autoRefreshCts?.Dispose();
-                }
-                catch { }
-                finally
-                {
-                    _autoRefreshCts = null;
-                }
+                _autoRefreshCts?.Cancel();
+                _autoRefreshCts?.Dispose();
+                _autoRefreshCts= null;
             }
         }
         public static async Task LoadUserProgressAsync(User user, CancellationToken cancellationToken = default)
         {
             if (user == null) throw new ArgumentNullException(nameof(user));
 
-            var items = await Task.Run(() => DbService.GetAllItems(), cancellationToken).ConfigureAwait(false);
-            var nodes = await Task.Run(() => DbService.GetAllNodes(), cancellationToken).ConfigureAwait(false);
 
+            var itemProgressList = await Task.Run(() => DbService.GetItemProgressForUser(user), cancellationToken).ConfigureAwait(false);
             var itemSnapshot = new Dictionary<int, ItemProgress>();
-            foreach (var item in items)
+            foreach (var item in itemProgressList)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                var progress = await Task.Run(() => DbService.GetProgressForItem(user, item), cancellationToken).ConfigureAwait(false);
-                if (progress != null) itemSnapshot[item.Id] = progress;
+                itemSnapshot[item.Item.Id] = item;
             }
 
+            var nodeProgresses = await Task.Run(() => DbService.GetNodeProgressForUser(user), cancellationToken).ConfigureAwait(false);
             var nodeSnapshot = new Dictionary<int, NodeProgress>();
-            foreach (var node in nodes)
+            foreach (var node in nodeProgresses)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                var progress = await Task.Run(() => DbService.GetProgressForNode(user, node), cancellationToken).ConfigureAwait(false);
-                if (progress != null) nodeSnapshot[node.Id] = progress;
+                nodeSnapshot[node.Node.Id] = node;
             }
 
             _lock.EnterWriteLock();
@@ -122,22 +111,7 @@ namespace Warframe_Progress_Tracker.Utils
                 _lock.ExitWriteLock();
             }
         }
-        public static void LoadUserProgress(User user)
-        {
-            Debug.WriteLine("Caching user progress...");
-            var items = DbService.GetAllItems();
-            foreach (var item in items)
-            {
-                var progress = DbService.GetProgressForItem(user, item);
-                if(progress is not null) StoreItemProgress(user.Id, item.Id, progress);
-            }
-            var nodes = DbService.GetAllNodes();
-            foreach(var node in nodes)
-            {
-                var progress = DbService.GetProgressForNode(user, node);
-                if (progress is not null) StoreNodeProgress(user.Id, node.Id, progress);
-            }
-        }
+
         public static void StoreItemProgress(int userId, int itemId, ItemProgress itemProgress) {
             if (itemProgress == null) return;
             _lock.EnterWriteLock();
@@ -189,36 +163,6 @@ namespace Warframe_Progress_Tracker.Utils
                 _lock.ExitReadLock();
             }
         }
-        public static Dictionary<int, ItemProgress> GetItemProgressSnapshot(int userId)
-        {
-            _lock.EnterReadLock();
-            try
-            {
-                // Copy only entries for this user into a fresh dictionary (itemId -> ItemProgress)
-                return _itemProgressCache
-                    .Where(kvp => kvp.Key.Item1 == userId)
-                    .ToDictionary(kvp => kvp.Key.Item2, kvp => kvp.Value);
-            }
-            finally
-            {
-                _lock.ExitReadLock();
-            }
-        }
-
-        public static Dictionary<int, NodeProgress> GetNodeProgressSnapshot(int userId)
-        {
-            _lock.EnterReadLock();
-            try
-            {
-                // Copy only entries for this user into a fresh dictionary (nodeId -> NodeProgress)
-                return _nodeProgressCache
-                    .Where(kvp => kvp.Key.Item1 == userId)
-                    .ToDictionary(kvp => kvp.Key.Item2, kvp => kvp.Value);
-            }
-            finally
-            {
-                _lock.ExitReadLock();
-            }
-        }
+        
     }
 }

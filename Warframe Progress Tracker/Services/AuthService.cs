@@ -7,12 +7,12 @@ using System.Text;
 using System.Threading.Tasks;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Utils;
+using Warframe_Progress_Tracker.Utils.Logger;
 
 namespace Warframe_Progress_Tracker.Services
 {
     internal class AuthService
     {
-        private const int SaltSize = 32;
         private const int HashSize = 32;
         private const int Iterations = 200000;
 
@@ -23,15 +23,17 @@ namespace Warframe_Progress_Tracker.Services
             {
                 throw new InvalidOperationException("Pepper is not set in environment variables.");
             }
-            else
-            {
-                using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(pepper));
-                return hmac.ComputeHash(usernameBytes);
-            }
+            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(pepper));
+            return hmac.ComputeHash(usernameBytes);
         }
         public static string HashPassword(string password, string username)
         {
-            var pepper = Environment.GetEnvironmentVariable("WPT_PEPPER") ?? "";
+            var pepper = Environment.GetEnvironmentVariable("WPT_PEPPER");
+            if (string.IsNullOrEmpty(pepper))
+            {
+                LoggerService.Log("Security!", "WPT_PEPPER not set; cannot hash password.");
+                throw new InvalidOperationException("Pepper is not set in environment variables.");
+            }
             var salt = DeriveSaltFromUsername(username, pepper);
 
             using var kdf = new Rfc2898DeriveBytes(password + pepper, salt, Iterations, 
@@ -44,11 +46,17 @@ namespace Warframe_Progress_Tracker.Services
         {
             if(string.IsNullOrEmpty(storedHash)) return false;
 
-            var pepper = Environment.GetEnvironmentVariable("WPT_PEPPER") ?? "";
+            var pepper = Environment.GetEnvironmentVariable("WPT_PEPPER");
+            if (string.IsNullOrEmpty(pepper))
+            {
+                LoggerService.Log("Security!", "WPT_PEPPER not set; cannot hash password.");
+                throw new InvalidOperationException("Pepper is not set in environment variables.");
+            }
             var parts = storedHash.Split('.');
             if (parts.Length != 2) return false;
 
-            int iterations = int.Parse(parts[0]);
+            if (!int.TryParse(parts[0], out int iterations)) return false;
+
             byte[] expectedHash = Convert.FromBase64String(parts[1]);
 
             var salt = DeriveSaltFromUsername(username, pepper);

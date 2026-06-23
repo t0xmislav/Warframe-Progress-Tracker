@@ -7,8 +7,8 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/Resources/Language/Dictionary-en.xaml"/>
-
                 <ResourceDictionary Source="/Resources/Theme/LightTheme.xaml"/>
+                <ResourceDictionary Source="/Resources/Theme/ControlStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

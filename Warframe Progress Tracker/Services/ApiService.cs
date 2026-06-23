@@ -37,11 +37,11 @@ namespace Warframe_Progress_Tracker.Services
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var uniqueName = (string)item["uniqueName"];
-                /*if (existingUniqueNames.Contains(uniqueName)) 
+                if (existingUniqueNames.Contains(uniqueName)) 
                 {
                     Debug.WriteLine($"Item Exists {uniqueName}");
                     continue;
-                }*/
+                }
                 Debug.WriteLine("populating...");
                 var masteryReq = item["masteryReq"]?.ToObject<int?>() ?? -1;
                 var category = (string)item["category"];

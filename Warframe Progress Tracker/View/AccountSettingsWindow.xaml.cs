@@ -50,7 +50,7 @@ namespace Warframe_Progress_Tracker.View
             }
         }
 
-        private void Save_Click(object sender, RoutedEventArgs e)
+        private async void Save_Click(object sender, RoutedEventArgs e)
         {
             if (MessageBox.Show(string.Format((string)System.Windows.Application.Current.Resources["SaveConfirmationStr"]),
                 string.Format((string)System.Windows.Application.Current.Resources["SaveSettingsStr"]), MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
@@ -59,7 +59,7 @@ namespace Warframe_Progress_Tracker.View
             }
 
             string displayName = DisplayNameBox.Text.Trim();
-            string platform = ((ComboBoxItem)PlatformBox.SelectedItem).Content.ToString();
+            string platform = ((ComboBoxItem)PlatformBox.SelectedItem).Content.ToString() ?? "pc";
             string lang = ((ComboBoxItem)LanguageBox.SelectedItem).Tag.ToString();
             string theme = ((ComboBoxItem)ThemeBox.SelectedItem).Content.ToString();
             string speedLimitText = SpeedLimitTextBox.Text.Trim();
@@ -73,7 +73,7 @@ namespace Warframe_Progress_Tracker.View
                 return;
             }
 
-            var success = AuthService.LinkWarframeAccount(_user.Id, displayName, platform);
+            var success = await AuthService.LinkWarframeAccount(_user.Id, displayName, platform);
 
             LanguageManager.SetLanguage(lang);
             ThemeManager.ApplyTheme(theme);

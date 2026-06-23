@@ -30,7 +30,6 @@ namespace Warframe_Progress_Tracker.ViewModel
                 OnPropertyChanged();
             }
         }
-        private int _totalMastered;
         private readonly object _totalMasteredLock = new();
 
         private CancellationTokenSource _cts = new();
@@ -59,21 +58,18 @@ namespace Warframe_Progress_Tracker.ViewModel
             }
             catch (Exception ex)
             {
+                LoggerService.Log("Error in periodic refresh loop", ex.ToString());
                 Console.WriteLine($"Error in periodic refresh loop: {ex.Message}");
             }
         }
 
         public void Stop()
         {
-            try
-            {
-                _cts.Cancel();
-            }
-            catch { }
+            _cts.Cancel();
         }
         private async Task RefreshDasboardProgressAsync()
         {
-            var categories = DbService.GetCategories().Where(c => c.DisplayName != "Node");
+            var categories = DbService.GetCategories().Where(c => c.DisplayName != "Node").ToList();
             var nodes = DbService.GetAllNodes();
 
             int totalMasterdLocal = 0;
@@ -83,12 +79,12 @@ namespace Warframe_Progress_Tracker.ViewModel
             var tasks = categories.Select((category, index) => Task.Run(() => {
                 var items = DbService.GetItemByCategory(category);
                 int masteredInCategory = items.Count(i => ProgressCacheUtil.GetItemProgress(_currentUser.Id, i.Id)?.Mastered == true);
-
+                var points = items.Where(i => ProgressCacheUtil.GetItemProgress(_currentUser.Id, i.Id)?.Mastered == true)
+                    .Sum(i => i.MasteryPoints);
                 lock (_totalMasteredLock)
                 {
                     totalMasterdLocal += masteredInCategory;
-                    totalMasteryPoints += items.Where(i => ProgressCacheUtil.GetItemProgress(_currentUser.Id, i.Id)?.Mastered == true)
-                        .Sum(i => i.MasteryPoints);
+                    totalMasteryPoints += points;
                 }
 
                 categoryProgressResults[index] = new CategoryProgress
@@ -101,47 +97,48 @@ namespace Warframe_Progress_Tracker.ViewModel
 
             CategoryProgress? normalNodeProgress = null;
             CategoryProgress? steelPathNodeProgress = null;
+            int nodeCount = nodes.Count();
             tasks = tasks.Concat([
                 Task.Run(() =>
                 {
                     int normalCleared = nodes.Count(n => ProgressCacheUtil.GetNodeProgress(_currentUser.Id, n.Id)?.ClearedNormal == true);
-                    
+                    var points = nodes.Where(n => ProgressCacheUtil.GetNodeProgress(_currentUser.Id, n.Id)?.ClearedNormal == true)
+                        .Sum(n => n.MasteryPoints);
                     lock (_totalMasteredLock)
                     {
                         totalMasterdLocal += normalCleared;
-                        totalMasteryPoints += nodes.Where(n => ProgressCacheUtil.GetNodeProgress(_currentUser.Id, n.Id)?.ClearedNormal == true)
-                            .Sum(n => n.MasteryPoints);
+                        totalMasteryPoints += points;
                     }
 
                     normalNodeProgress = new CategoryProgress
                     {
                         Category = new Category{DisplayName = "Normal Nodes"},
                         MasteredItems = normalCleared,
-                        TotalItems = nodes.Count(),
+                        TotalItems = nodeCount,
                     };
                 }),
                 Task.Run(() =>
                 {
                     int spCleared = nodes.Count(n => ProgressCacheUtil.GetNodeProgress(_currentUser.Id, n.Id)?.ClearedSteelPath == true);
-
+                    var points = nodes.Where(n => ProgressCacheUtil.GetNodeProgress(_currentUser.Id, n.Id)?.ClearedSteelPath == true)
+                        .Sum(n => n.MasteryPoints);
                     lock (_totalMasteredLock)
                     {
                         totalMasterdLocal += spCleared;
-                        totalMasteryPoints += nodes.Where(n => ProgressCacheUtil.GetNodeProgress(_currentUser.Id, n.Id)?.ClearedSteelPath == true)
-                            .Sum(n => n.MasteryPoints);
+                        totalMasteryPoints += points;
                     }
 
                     steelPathNodeProgress = new CategoryProgress
                     {
                         Category = new Category{ DisplayName = "Steel Path Nodes" },
                         MasteredItems = spCleared,
-                        TotalItems = nodes.Count(),
+                        TotalItems = nodeCount,
                     };
                 })
             ]);
 
             await Task.WhenAll(tasks);
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            Application.Current.Dispatcher.Invoke(() =>
             {
                 var rankInfo = MasteryCalculator.GetRankFromPoints(totalMasteryPoints);
                 TotalRankText = $"Current Rank: {rankInfo.Rank}";
@@ -154,12 +151,12 @@ namespace Warframe_Progress_Tracker.ViewModel
                 if(normalNodeProgress is not null) CategoryProgresses.Add(normalNodeProgress);
                 if(steelPathNodeProgress is not null) CategoryProgresses.Add(steelPathNodeProgress);
 
-                _totalMastered = totalMasterdLocal;
                 TotalProgressPercentage = CategoryProgresses.Sum(c => c.TotalItems) > 0
-                ? (double)_totalMastered / CategoryProgresses.Sum(c => c.TotalItems) : 0;
+                ? (double)totalMasterdLocal / CategoryProgresses.Sum(c => c.TotalItems) : 0;
                 TotalProgressPercentageText = $"{TotalProgressPercentage*100:F2}%";
                 OnPropertyChanged(nameof(TotalProgressPercentageText));
                 OnPropertyChanged(nameof(TotalRankText));
+                OnPropertyChanged(nameof(TotalProgressPercentage));
             });
         }
         

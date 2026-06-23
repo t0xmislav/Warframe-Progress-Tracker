@@ -43,7 +43,7 @@ namespace Warframe_Progress_Tracker
             {
                 IniFileService.Write("Account", "Language", "en");
                 IniFileService.Write("Account", "Theme", "Light");
-                IniFileService.Write("Account", "SpeedLimit", "0");
+                IniFileService.Write("Download", "SpeedLimit", "0");
             }
             string lang = IniFileService.Read("Account", "Language", "en");
             string theme = IniFileService.Read("Account", "Theme", "Light");
@@ -52,11 +52,11 @@ namespace Warframe_Progress_Tracker
             DbService.InitializeDatabase();
             //Default admin account for testing
             AuthService.Register("admin", "admin", true);
-
+            LoggerService.Log("Application", "Application started");
             var pluginsFolder = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Plugins");
             Console.WriteLine($"Before loading plugin");
             PluginLoader.LoadPlugins(pluginsFolder);
         }
-    }
 
+    }
 }

@@ -13,7 +13,7 @@ namespace Warframe_Progress_Tracker.ViewModel
 {
     public class LogViewModel
     {
-        public ObservableCollection<LogRowViewModel> Logs { get; set; } = new ObservableCollection<LogRowViewModel>();
+        public ObservableCollection<LogRowViewModel> Logs { get; } = new ObservableCollection<LogRowViewModel>();
         public User CurrentUser { get; }
         public bool IsAdmin => CurrentUser.IsAdmin;
 

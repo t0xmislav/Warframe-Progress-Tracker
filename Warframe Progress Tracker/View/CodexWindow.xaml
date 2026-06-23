@@ -8,6 +8,8 @@
         xmlns:selectors="clr-namespace:Warframe_Progress_Tracker.View.TemplateSelectors"
         mc:Ignorable="d"
         Title="Codex" Height="600" Width="900"
+        Background="{DynamicResource PrimaryBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryForegroundBrush}"
         WindowStartupLocation="CenterOwner"
         d:DesignHeight="450" d:DesignWidth="800">
     <Window.Resources>
@@ -31,18 +33,18 @@
             <TextBox Text="{Binding NameFilter, UpdateSourceTrigger=PropertyChanged}" MinWidth="100" MaxHeight="20"/>
             <GroupBox Header="{DynamicResource CodexSortOptionsStr}" BorderBrush="Black" Margin="20,0,5,0">
                 <StackPanel Orientation="Horizontal">
-                    <RadioButton Tag="Name" Checked="SortEntries_Checked"
+                    <RadioButton Tag="Name" IsChecked="True" Checked="SortEntries_Checked"
                                  Content="{DynamicResource CodexSortNameStr}"/>
-                    <RadioButton Tag="DateMastered" Checked="SortEntries_Checked"
+                    <RadioButton Tag="DateMastered" IsChecked="False" Checked="SortEntries_Checked"
                                  Content="{DynamicResource CodexSortDateStr}"/>
                 </StackPanel>
             </GroupBox>
 
             <GroupBox Header="{DynamicResource CodexClearFilterStr}" BorderBrush="Black" Margin="20,0,5,0">
                 <StackPanel Orientation="Horizontal">
-                    <RadioButton Tag="All" Checked="ClearFilter_Checked" Content="{DynamicResource AllStr}" Margin="0,0,6,0"/>
-                    <RadioButton Tag="Cleared" Checked="ClearFilter_Checked" Content="{DynamicResource ClearedStr}" Margin="0,0,6,0"/>
-                    <RadioButton Tag="Uncleared" Checked="ClearFilter_Checked" Content="{DynamicResource UnclearedStr}"/>
+                    <RadioButton Tag="All" IsChecked="True" Checked="ClearFilter_Checked" Content="{DynamicResource AllStr}" Margin="0,0,6,0"/>
+                    <RadioButton Tag="Cleared" IsChecked="False" Checked="ClearFilter_Checked" Content="{DynamicResource ClearedStr}" Margin="0,0,6,0"/>
+                    <RadioButton Tag="Uncleared" IsChecked="False" Checked="ClearFilter_Checked" Content="{DynamicResource UnclearedStr}"/>
                 </StackPanel>
             </GroupBox>
         </StackPanel>

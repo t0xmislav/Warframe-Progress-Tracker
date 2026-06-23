@@ -425,6 +425,48 @@ namespace Warframe_Progress_Tracker.Services
             }
             return new ItemProgress { Item = item, User = user };
         }
+        public static List<ItemProgress> GetItemProgressForUser(User user)
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                SELECT i.Id, i.UniqueName, i.Name, i.MasteryPoints, i.CategoryId, c.DisplayName, i.Image,
+                       up.Owned, up.Mastered, up.DateOwned, up.DateMastered
+                FROM UserProgress up
+                JOIN Items i ON up.ItemId = i.Id
+                JOIN Categories c ON i.CategoryId = c.Id
+                WHERE up.UserId = $userId;
+            ";
+            cmd.Parameters.AddWithValue("$userId", user.Id);
+
+            var itemProgressList = new List<ItemProgress>();
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                var item = new Item
+                {
+                    Id = reader.GetInt32(0),
+                    UniqueName = reader.GetString(1),
+                    Name = reader.GetString(2),
+                    MasteryPoints = reader.GetInt32(3),
+                    Category = new Category { Id = reader.GetInt32(4), DisplayName = reader.GetString(5) },
+                    Image = reader.IsDBNull(6) ? null : (byte[])reader["Image"]
+                };
+                var progress = new ItemProgress
+                {
+                    User = user,
+                    Item = item,
+                    Owned = reader.GetInt32(7) == 1,
+                    Mastered = reader.GetInt32(8) == 1,
+                    DateOwned = reader.IsDBNull(9) ? null : DateTime.Parse(reader.GetString(9)),
+                    DateMastered = reader.IsDBNull(10) ? null : DateTime.Parse(reader.GetString(10))
+                };
+                itemProgressList.Add(progress);
+            }
+            return itemProgressList;
+        }
         public static NodeProgress GetProgressForNode(User user, Node node)
         {
             using var connection = new SqliteConnection($"Data Source={dbPath}");
@@ -453,6 +495,42 @@ namespace Warframe_Progress_Tracker.Services
                 };
             }
             return new NodeProgress { Node = node, User = user };
+        }
+        public static List<NodeProgress> GetNodeProgressForUser(User user)
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                SELECT  n.Id, n.Name, n.Planet, np.ClearedNormal, np.ClearedSteelPath, np.DateNormalClear, np.DateSteelPathClear
+                FROM NodeProgress np
+                JOIN Nodes n ON np.NodeId = n.Id
+                WHERE np.UserId = $userId;
+            ";
+            cmd.Parameters.AddWithValue("$userId", user.Id);
+
+            var nodeProgressList = new List<NodeProgress>();
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                var progress = new NodeProgress
+                {
+                    User = user,
+                    Node = new Node
+                    {
+                        Id = reader.GetInt32(0),
+                        Name = reader.GetString(1),
+                        Planet = reader.GetString(2)
+                    },
+                    ClearedNormal = reader.GetInt32(3) == 1,
+                    ClearedSteelPath = reader.GetInt32(4) == 1,
+                    DateNormalClear = reader.IsDBNull(5) ? null : DateTime.Parse(reader.GetString(5)),
+                    DateSteelPathClear = reader.IsDBNull(6) ? null : DateTime.Parse(reader.GetString(6))
+                };
+                nodeProgressList.Add(progress);
+            }
+            return nodeProgressList;
         }
         public static List<Category> GetCategories()
         {

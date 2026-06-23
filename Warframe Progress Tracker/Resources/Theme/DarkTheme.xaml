@@ -1,9 +1,35 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Color x:Key="PrimaryBackgroundColor">#FF1E1E1E</Color>
-    <Color x:Key="PrimaryForegroundColor">#FFFFFFFF</Color>
 
-    <SolidColorBrush x:Key="PrimaryBackgroundBrush" Color="{StaticResource PrimaryBackgroundColor}" />
-    <SolidColorBrush x:Key="PrimaryForegroundBrush" Color="{StaticResource PrimaryForegroundColor}" />
+    <!-- Surfaces -->
+    <Color x:Key="PrimaryBackgroundColor">#FF1E1E1E</Color>
+    <Color x:Key="SecondaryBackgroundColor">#FF2D2D2D</Color>
+    <Color x:Key="TertiaryBackgroundColor">#FF3C3C3C</Color>
+
+    <!-- Foreground -->
+    <Color x:Key="PrimaryForegroundColor">#FFFFFFFF</Color>
+    <Color x:Key="SecondaryForegroundColor">#FFB0B0B0</Color>
+    <!-- labels, hints -->
+
+    <!-- Accent -->
+    <Color x:Key="AccentColor">#FF4A9EFF</Color>
+    <Color x:Key="AccentHoverColor">#FF6AB4FF</Color>
+
+    <!-- Semantic -->
+    <Color x:Key="BorderColor">#FF555555</Color>
+    <Color x:Key="ErrorColor">#FFCF6679</Color>
+    <Color x:Key="SuccessColor">#FF4CAF50</Color>
+
+    <!-- Brushes -->
+    <SolidColorBrush x:Key="PrimaryBackgroundBrush"   Color="{DynamicResource PrimaryBackgroundColor}" />
+    <SolidColorBrush x:Key="SecondaryBackgroundBrush" Color="{DynamicResource SecondaryBackgroundColor}" />
+    <SolidColorBrush x:Key="TertiaryBackgroundBrush"  Color="{DynamicResource TertiaryBackgroundColor}" />
+    <SolidColorBrush x:Key="PrimaryForegroundBrush"   Color="{DynamicResource PrimaryForegroundColor}" />
+    <SolidColorBrush x:Key="SecondaryForegroundBrush" Color="{DynamicResource SecondaryForegroundColor}" />
+    <SolidColorBrush x:Key="AccentBrush"              Color="{DynamicResource AccentColor}" />
+    <SolidColorBrush x:Key="AccentHoverBrush"         Color="{DynamicResource AccentHoverColor}" />
+    <SolidColorBrush x:Key="BorderBrush"              Color="{DynamicResource BorderColor}" />
+    <SolidColorBrush x:Key="ErrorBrush"               Color="{DynamicResource ErrorColor}" />
+    <SolidColorBrush x:Key="SuccessBrush"             Color="{DynamicResource SuccessColor}" />
 
 </ResourceDictionary>

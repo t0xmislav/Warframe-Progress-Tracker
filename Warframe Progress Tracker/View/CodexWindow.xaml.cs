@@ -62,7 +62,7 @@ namespace Warframe_Progress_Tracker.View
         }
         private async void ItemsList_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
-            var sv = e.OriginalSource as ScrollViewer;
+            if (e.OriginalSource is not ScrollViewer sv) return;
             Debug.WriteLine("Scroll Called");
             if (sv == null) {
                 return;
@@ -71,14 +71,13 @@ namespace Warframe_Progress_Tracker.View
             const double threshold = 250.0;
             if (sv.VerticalOffset + sv.ViewportHeight >= sv.ExtentHeight - threshold)
             {
-                Debug.WriteLine("Scroll Called Load");
                 await _vm.LoadNextBatchAsync();
             }
         }
 
         private static IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject
         {
-            if (depObj != null) yield break;
+            if (depObj == null) yield break;
             for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(depObj); i++)
             {
                 DependencyObject child = System.Windows.Media.VisualTreeHelper.GetChild(depObj, i);

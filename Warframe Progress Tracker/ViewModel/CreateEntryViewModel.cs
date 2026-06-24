@@ -35,7 +35,7 @@ namespace Warframe_Progress_Tracker.ViewModel
         {
             get => _name;
             set {
-                if (_name != value) return;
+                if (_name == value) return;
                 _name = value; 
                 OnPropertyChanged(); 
              }
@@ -57,7 +57,7 @@ namespace Warframe_Progress_Tracker.ViewModel
         {
             get => _masteryPoints;
             set {
-                if (_masteryPoints != value) return;
+                if (_masteryPoints == value) return;
                 _masteryPoints = value; 
                 OnPropertyChanged(); 
             }
@@ -67,7 +67,7 @@ namespace Warframe_Progress_Tracker.ViewModel
         {
             get => _planet;
             set {
-                if (_planet != value) return;
+                if (_planet == value) return;
                 _planet = value;
                 OnPropertyChanged(); 
             }
@@ -77,7 +77,7 @@ namespace Warframe_Progress_Tracker.ViewModel
         {
             get => _uniqueName;
             set {
-                if (_uniqueName != value) return;
+                if (_uniqueName == value) return;
                 _uniqueName = value; 
                 OnPropertyChanged(); 
             }
@@ -86,7 +86,7 @@ namespace Warframe_Progress_Tracker.ViewModel
         {
             get => _image;
             set {
-                if (_image != value) return;
+                if (_image == value) return;
                 _image = value; 
                 OnPropertyChanged(); 
             }

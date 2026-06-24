@@ -19,6 +19,7 @@ using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
 using Warframe_Progress_Tracker.Utils;
 using Warframe_Progress_Tracker.Utils.Logger;
+using Warframe_Progress_Tracker.ViewModel;
 
 namespace Warframe_Progress_Tracker.View
 {
@@ -103,11 +104,16 @@ namespace Warframe_Progress_Tracker.View
                 {
                     await Task.Run(() => {
                         DbService.DeleteItem(item);
+
                         LoggerService.Log("Deleted Item", $"{_currentUser.Name}: Deleted item: {item.Name}.");
                     });
 
                     var parentListBox = FindParent<ListBox>(this);
                     if (parentListBox?.ItemsSource is ObservableCollection<Model.CodexEntry> entries) entries.Remove(item);
+
+                    var codexVm = parentListBox?.DataContext as CodexViewModel
+                        ?? FindParent<System.Windows.Window>(this)?.DataContext as CodexViewModel;
+                    codexVm?.RemoveEntry(item);
                     MessageBox.Show((string)Application.Current.Resources["DeleteItemSuccessStr"], (string)Application.Current.Resources["SuccessStr"], MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }

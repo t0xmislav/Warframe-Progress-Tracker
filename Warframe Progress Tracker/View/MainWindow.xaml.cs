@@ -18,6 +18,7 @@ using System.Windows.Navigation;
 using Warframe_Progress_Tracker.Services;
 using Warframe_Progress_Tracker.Utils;
 using Warframe_Progress_Tracker.Utils.Logger;
+using Warframe_Progress_Tracker.ViewModel;
 
 namespace Warframe_Progress_Tracker.View
 {
@@ -38,7 +39,7 @@ namespace Warframe_Progress_Tracker.View
         {
             
             await ProgressCacheUtil.LoadUserProgressAsync(_currentUser);
-            ProgressCacheUtil.StartAutoRefresh(_currentUser, TimeSpan.FromSeconds(30));
+            ProgressCacheUtil.StartAutoRefresh(_currentUser, TimeSpan.FromSeconds(10));
             LoadDashboard();
         }
         private void LoadDashboard()
@@ -109,18 +110,7 @@ namespace Warframe_Progress_Tracker.View
                 var uniqueNames = DbService.GetAllUniqueItemNames();
                 int added = 0;
                 await ApiService.FetchItemsAsync(progress, cts.Token, uniqueNames);
-                /*await Task.Run(async () =>
-                {
-                    var items = await ApiService.FetchItemsAsync(progress, cts.Token, uniqueNames);
 
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        dialog.UpdateMessage("SavingItemsStr", new object[] { });
-                    });
-
-                    added = DbService.SaveItems(items);
-
-                }, cts.Token);*/
                 LoggerService.Log("Item Fetching Finished", $"{_currentUser.Name}: Finished fetching node from api | Added: {added} items.");
                 MessageBox.Show((string)Application.Current.Resources["ItemsAddedStr"], (string)Application.Current.Resources["DbUpdatedStr"]);
             }
@@ -192,9 +182,8 @@ namespace Warframe_Progress_Tracker.View
         {
             var dialog = new OpenFolderDialog();
             dialog.ShowDialog();
-            var folderName = dialog.FolderName;
 
-            return folderName;
+            return dialog.FolderName;
         }
 
         private async void GenerateReport_Click(object sender, RoutedEventArgs e)
@@ -252,7 +241,6 @@ namespace Warframe_Progress_Tracker.View
                 var success = XmlUtil.ApplyProgressSnapshot(xml);
                 if (!success)
                 {
-                    await ProgressCacheUtil.LoadUserProgressAsync(_currentUser); // Refresh cache to ensure consistency
                     MessageBox.Show("Failed to apply progress snapshot.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }

@@ -44,7 +44,6 @@ namespace Warframe_Progress_Tracker.Services
                 .Select(a => wikiUrl + a.GetAttributeValue("href", ""))
                 .Distinct()
                 .ToList();
-
             foreach (var planetUrl in planetLinks)
             {
                 cancellationToken.ThrowIfCancellationRequested();

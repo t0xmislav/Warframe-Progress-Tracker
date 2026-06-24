@@ -56,6 +56,8 @@ namespace Warframe_Progress_Tracker
             var pluginsFolder = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Plugins");
             Console.WriteLine($"Before loading plugin");
             PluginLoader.LoadPlugins(pluginsFolder);
+
+
         }
 
     }

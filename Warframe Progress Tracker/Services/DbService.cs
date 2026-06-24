@@ -82,11 +82,19 @@ namespace Warframe_Progress_Tracker.Services
                 );";
             command.ExecuteNonQuery();
         }
+        private static SqliteConnection OpenConnection(string connectionString)
+        {
+            var connection = new SqliteConnection(connectionString);
+            connection.Open();
 
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA foreign_keys=ON;";
+            cmd.ExecuteNonQuery();
+            return connection;
+        }
         public static int AddCategory(String categoryName)
         {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             using var checkCommand = connection.CreateCommand();
 
@@ -111,10 +119,9 @@ namespace Warframe_Progress_Tracker.Services
         public static bool AddItem(Item item)
         {
             var categoryId = AddCategory(item.Category.DisplayName);
-            using var connection = new SqliteConnection($"Data source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
-            
+
             var command = connection.CreateCommand();
             command.CommandText =
                 @"
@@ -152,8 +159,7 @@ namespace Warframe_Progress_Tracker.Services
             if(items == null || items.Count == 0) return 0;
             int count = 0;
 
-            using var connection = new SqliteConnection($"Data source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             using var transaction = connection.BeginTransaction();
             try
@@ -214,8 +220,7 @@ namespace Warframe_Progress_Tracker.Services
         }
         public static bool ItemExists(string uniqueName)
         {
-            using var connection = new SqliteConnection($"Data source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
             var checkCmd = connection.CreateCommand();
             checkCmd.CommandText = "SELECT COUNT(*) FROM Items WHERE UniqueName = $name";
             checkCmd.Parameters.AddWithValue("$name", uniqueName);
@@ -225,8 +230,7 @@ namespace Warframe_Progress_Tracker.Services
         }
         public static bool NodeExists(string name)
         {
-            using var connection = new SqliteConnection($"Data source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var checkCmd = connection.CreateCommand();
             checkCmd.CommandText = "SELECT COUNT(*) FROM Nodes WHERE Name = $name";
@@ -238,9 +242,7 @@ namespace Warframe_Progress_Tracker.Services
         public static bool AddNode(Node node)
         {
             var categoryId = AddCategory("Node");
-            using var connection = new SqliteConnection($"Data source={dbPath}");
-
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
 
             var command = connection.CreateCommand();
@@ -259,8 +261,7 @@ namespace Warframe_Progress_Tracker.Services
         public static int SaveNodes(List<Node> nodes)
         {
             int count = 0;
-            using var connection = new SqliteConnection($"Data source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             foreach (var node in nodes)
             {
@@ -300,8 +301,7 @@ namespace Warframe_Progress_Tracker.Services
         {
             var list = new List<Item>();
 
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var command = connection.CreateCommand();
             command.CommandText = @"
@@ -328,8 +328,7 @@ namespace Warframe_Progress_Tracker.Services
         {
             var list = new List<Item>();
 
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var command = connection.CreateCommand();
             command.CommandText = @"
@@ -357,8 +356,7 @@ namespace Warframe_Progress_Tracker.Services
         {
             var list = new List<Item>();
 
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var command = connection.CreateCommand();
             command.CommandText = @"
@@ -374,8 +372,7 @@ namespace Warframe_Progress_Tracker.Services
         {
             var list = new List<Node>();
 
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var command = connection.CreateCommand();
             command.CommandText = @"
@@ -398,8 +395,7 @@ namespace Warframe_Progress_Tracker.Services
             return list;
         }
         public static ItemProgress GetProgressForItem(User user, Item item) {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"
@@ -427,8 +423,7 @@ namespace Warframe_Progress_Tracker.Services
         }
         public static List<ItemProgress> GetItemProgressForUser(User user)
         {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"
@@ -469,8 +464,7 @@ namespace Warframe_Progress_Tracker.Services
         }
         public static NodeProgress GetProgressForNode(User user, Node node)
         {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"
@@ -498,8 +492,7 @@ namespace Warframe_Progress_Tracker.Services
         }
         public static List<NodeProgress> GetNodeProgressForUser(User user)
         {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"
@@ -535,8 +528,7 @@ namespace Warframe_Progress_Tracker.Services
         public static List<Category> GetCategories()
         {
             var list = new List<Category>();
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var command = connection.CreateCommand();
             command.CommandText = @"
@@ -553,8 +545,7 @@ namespace Warframe_Progress_Tracker.Services
         public static HashSet<string> GetAllUniqueItemNames()
         {
             var set = new HashSet<string>();
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var command = connection.CreateCommand();
             command.CommandText = @"
@@ -569,8 +560,7 @@ namespace Warframe_Progress_Tracker.Services
         }
         public static bool SetItemProgress(int userId, int itemId, bool mastered, bool owned, DateTime? dateOwned, DateTime? dateMastered)
         {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"
@@ -594,8 +584,7 @@ namespace Warframe_Progress_Tracker.Services
         }
         public static bool UpdateItemProgress(int userId, int itemId, bool mastered, bool owned)
         {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"
@@ -619,8 +608,7 @@ namespace Warframe_Progress_Tracker.Services
         }
         public static bool SetNodeProgress(int userId, int nodeId, bool cleared, bool clearedSteelPath, DateTime? dateNormalCleared, DateTime? dateSteelPathCleared)
         {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"
@@ -644,8 +632,7 @@ namespace Warframe_Progress_Tracker.Services
         }
         public static bool UpdateNodeProgress(int userId, int nodeId, bool cleared, bool clearedSteelPath)
         {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"
@@ -669,8 +656,7 @@ namespace Warframe_Progress_Tracker.Services
         }
         public static bool DeleteItem(Item item)
         {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"
@@ -683,8 +669,8 @@ namespace Warframe_Progress_Tracker.Services
 
         public static void DeleteNode(Node node)
         {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
+
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"
                 DELETE FROM Nodes WHERE Id = $id;
@@ -696,8 +682,7 @@ namespace Warframe_Progress_Tracker.Services
 
         public static bool DeleteUser(User user)
         {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             using var transaction = connection.BeginTransaction();
             try
@@ -729,8 +714,7 @@ namespace Warframe_Progress_Tracker.Services
         }
         public static bool IsItemsTableEmpty()
         {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var cmd = connection.CreateCommand();
             cmd.CommandText = "SELECT COUNT(*) FROM Items;";
@@ -740,8 +724,7 @@ namespace Warframe_Progress_Tracker.Services
         }
         public static bool UpdateNode(Node node)
         {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"
@@ -760,8 +743,7 @@ namespace Warframe_Progress_Tracker.Services
 
         public static bool UpdateItem(Item item)
         {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"
@@ -786,8 +768,7 @@ namespace Warframe_Progress_Tracker.Services
 
         public static bool SetAdminStatus(int userId, bool isAdmin)
         {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"
@@ -803,8 +784,7 @@ namespace Warframe_Progress_Tracker.Services
 
         public static User? GetUserById(int userId)
         {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var cmd = connection.CreateCommand();
             cmd.CommandText = "SELECT Id, Username, PasswordHash, WarframeDisplayName, WarframeAccountId, Platform, IsAdmin FROM Users WHERE Id = $id;";
@@ -831,8 +811,7 @@ namespace Warframe_Progress_Tracker.Services
         }
         public static bool AddUser(string username, string passwordHash, bool isAdmin)
         {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var command = connection.CreateCommand();
             command.CommandText =
@@ -847,8 +826,8 @@ namespace Warframe_Progress_Tracker.Services
         }
         public static bool IsUsernameTaken(string username)
         {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
+
             var cmd = connection.CreateCommand();
             cmd.CommandText = "SELECT COUNT(*) FROM Users WHERE Username = $username;";
             cmd.Parameters.AddWithValue("$username", username);
@@ -857,8 +836,7 @@ namespace Warframe_Progress_Tracker.Services
         }
         public static User? Login(string username, string password)
         {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var cmd = connection.CreateCommand();
             cmd.CommandText = "SELECT Id, Username, PasswordHash, WarframeDisplayName, " +
@@ -885,8 +863,7 @@ namespace Warframe_Progress_Tracker.Services
         }
         public static bool SetUserWfAccount(int userId, string displayName, string accountId, string platform)
         {
-            using var connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
+            using var connection = OpenConnection($"Data source={dbPath}");
 
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"

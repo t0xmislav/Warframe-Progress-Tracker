@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
+using Warframe_Progress_Tracker.Utils.Logger;
 
 namespace Warframe_Progress_Tracker.Utils
 {
@@ -73,21 +74,25 @@ namespace Warframe_Progress_Tracker.Utils
         public static async Task LoadUserProgressAsync(User user, CancellationToken cancellationToken = default)
         {
             if (user == null) throw new ArgumentNullException(nameof(user));
+            /*var sw = Stopwatch.StartNew();
+            var itemsTask = await Task.Run(() => DbService.GetItemProgressForUser(user), cancellationToken);
+            var nodesTask = await Task.Run(() => DbService.GetNodeProgressForUser(user), cancellationToken);
+            sw.Stop();
 
+            LoggerService.Log("Perf", $"Sequential LoadUserProgressAsync: {sw.ElapsedMilliseconds}ms");
+            */
 
-            var itemProgressList = await Task.Run(() => DbService.GetItemProgressForUser(user), cancellationToken).ConfigureAwait(false);
-            var itemSnapshot = new Dictionary<int, ItemProgress>();
-            foreach (var item in itemProgressList)
-            {
-                itemSnapshot[item.Item.Id] = item;
-            }
+            
+            var sw = Stopwatch.StartNew();
 
-            var nodeProgresses = await Task.Run(() => DbService.GetNodeProgressForUser(user), cancellationToken).ConfigureAwait(false);
-            var nodeSnapshot = new Dictionary<int, NodeProgress>();
-            foreach (var node in nodeProgresses)
-            {
-                nodeSnapshot[node.Node.Id] = node;
-            }
+            var itemsTask = Task.Run(() => DbService.GetItemProgressForUser(user), cancellationToken);
+            var nodesTask = Task.Run(() => DbService.GetNodeProgressForUser(user), cancellationToken);
+            await Task.WhenAll(itemsTask, nodesTask);
+            sw.Stop();
+            //LoggerService.Log("Perf", $"Parallel LoadUserProgressAsync: {sw.ElapsedMilliseconds}ms");
+            
+            var itemSnapshot = itemsTask.Result.ToDictionary(i => i.Item.Id);
+            var nodeSnapshot = nodesTask.Result.ToDictionary(n => n.Node.Id);
 
             _lock.EnterWriteLock();
             try

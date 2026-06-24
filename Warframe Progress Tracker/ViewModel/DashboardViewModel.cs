@@ -17,6 +17,7 @@ namespace Warframe_Progress_Tracker.ViewModel
         public ObservableCollection<CategoryProgress> CategoryProgresses { get; } = new();
         public double TotalProgressPercentage { get; private set; }
         public string TotalProgressPercentageText { get; private set; }
+        public string UserDisplayName {  get; private set; }
         public string TotalRankText { get; private set; }
         private readonly User _currentUser;
         private BitmapImage? _masteryRankImage;
@@ -38,7 +39,14 @@ namespace Warframe_Progress_Tracker.ViewModel
         public DashboardViewModel(User currentUser) 
         {
             _currentUser = currentUser;
-
+            if(_currentUser.WarframeDisplayName is not null) 
+            {
+                UserDisplayName = _currentUser.WarframeDisplayName;
+            }
+            else
+            {
+                UserDisplayName = _currentUser.Name;
+            }
             _ = PeriodicRefreshLoop(_cts.Token);
         }
 
@@ -72,7 +80,7 @@ namespace Warframe_Progress_Tracker.ViewModel
             var categories = DbService.GetCategories().Where(c => c.DisplayName != "Node").ToList();
             var nodes = DbService.GetAllNodes();
 
-            int totalMasterdLocal = 0;
+            int totalMasterdEntries = 0;
             int totalMasteryPoints = 0;
 
             var categoryProgressResults = new CategoryProgress[categories.Count()];
@@ -83,7 +91,7 @@ namespace Warframe_Progress_Tracker.ViewModel
                     .Sum(i => i.MasteryPoints);
                 lock (_totalMasteredLock)
                 {
-                    totalMasterdLocal += masteredInCategory;
+                    totalMasterdEntries += masteredInCategory;
                     totalMasteryPoints += points;
                 }
 
@@ -106,7 +114,7 @@ namespace Warframe_Progress_Tracker.ViewModel
                         .Sum(n => n.MasteryPoints);
                     lock (_totalMasteredLock)
                     {
-                        totalMasterdLocal += normalCleared;
+                        totalMasterdEntries += normalCleared;
                         totalMasteryPoints += points;
                     }
 
@@ -124,7 +132,7 @@ namespace Warframe_Progress_Tracker.ViewModel
                         .Sum(n => n.MasteryPoints);
                     lock (_totalMasteredLock)
                     {
-                        totalMasterdLocal += spCleared;
+                        totalMasterdEntries += spCleared;
                         totalMasteryPoints += points;
                     }
 
@@ -136,8 +144,18 @@ namespace Warframe_Progress_Tracker.ViewModel
                     };
                 })
             ]);
-
+            /*
+            var sw = Stopwatch.StartNew();
+            foreach(var task in tasks) await task;
+            sw.Stop();
+            LoggerService.Log("Perf", $"Sequential progress calculation took {sw.ElapsedMilliseconds}ms");
+            */
+            
+            var sw2 = Stopwatch.StartNew();
             await Task.WhenAll(tasks);
+            sw2.Stop();
+            //LoggerService.Log("Perf", $"Parallel progress calculation took {sw2.ElapsedMilliseconds}ms");
+            
             Application.Current.Dispatcher.Invoke(() =>
             {
                 var rankInfo = MasteryCalculator.GetRankFromPoints(totalMasteryPoints);
@@ -152,7 +170,7 @@ namespace Warframe_Progress_Tracker.ViewModel
                 if(steelPathNodeProgress is not null) CategoryProgresses.Add(steelPathNodeProgress);
 
                 TotalProgressPercentage = CategoryProgresses.Sum(c => c.TotalItems) > 0
-                ? (double)totalMasterdLocal / CategoryProgresses.Sum(c => c.TotalItems) : 0;
+                ? (double)totalMasterdEntries / CategoryProgresses.Sum(c => c.TotalItems) : 0;
                 TotalProgressPercentageText = $"{TotalProgressPercentage*100:F2}%";
                 OnPropertyChanged(nameof(TotalProgressPercentageText));
                 OnPropertyChanged(nameof(TotalRankText));

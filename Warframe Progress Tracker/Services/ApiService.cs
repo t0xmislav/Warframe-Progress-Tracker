@@ -3,10 +3,12 @@ using SQLitePCL;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows;
@@ -20,12 +22,13 @@ namespace Warframe_Progress_Tracker.Services
         private static readonly HttpClient httpClient = new HttpClient();
 
         private static readonly int BatchSize = 50;
-
+        private static readonly object batchLock = new object();
         public static async Task<List<Model.Item>> FetchItemsAsync(
             IProgress<(string key, object[] args)>? progress, 
             CancellationToken cancellationToken = default, 
             HashSet<string>? existingUniqueNames = null)
         {
+            var sw = Stopwatch.StartNew();
             progress?.Report(("LoadingFetchingItemsStr", new object[] { }));
 
             var response = await httpClient.GetStringAsync("https://api.warframestat.us/items");
@@ -37,11 +40,11 @@ namespace Warframe_Progress_Tracker.Services
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var uniqueName = (string)item["uniqueName"];
-                if (existingUniqueNames.Contains(uniqueName)) 
+                /*if (existingUniqueNames.Contains(uniqueName)) 
                 {
                     Debug.WriteLine($"Item Exists {uniqueName}");
                     continue;
-                }
+                }*/
                 Debug.WriteLine("populating...");
                 var masteryReq = item["masteryReq"]?.ToObject<int?>() ?? -1;
                 var category = (string)item["category"];
@@ -105,7 +108,6 @@ namespace Warframe_Progress_Tracker.Services
                     Image = imageBytes
                 };
                 items.Add(parsed);
-                count++;
                 if(items.Count >= BatchSize)
                 {
                     try
@@ -134,6 +136,8 @@ namespace Warframe_Progress_Tracker.Services
                     LoggerService.Log("DbSaveFailed", $"Saving items batch failed, retrying individually");
                 }
             }
+            sw.Stop();
+            LoggerService.Log("Api Performance", $"Single thread time: {sw.ElapsedMilliseconds}ms | Items processed: {count}");
             progress?.Report(("FinishedItemFetchStr", new object[] {}));
             return items;
         }
@@ -237,6 +241,211 @@ namespace Warframe_Progress_Tracker.Services
                 return await client.GetByteArrayAsync(url);
             }
         }
-        
+        public static async Task<List<Model.Item>> FetchItemsAsyncMultithread(
+            IProgress<(string key, object[] args)>? progress,
+            CancellationToken cancellationToken = default,
+            HashSet<string>? existingUniqueNames = null)
+        {
+            var sw = Stopwatch.StartNew();
+            progress?.Report(("LoadingFetchingItemsStr", new object[] { }));
+
+            var response = await httpClient.GetStringAsync("https://api.warframestat.us/items");
+            var jsonArray = JArray.Parse(response);
+
+            var itemsToProcess = new List<(JToken token, string name, string? imageUrl, int masteryPoints, string category)>();
+
+            foreach (var item in jsonArray)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var uniqueName = (string)item["uniqueName"];
+                //if (existingUniqueNames?.Contains(uniqueName) == true) continue;
+
+                var masteryReq = item["masteryReq"]?.ToObject<int?>() ?? -1;
+                var category = (string)item["category"];
+                var excludeFromCodex = item["excludeFromCodex"]?.ToObject<bool>() ?? false;
+
+                bool grantsMastery = PluginLoader.GrantsMastery != null
+                    ? PluginLoader.GrantsMastery(uniqueName, category, masteryReq, excludeFromCodex)
+                    : false;
+
+                if (!grantsMastery) continue;
+
+                int masteryPoints = PluginLoader.GetMasteryPoints != null
+                    ? PluginLoader.GetMasteryPoints(category, uniqueName)
+                    : 0;
+
+                var imageName = (string?)item["imageName"];
+                var imageUrl = !string.IsNullOrEmpty(imageName)
+                    ? "https://cdn.warframestat.us/img/" + imageName
+                    : null;
+
+                itemsToProcess.Add((item, (string)item["name"], imageUrl, masteryPoints, category));
+            }
+
+            // Get total download size via HEAD requests for percentage tracking
+            progress?.Report(("LoadingHeadRequestStr", new object[] { }));
+            long totalBytes = 0;
+            var semaphore = new SemaphoreSlim(4);
+            //var sw = Stopwatch.StartNew();
+            var headTasks = itemsToProcess
+                .Where(i => i.imageUrl != null)
+                .Select(async i =>
+                {
+                    await semaphore.WaitAsync(cancellationToken);
+                    try
+                    {
+                        using var req = new HttpRequestMessage(HttpMethod.Head, i.imageUrl);
+                        using var resp = await httpClient.SendAsync(req, cancellationToken);
+                        return resp.Content.Headers.ContentLength ?? 0;
+                    }
+                    catch { return 0L; }
+                    finally { semaphore.Release(); }
+                });
+
+            var sizes = await Task.WhenAll(headTasks);
+            totalBytes = sizes.Sum();
+
+
+            int.TryParse(IniFileService.Read("Download", "SpeedLimit", "0"), out int speedLimitKB);
+            int speedLimitBytes = Math.Max(0, speedLimitKB) * 1024;
+            HttpDownloaderUtil.SetSpeedLimit(speedLimitBytes);
+
+
+            // Parallel image downloads with progress
+            long downloadedBytes = 0;
+            var itemDownloadedBytes = new long[itemsToProcess.Count];
+            var batch = new List<Model.Item>();
+            var downloadTasks = itemsToProcess
+                .Where(i => i.imageUrl != null)
+                .Select(async i =>
+                {
+                    await semaphore.WaitAsync(cancellationToken);
+                    try
+                    {
+                        
+                        var bytes = await HttpDownloaderUtil.DownloadDataAsync(
+                            i.imageUrl!,
+                            new Progress<double>(p =>
+                            {
+                                int idx = itemsToProcess.IndexOf(i);
+                                long itemTotal = sizes[idx];
+                                long newItemBytes = (long)(p * itemTotal);
+                                long delta = newItemBytes - Interlocked.Read(ref itemDownloadedBytes[idx]);
+
+                                Interlocked.Exchange(ref itemDownloadedBytes[idx], newItemBytes);
+                                var total = Interlocked.Add(ref downloadedBytes, delta);
+
+                                var percentage = totalBytes > 0 ? (int)((double)total / totalBytes * 100) : 0;
+                                progress?.Report(("DownloadingImageProgressStr", new object[] { i.name, percentage }));
+                            }),
+                            cancellationToken: cancellationToken);
+
+                        var item = new Model.Item
+                        {
+                            Name = i.name,
+                            UniqueName = (string)i.token["uniqueName"],
+                            Category = new Model.Category { DisplayName = i.category },
+                            MasteryPoints = i.masteryPoints,
+                            Image = bytes
+                        };
+                        bytes = null;
+                        lock (batchLock)
+                        {
+                            batch.Add(item);
+                            if (batch.Count >= BatchSize)
+                            {
+                                DbService.SaveItemsBatch(batch.ToList());
+                                batch.Clear();
+                                progress?.Report(("SavingItemsStr", new object[] { }));
+                            }
+                        }
+
+                    }
+                    catch (OperationCanceledException) { throw; }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Image download failed for {i.imageUrl}: {ex.Message}");
+                    }
+                    finally { semaphore.Release(); }
+                });
+
+            await Task.WhenAll(downloadTasks);
+            //sw.Stop();
+            //LoggerService.Log("Perf", $"Parallel image download: {sw.ElapsedMilliseconds}ms | Items: {itemsToProcess.Count(i => i.imageUrl != null)}");
+
+
+            if (batch.Count > 0)
+            {
+                try
+                {
+                    DbService.SaveItemsBatch(batch);
+                    progress?.Report(("SavingItemsStr", new object[] { }));
+                    batch.Clear();
+                }
+                catch
+                {
+                    LoggerService.Log("DbSaveFailed", "Saving items batch failed");
+                }
+            }
+            sw.Stop();
+            LoggerService.Log("Api Performance", $"Parallel thread time: {sw.ElapsedMilliseconds}ms | Items processed: {itemsToProcess.Count}");
+            progress?.Report(("FinishedItemFetchStr", new object[] { }));
+            return batch;
+        }
+
+        private static async Task<byte[]> DownloadWithProgressAsync(
+            string url,
+            Action<long> onBytesRead,
+            CancellationToken cancellationToken,
+            int speedLimitBytes = 0,
+            int maxRetries = 3)
+        {
+            int attempt = 0;
+            while (true)
+            {
+                try
+                {
+                    using var response = await httpClient.GetAsync(
+                        url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+
+                    if ((int)response.StatusCode == 504 && attempt < maxRetries)
+                    {
+                        
+                        attempt++;
+                        await Task.Delay(TimeSpan.FromSeconds(attempt * 2), cancellationToken);
+                        continue;
+                    }
+
+                    response.EnsureSuccessStatusCode();
+
+                    using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+                    using var ms = new MemoryStream();
+
+                    var buffer = new byte[8192];
+                    int bytesRead;
+                    while ((bytesRead = await stream.ReadAsync(buffer, cancellationToken)) > 0)
+                    {
+                        await ms.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
+                        onBytesRead(bytesRead);
+
+                        // Apply speed limit if set
+                        if (speedLimitBytes > 0)
+                        {
+                            var delay = (int)(buffer.Length * 1000.0 / speedLimitBytes);
+                            if (delay > 0)
+                                await Task.Delay(delay, cancellationToken);
+                        }
+                    }
+                    return ms.ToArray();
+                }
+                catch (OperationCanceledException) { throw; }
+                catch (Exception) when (attempt < maxRetries)
+                {
+                    attempt++;
+                    await Task.Delay(TimeSpan.FromSeconds(attempt * 2), cancellationToken);
+                }
+            }
+        }
     }
 }

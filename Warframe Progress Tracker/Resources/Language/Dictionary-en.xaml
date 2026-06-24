@@ -123,5 +123,6 @@
     <System:String x:Key="AccountDeletedStr">Account deleted successfully</System:String>
     <System:String x:Key="AccountDeletionFailedStr">Failed deleting account</System:String>
     <System:String x:Key="DeleteStr">Delete Log</System:String>
+    <System:String x:Key="LoadingHeadRequestStr">Getting image sizes...</System:String>
     
 </ResourceDictionary>

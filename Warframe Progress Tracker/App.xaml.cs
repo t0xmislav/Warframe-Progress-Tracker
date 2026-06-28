@@ -19,7 +19,7 @@ namespace Warframe_Progress_Tracker
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-
+            Debug.WriteLine("Initializing application...");
             var pepper = Environment.GetEnvironmentVariable("WPT_PEPPER");
             if (string.IsNullOrEmpty(pepper))
             {

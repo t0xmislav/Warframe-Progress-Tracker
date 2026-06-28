@@ -106,6 +106,8 @@ namespace Warframe_Progress_Tracker.Services
                         if (cells == null || cells.Count < 3) continue;
 
                         var nodeName = WebUtility.HtmlDecode(cells.ElementAtOrDefault(1)?.InnerText?.Trim() ?? "");
+                        //Check if node already exists in database, if so skip it
+                        if (DbService.DoesNodeExist(nodeName, planetName)) continue;
 
                         var masteryText = WebUtility.HtmlEncode(cells.ElementAtOrDefault(7)?.InnerText?.Trim() ?? "");
                         masteryText = Regex.Replace(masteryText, @"\[\d+\]", "");

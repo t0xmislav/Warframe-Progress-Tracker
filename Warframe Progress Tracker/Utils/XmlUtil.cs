@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using System.Xml.Linq;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Services;
@@ -85,10 +80,11 @@ namespace Warframe_Progress_Tracker.Utils
                     var id = nodeProgress.Attribute("Id")?.Value;
                     var cleared = nodeProgress.Attribute("Cleared")?.Value == "true";
                     var clearedSteelPath = nodeProgress.Attribute("ClearedSteelPath")?.Value == "true";
-                    var dateNormalCleared = DateTime.TryParse(nodeProgress.Attribute("DateNormalCleared")?.Value, out var dnc) ? dnc : (DateTime?)null;
-                    var dateSteelPathCleared = DateTime.TryParse(nodeProgress.Attribute("DateSteelPathCleared")?.Value, out var dspc) ? dspc : (DateTime?)null;
+                    var dateNormalCleared = DateTime.TryParse(nodeProgress.Attribute("DateClearedNormal")?.Value, out var dnc) ? dnc : (DateTime?)null;
+                    var dateSteelPathCleared = DateTime.TryParse(nodeProgress.Attribute("DateClearedSteelPath")?.Value, out var dspc) ? dspc : (DateTime?)null;
                     if (id is not null)
                     {
+                        Debug.WriteLine("Writing progress for item " + id);
                         DbService.SetNodeProgress(int.Parse(userId), int.Parse(id), cleared, clearedSteelPath, dateNormalCleared, dateSteelPathCleared);
                     }
 

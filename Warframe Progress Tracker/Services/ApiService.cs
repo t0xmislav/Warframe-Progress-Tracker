@@ -371,8 +371,8 @@ namespace Warframe_Progress_Tracker.Services
                 });
 
             await Task.WhenAll(downloadTasks);
-            //sw.Stop();
-            //LoggerService.Log("Perf", $"Parallel image download: {sw.ElapsedMilliseconds}ms | Items: {itemsToProcess.Count(i => i.imageUrl != null)}");
+            sw.Stop();
+            LoggerService.Log("Perf", $"Parallel api fetching: {sw.ElapsedMilliseconds}ms | Items: {itemsToProcess.Count(i => i.imageUrl != null)}");
 
 
             if (batch.Count > 0)

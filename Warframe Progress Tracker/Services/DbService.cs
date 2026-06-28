@@ -368,6 +368,19 @@ namespace Warframe_Progress_Tracker.Services
             return count > 0;
 
         }
+        public static bool DoesNodeExist(string nodeName, string planet)
+        {
+            using var connection = OpenConnection($"Data source={dbPath}");
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                SELECT COUNT(*) FROM Nodes 
+                WHERE Name = $nodeName AND Planet = $planet;
+            ";
+            command.Parameters.AddWithValue("$nodeName", nodeName);
+            command.Parameters.AddWithValue("$planet", planet);
+            var count = Convert.ToInt32(command.ExecuteScalar());
+            return count > 0;
+        }
         public static List<Node> GetAllNodes()
         {
             var list = new List<Node>();

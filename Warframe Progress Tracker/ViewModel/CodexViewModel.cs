@@ -268,6 +268,30 @@ namespace Warframe_Progress_Tracker.ViewModel
             }
             FilteredEntries.Remove(entry);
         }
+        public void ReplaceEntry(CodexEntry oldEntry, CodexEntry newEntry)
+        {
+            lock (_cacheLock)
+            {
+                var index = _allSummaries.IndexOf(oldEntry);
+                if (index >= 0)
+                {
+                    _allSummaries[index] = newEntry;
+                }
+                index = _sortedCache.IndexOf(oldEntry);
+                if (index >= 0)
+                {
+                    _sortedCache[index] = newEntry;
+                }
+            }
+            var filteredIndex = FilteredEntries.IndexOf(oldEntry);
+            if (filteredIndex >= 0)
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    FilteredEntries[filteredIndex] = newEntry;
+                });
+            }
+        }
 
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string propName = "") =>

@@ -286,7 +286,7 @@ namespace Warframe_Progress_Tracker.Services
             // Get total download size via HEAD requests for percentage tracking
             progress?.Report(("LoadingHeadRequestStr", new object[] { }));
             long totalBytes = 0;
-            var semaphore = new SemaphoreSlim(4);
+            var semaphore = new SemaphoreSlim(1);
             //var sw = Stopwatch.StartNew();
             var headTasks = itemsToProcess
                 .Where(i => i.imageUrl != null)
@@ -337,7 +337,7 @@ namespace Warframe_Progress_Tracker.Services
                                 var total = Interlocked.Add(ref downloadedBytes, delta);
 
                                 var percentage = totalBytes > 0 ? (int)((double)total / totalBytes * 100) : 0;
-                                progress?.Report(("DownloadingImageProgressStr", new object[] { i.name, percentage }));
+                                progress?.Report(("DownloadingImageProgressOnlyStr", new object[] { percentage }));
                             }),
                             cancellationToken: cancellationToken);
 
@@ -372,7 +372,6 @@ namespace Warframe_Progress_Tracker.Services
 
             await Task.WhenAll(downloadTasks);
             sw.Stop();
-            LoggerService.Log("Perf", $"Parallel api fetching: {sw.ElapsedMilliseconds}ms | Items: {itemsToProcess.Count(i => i.imageUrl != null)}");
 
 
             if (batch.Count > 0)

@@ -90,7 +90,12 @@ namespace Warframe_Progress_Tracker.View
         {
             if(DataContext is Model.Item item)
             {
-                var editWindow = new ItemEditWindow(item, _currentUser);
+                var editWindow = new ItemEditWindow(item, _currentUser, (updatedItem) =>
+                {
+                    var codexVm = FindParent<ListBox>(this)?.DataContext as CodexViewModel
+                        ?? FindParent<System.Windows.Window>(this)?.DataContext as CodexViewModel;
+                    codexVm?.ReplaceEntry(item, updatedItem);
+                });
                 editWindow.Owner = Application.Current.MainWindow;
                 editWindow.ShowDialog();
             }

@@ -93,7 +93,7 @@
     <System:String x:Key="DuplicateUniqueNameStr">Duplicate Unique Name</System:String>
     <System:String x:Key="ItemCreatedStr">Item created successfully.</System:String>
     <System:String x:Key="ThemeStr">Theme:</System:String>
-    <System:String x:Key="GenerateReportStr">Generate Progress Report:</System:String>
+    <System:String x:Key="GenerateReportStr">Generate Progress Report</System:String>
     <System:String x:Key="ReportGeneratedStr">Report generated!</System:String>
     <System:String x:Key="ReportGenerationFailedStr">Failed generating report.</System:String>
     <System:String x:Key="FinishedItemFetchStr">Finished fetching items.</System:String>
@@ -127,4 +127,6 @@
     <System:String x:Key="ExportProgressStr">Export Progress</System:String>
     <System:String x:Key="ImportProgressStr">Import Progress</System:String>
     <System:String x:Key="ProgressStr">Progress</System:String>
+    <System:String x:Key="DownloadingImageProgressOnlyStr">Downloading images {0}</System:String>
+    
 </ResourceDictionary>

@@ -54,7 +54,7 @@ namespace Warframe_Progress_Tracker
             AuthService.Register("admin", "admin", true);
             LoggerService.Log("Application", "Application started");
             var pluginsFolder = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Plugins");
-            Console.WriteLine($"Before loading plugin");
+            Debug.WriteLine($"Before loading plugin");
             PluginLoader.LoadPlugins(pluginsFolder);
 
 

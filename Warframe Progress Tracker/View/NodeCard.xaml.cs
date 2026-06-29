@@ -52,14 +52,14 @@ namespace Warframe_Progress_Tracker.View
                 ? string.Format((string)Application.Current.Resources["SPClearedDateStr"], progress.DateSteelPathClear?.ToShortDateString())
                 : string.Empty;
 
-            ClearedNormalCheck.Checked += (_, _) => {  UpdateProgressAsync(user, node); };
-            ClearedNormalCheck.Unchecked += (_, _) => { UpdateProgressAsync(user, node); };
-            ClearedSteelCheck.Checked += (_, _) =>{ UpdateProgressAsync(user, node); };
-            ClearedSteelCheck.Unchecked += (_, _) => { UpdateProgressAsync(user, node); };
+            ClearedNormalCheck.Checked += (_, _) => {  UpdateProgressAsync(user, node, isNormal: true); };
+            ClearedNormalCheck.Unchecked += (_, _) => { UpdateProgressAsync(user, node, isNormal: true); };
+            ClearedSteelCheck.Checked += (_, _) =>{ UpdateProgressAsync(user, node, isNormal: false); };
+            ClearedSteelCheck.Unchecked += (_, _) => { UpdateProgressAsync(user, node, isNormal: false); };
             
         }
 
-        private async void UpdateProgressAsync(User user, Node node)
+        private async void UpdateProgressAsync(User user, Node node, bool isNormal)
         {
             var normalCleared = ClearedNormalCheck.IsChecked == true;
             var steelPathCleared = ClearedSteelCheck.IsChecked == true;
@@ -68,21 +68,17 @@ namespace Warframe_Progress_Tracker.View
             {
                 var updated = await node.UpdateProgressAsync(user, normalCleared, steelPathCleared);
 
-                if (normalCleared)
+                if (isNormal)
                 {
-                    NormalDateBlock.Text = string.Format((string)Application.Current.Resources["NormalClearedDateStr"], updated.DateNormalClear?.ToShortDateString());
+                    NormalDateBlock.Text = normalCleared
+                        ? string.Format((string)Application.Current.Resources["NormalClearedDateStr"], updated.DateNormalClear?.ToShortDateString())
+                        : string.Empty;
                 }
                 else
                 {
-                    NormalDateBlock.Text = string.Empty;
-                }
-                if (steelPathCleared)
-                {
-                    SteelDateBlock.Text = string.Format((string)Application.Current.Resources["SPClearedDateStr"], updated.DateSteelPathClear?.ToShortDateString());
-                }
-                else
-                {
-                    SteelDateBlock.Text = string.Empty;
+                    SteelDateBlock.Text = steelPathCleared
+                        ? string.Format((string)Application.Current.Resources["SPClearedDateStr"], updated.DateSteelPathClear?.ToShortDateString())
+                        : string.Empty;
                 }
             }
             catch (Exception ex)
@@ -96,7 +92,12 @@ namespace Warframe_Progress_Tracker.View
         {
             if (DataContext is Model.Node node)
             {
-                var editWindow = new NodeEditWindow(node, _currentUser);
+                var editWindow = new NodeEditWindow(node, _currentUser, updatedNode =>
+                {
+                    var codexVm = FindParent<ListBox>(this)?.DataContext as CodexViewModel
+                        ?? FindParent<System.Windows.Window>(this)?.DataContext as CodexViewModel;
+                    codexVm?.ReplaceEntry(node, updatedNode);
+                });
                 editWindow.Owner = Application.Current.MainWindow;
                 editWindow.ShowDialog();
             }

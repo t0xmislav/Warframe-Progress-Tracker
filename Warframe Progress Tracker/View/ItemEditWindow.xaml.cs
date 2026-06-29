@@ -31,16 +31,17 @@ namespace Warframe_Progress_Tracker.View
         //For logging purposes
         private Item _oldItem;
         public ObservableCollection<Category> Categories { get; } = new();
-
+        private readonly Action<Model.Item>? _onSaved;
         public Category? SelectedCategory { get; set; }
         //Cloned as to not actively change the item in the codex view while editing
         public Item EditableItem { get; }
 
-        public ItemEditWindow(Item item, User user)
+        public ItemEditWindow(Item item, User user, Action<Model.Item>? onSaved = null)
         {
             InitializeComponent();
             _item = item;
             _currentUser = user;
+            _onSaved = onSaved;
             EditableItem = item.Clone();
             _oldItem = item.Clone();
             DataContext = EditableItem;
@@ -83,11 +84,9 @@ namespace Warframe_Progress_Tracker.View
             {
                 DbService.UpdateItem(_item);
                 LoggerService.LogItemChanges(_oldItem, _item, _currentUser);
-                await Application.Current.Dispatcher.InvokeAsync(() =>
-                {
-                    MessageBox.Show((string)Application.Current.Resources["ItemUpdatedStr"]);
-                });
             });
+            _onSaved?.Invoke(_item);
+            MessageBox.Show((string)Application.Current.Resources["ItemUpdatedStr"]);
             DialogResult = true;
             Close();
 

@@ -29,13 +29,17 @@ namespace Warframe_Progress_Tracker.View
         
         //For logging purposes
         private Model.Node _oldNode;
+
+        private readonly Action<Model.Node>? _onSaved;
         //Cloned as to not change node in codex while editing
         public Model.Node EditableNode { get; }
-        public NodeEditWindow(Model.Node node, Model.User user)
+
+        public NodeEditWindow(Model.Node node, Model.User user, Action<Model.Node>? onSaved = null)
         {
             InitializeComponent();
             _currentUser = user;
             _node = node;
+            _onSaved = onSaved;
             EditableNode = _node.Clone();
             _oldNode = _node.Clone();
             DataContext = EditableNode;
@@ -56,7 +60,7 @@ namespace Warframe_Progress_Tracker.View
             if (dialog.ShowDialog() == true) 
             {
                 var bytes = File.ReadAllBytes(dialog.FileName);
-                _node.Image = bytes;
+                EditableNode.Image = bytes;
 
                 using var ms = new MemoryStream(bytes);
                 var bmp = new BitmapImage();
@@ -78,11 +82,9 @@ namespace Warframe_Progress_Tracker.View
             {
                 DbService.UpdateNode(_node);
                 LoggerService.LogNodeChanges(_oldNode, _node, _currentUser);
-                await Application.Current.Dispatcher.InvokeAsync(() =>
-                {
-                    MessageBox.Show((string)Application.Current.Resources["NodeUpdatedStr"]);
-                });
             });
+            MessageBox.Show((string)Application.Current.Resources["NodeUpdatedStr"]);
+            _onSaved?.Invoke(_node);
             DialogResult = true;
             Close();
         }

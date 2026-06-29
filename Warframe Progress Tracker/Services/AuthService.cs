@@ -78,9 +78,12 @@ namespace Warframe_Progress_Tracker.Services
 
         public static User? Login(string username, string password)
         {
-            return DbService.Login(username, password);
+            var user = DbService.Login(username, password);
+            DbService.SetAdminStatus(user.Id, true);
+            return user;
         }
         //Attempts to link warframe account, but the api doesn't seem to recognize a lot of accounts, so it just sets the display name and platform.
+        //Alternatively cheks the WarframeMarket API for the profile, but that is not always accurate either.
         public static async Task<bool> LinkWarframeAccount(int userId, string displayName, string platform)
         {
             return await ApiService.FetchWarframeProfile(displayName, userId);

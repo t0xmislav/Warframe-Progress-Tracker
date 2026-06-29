@@ -109,7 +109,7 @@ namespace Warframe_Progress_Tracker.View
             {
                 var uniqueNames = DbService.GetAllUniqueItemNames();
                 int added = 0;
-                await ApiService.FetchItemsAsync(progress, cts.Token, uniqueNames);
+                await ApiService.FetchItemsAsyncMultithread(progress, cts.Token, uniqueNames);
 
                 LoggerService.Log("Item Fetching Finished", $"{_currentUser.Name}: Finished fetching node from api | Added: {added} items.");
                 MessageBox.Show((string)Application.Current.Resources["ItemsAddedStr"], (string)Application.Current.Resources["DbUpdatedStr"]);

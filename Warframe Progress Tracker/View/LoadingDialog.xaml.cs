@@ -77,55 +77,37 @@ namespace Warframe_Progress_Tracker.View
         {
             _currentMessageArgs = args;
             _currentMessageKey = resourceKey;
-            Dispatcher.Invoke(() => {
-                if(resourceKey == "DownloadingImageProgressStr" && args != null && args.Length >= 2)
+            Dispatcher.Invoke(() =>
+            {
+                if (resourceKey == "DownloadingImageProgressOnlyStr")
                 {
-                    double progressFrac = -1;
-                    try
-                    {
-                        if (args[1] is double d)
-                            progressFrac = d;
-                        else if (args[1] is int i)
-                            progressFrac = i / 100.0;
-                        else if (args[1] is float f)
-                            progressFrac = f;
-                        else if(double.TryParse(args[1].ToString(), out double parsed))
-                            progressFrac = parsed;
-                    }
-                    catch
-                    {
-                        progressFrac = -1;
-                    }
-                    if (progressFrac >= 0)
+                    var res = (string)Application.Current.Resources[resourceKey];
+                    // args[0] is already an int percentage (0-100)
+                    if (args[0] is int percentage)
                     {
                         MainProgressBar.IsIndeterminate = false;
-                        MainProgressBar.Value = Math.Max(0.0, Math.Min(1.0, progressFrac));
+                        MainProgressBar.Maximum = 100;
+                        MainProgressBar.Value = percentage;
+                        MessageBlock.Text = string.Format(res, $"{percentage}%");
                     }
                     else
                     {
                         MainProgressBar.IsIndeterminate = true;
-                    }
-                    
-                    var displayArgs = new object[args.Length];
-                    Array.Copy(args, displayArgs, args.Length);
-                    if(progressFrac >= 0)
-                    {
-                        displayArgs[1] = $"{progressFrac:P0}";
-                    }
-                    try
-                    {
-                        var res = (string)Application.Current.Resources[resourceKey];
-                        MessageBlock.Text = string.Format(res, displayArgs);
-                    }
-                    catch
-                    {
-                        MessageBlock.Text = args.Length > 0 ? args[0]?.ToString() ?? "" : string.Empty;
+                        MessageBlock.Text = args[0]?.ToString() ?? string.Empty;
                     }
                     return;
                 }
-                var text = string.Format((string)Application.Current.Resources[resourceKey], args);
-                MessageBlock.Text = text;
+
                 MainProgressBar.IsIndeterminate = true;
+                try
+                {
+                    var res = (string)Application.Current.Resources[resourceKey];
+                    MessageBlock.Text = string.Format(res, args);
+                }
+                catch
+                {
+                    MessageBlock.Text = args?.Length > 0 ? args[0]?.ToString() ?? string.Empty : string.Empty;
+                }
             });
         }
         protected override void OnClosed(EventArgs e)

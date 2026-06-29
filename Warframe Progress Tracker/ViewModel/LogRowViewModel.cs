@@ -27,7 +27,7 @@ namespace Warframe_Progress_Tracker.ViewModel
             set
             {
                 if (_adminNote == value) return;
-                _adminNote = value ?? string.Empty;
+                _adminNote = value;
                 OnPropertyChanged();
                 IsDirty = !string.Equals(OriginalAdminNote, _adminNote, StringComparison.Ordinal);
                 _saveCommand.RaiseCanExecuteChanged();

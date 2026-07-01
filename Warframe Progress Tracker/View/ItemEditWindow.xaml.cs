@@ -85,7 +85,7 @@ namespace Warframe_Progress_Tracker.View
                 DbService.UpdateItem(_item);
                 LoggerService.LogItemChanges(_oldItem, _item, _currentUser);
             });
-            _onSaved?.Invoke(_item);
+            _onSaved?.Invoke(EditableItem);
             MessageBox.Show((string)Application.Current.Resources["ItemUpdatedStr"]);
             DialogResult = true;
             Close();

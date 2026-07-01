@@ -63,7 +63,6 @@ namespace Warframe_Progress_Tracker.View
         private async void ItemsList_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             if (e.OriginalSource is not ScrollViewer sv) return;
-            Debug.WriteLine("Scroll Called");
             if (sv == null) {
                 return;
             }

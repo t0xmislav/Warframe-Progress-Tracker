@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Warframe_Progress_Tracker.Utils.Logger;
 
 namespace Warframe_Progress_Tracker.Utils
 {
@@ -22,7 +23,7 @@ namespace Warframe_Progress_Tracker.Utils
         public static byte[] GetKey()
         {
             if(_key == null) Initialize();
-            return _key;
+            return _key!;
         }
 
         private static byte[] LoadOrCreateKey()
@@ -37,12 +38,13 @@ namespace Warframe_Progress_Tracker.Utils
                 {
                     return ProtectedData.Unprotect(protectedBytes, null, DataProtectionScope.CurrentUser);
                 }
-                catch
+                catch(Exception ex)
                 {
+                    LoggerService.Log("KeyManager", $"Failed to unprotect existing key, regenerating: {ex.Message}");
                     File.Delete(keyFile);
                 }
             }
-            var key = new byte[32];
+            byte[] key;
             using (var aes = Aes.Create())
             {
                 aes.KeySize = 256;

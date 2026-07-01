@@ -19,12 +19,12 @@ namespace Warframe_Progress_Tracker.Utils
         private const string KeyFileName = "progress_rsa.key.prot";
         private const int RsaKeySize = 2048;
 
-        public static async Task<(bool Success, string? Path)> SignPorgressSnapshot(string xml)
+        public static async Task<(bool Success, string? Path)> SignPorgressSnapshot(string xml, string user)
         {
             var dlg = new SaveFileDialog
             {
                 Filter = "XML Progress|*.xml",
-                FileName = $"Progress-{DateTime.UtcNow:yyyyMMdd-HHmmss}.xml"
+                FileName = $"Progress-{user}-{DateTime.UtcNow:yyyyMMdd-HHmmss}.xml"
             };
             if (dlg.ShowDialog() != true) return (false, null);
 

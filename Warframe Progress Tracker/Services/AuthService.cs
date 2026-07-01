@@ -79,7 +79,9 @@ namespace Warframe_Progress_Tracker.Services
         public static User? Login(string username, string password)
         {
             var user = DbService.Login(username, password);
-            DbService.SetAdminStatus(user.Id, true);
+            if (user is not null) { 
+                DbService.SetAdminStatus(user.Id, true);
+            }
             return user;
         }
         //Attempts to link warframe account, but the api doesn't seem to recognize a lot of accounts, so it just sets the display name and platform.

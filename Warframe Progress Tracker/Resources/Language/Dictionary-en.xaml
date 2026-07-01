@@ -122,7 +122,7 @@
     <System:String x:Key="DeleteAccountConfirmationStr">Are you sure you want to delete your account?</System:String>
     <System:String x:Key="AccountDeletedStr">Account deleted successfully</System:String>
     <System:String x:Key="AccountDeletionFailedStr">Failed deleting account</System:String>
-    <System:String x:Key="DeleteStr">Delete Log</System:String>
+    <System:String x:Key="DeleteStr">Delete</System:String>
     <System:String x:Key="LoadingHeadRequestStr">Getting image sizes...</System:String>
     <System:String x:Key="ExportProgressStr">Export Progress</System:String>
     <System:String x:Key="ImportProgressStr">Import Progress</System:String>

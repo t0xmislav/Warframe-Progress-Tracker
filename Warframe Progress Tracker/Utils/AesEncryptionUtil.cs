@@ -20,7 +20,7 @@ namespace Warframe_Progress_Tracker.Utils
             var tag = new byte[16];
             var cipherBytes = new byte[plainBytes.Length];
 
-            using var aesGcm = new AesGcm(key, 32);
+            using var aesGcm = new AesGcm(key, tag.Length);
             aesGcm.Encrypt(nonce, plainBytes, cipherBytes, tag);
 
             using var ms = new System.IO.MemoryStream();
@@ -46,7 +46,7 @@ namespace Warframe_Progress_Tracker.Utils
             var key = AesKeyManager.GetKey();
             var plainBytes = new byte[cipherBytes.Length];
 
-            using var aesGcm = new AesGcm(key, 32);
+            using var aesGcm = new AesGcm(key, tag.Length);
             aesGcm.Decrypt(nonce, cipherBytes, tag, plainBytes);
 
             return Encoding.UTF8.GetString(plainBytes);

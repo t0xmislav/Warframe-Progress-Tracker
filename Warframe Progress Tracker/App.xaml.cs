@@ -11,13 +11,16 @@ using Warframe_Progress_Tracker.Utils.Logger;
 
 namespace Warframe_Progress_Tracker
 {
+
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
     public partial class App : Application
     {
+
         protected override void OnStartup(StartupEventArgs e)
         {
+
             base.OnStartup(e);
             Debug.WriteLine("Initializing application...");
             var pepper = Environment.GetEnvironmentVariable("WPT_PEPPER");
@@ -37,7 +40,7 @@ namespace Warframe_Progress_Tracker
             }
 
             AesKeyManager.Initialize();
-
+            
             GlobalFontSettings.UseWindowsFontsUnderWindows = true;
             if (!IniFileService.Exists)
             {
@@ -50,6 +53,7 @@ namespace Warframe_Progress_Tracker
             LanguageManager.SetLanguage(lang);
             ThemeManager.ApplyTheme(theme);
             DbService.InitializeDatabase();
+            DbService.AddDefaultCategories();
             //Default admin account for testing
             AuthService.Register("admin", "admin", true);
             LoggerService.Log("Application", "Application started");

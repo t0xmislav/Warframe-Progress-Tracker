@@ -1,15 +1,8 @@
 ﻿using Microsoft.Data.Sqlite;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 using Warframe_Progress_Tracker.Model;
 using Warframe_Progress_Tracker.Utils;
-using Warframe_Progress_Tracker.View;
+using Warframe_Progress_Tracker.Utils.Logger;
 
 namespace Warframe_Progress_Tracker.Services
 {
@@ -19,9 +12,10 @@ namespace Warframe_Progress_Tracker.Services
         private static readonly string dbPath = Path.Combine(folderPath, "warframeItemsDb.db");
 
         public static string GetDbPath() { return dbPath; }
-        public static void InitializeDatabase() {
+        public static void InitializeDatabase()
+        {
             if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
-            
+
             using var connection = new SqliteConnection($"Data Source={dbPath}");
             connection.Open();
 
@@ -92,6 +86,25 @@ namespace Warframe_Progress_Tracker.Services
             cmd.ExecuteNonQuery();
             return connection;
         }
+        public static void AddDefaultCategories()
+        {
+            var existing = GetCategories();
+            if (existing.Count > 0) return;
+
+            var defaultCategories = new[]
+            {
+                "Warframes", "Primary", "Secondary", "Melee",
+                "Archwing", "Arch-gun", "Arch-melee", "Sentinels",
+                "Pets", "Misc"
+            };
+
+            foreach (var category in defaultCategories)
+            {
+                AddCategory(category);
+            }
+
+            LoggerService.Log("Database Initialized", $"Populated {defaultCategories.Length} default categories.");
+        }
         public static int AddCategory(String categoryName)
         {
             using var connection = OpenConnection($"Data source={dbPath}");
@@ -102,7 +115,7 @@ namespace Warframe_Progress_Tracker.Services
             checkCommand.Parameters.AddWithValue("$name", categoryName);
             var result = checkCommand.ExecuteScalar();
 
-            if(result != null) return Convert.ToInt32(result);
+            if (result != null) return Convert.ToInt32(result);
 
             using var insertCommand = connection.CreateCommand();
             insertCommand.CommandText = "INSERT INTO Categories (DisplayName) VALUES ($name);";
@@ -114,7 +127,7 @@ namespace Warframe_Progress_Tracker.Services
             var newId = getIdCommand.ExecuteScalar();
 
             return Convert.ToInt32(newId);
-            
+
         }
         public static bool AddItem(Item item)
         {
@@ -156,7 +169,7 @@ namespace Warframe_Progress_Tracker.Services
         }
         public static int SaveItemsBatch(List<Item> items)
         {
-            if(items == null || items.Count == 0) return 0;
+            if (items == null || items.Count == 0) return 0;
             int count = 0;
 
             using var connection = OpenConnection($"Data source={dbPath}");
@@ -183,7 +196,7 @@ namespace Warframe_Progress_Tracker.Services
                 var paramImage = insertItemCmd.Parameters.Add("$image", SqliteType.Blob);
                 var paramMasteryPoints = insertItemCmd.Parameters.Add("$masteryPoints", SqliteType.Integer);
 
-                foreach(var item in items)
+                foreach (var item in items)
                 {
                     paramCatName.Value = item.Category.DisplayName;
                     var catIdObj = getCategoryCmd.ExecuteScalar();
@@ -210,7 +223,8 @@ namespace Warframe_Progress_Tracker.Services
                     if (rowsAffected > 0) count += rowsAffected;
                 }
                 transaction.Commit();
-            }catch
+            }
+            catch
             {
                 transaction.Rollback();
                 throw;
@@ -320,7 +334,7 @@ namespace Warframe_Progress_Tracker.Services
                     Category = new Category { Id = reader.GetInt32(4), DisplayName = reader.GetString(5) },
                     Image = reader.IsDBNull(6) ? null : (byte[])reader["Image"]
                 };
-                list.Add(item); 
+                list.Add(item);
             }
             return list;
         }
@@ -393,7 +407,8 @@ namespace Warframe_Progress_Tracker.Services
                 LEFT JOIN Categories c ON n.CategoryId = c.Id;
             ";
             using var reader = command.ExecuteReader();
-            while (reader.Read()) {
+            while (reader.Read())
+            {
                 var nodes = new Node
                 {
                     Id = reader.GetInt32(0),
@@ -407,7 +422,8 @@ namespace Warframe_Progress_Tracker.Services
             }
             return list;
         }
-        public static ItemProgress GetProgressForItem(User user, Item item) {
+        public static ItemProgress GetProgressForItem(User user, Item item)
+        {
             using var connection = OpenConnection($"Data source={dbPath}");
 
             var cmd = connection.CreateCommand();
@@ -766,7 +782,7 @@ namespace Warframe_Progress_Tracker.Services
             ";
             cmd.Parameters.AddWithValue("$id", item.Id);
             cmd.Parameters.AddWithValue("$name", item.Name);
-            cmd.Parameters.AddWithValue("$planet", item.Category.Id);
+            cmd.Parameters.AddWithValue("$categoryId", item.Category.Id);
             cmd.Parameters.AddWithValue("$masteryPoints", item.MasteryPoints);
             cmd.Parameters.AddWithValue("$image", item.Image ?? (object)DBNull.Value);
             int rowsAffected = cmd.ExecuteNonQuery();
@@ -806,19 +822,18 @@ namespace Warframe_Progress_Tracker.Services
             using var reader = cmd.ExecuteReader();
             if (reader.Read())
             {
-                using (Aes myAes = Aes.Create())
+
+                return new User
                 {
-                    return new User
-                    {
-                        Id = reader.GetInt32(0),
-                        Name = reader.GetString(1),
-                        PasswordHash = reader.GetString(2),
-                        WarframeDisplayName = reader.IsDBNull(3) ? null : reader.GetString(3),
-                        WarframeAccountId = reader.IsDBNull(4) ? null : AesEncryptionUtil.Decrypt(reader.GetString(4)),
-                        Platform = reader.IsDBNull(5) ? null : reader.GetString(5),
-                        IsAdmin = reader.GetInt32(6) == 1
-                    };
-                }
+                    Id = reader.GetInt32(0),
+                    Name = reader.GetString(1),
+                    PasswordHash = reader.GetString(2),
+                    WarframeDisplayName = reader.IsDBNull(3) ? null : AesEncryptionUtil.Decrypt(reader.GetString(3)),
+                    WarframeAccountId = reader.IsDBNull(4) ? null : AesEncryptionUtil.Decrypt(reader.GetString(4)),
+                    Platform = reader.IsDBNull(5) ? null : reader.GetString(5),
+                    IsAdmin = reader.GetInt32(6) == 1
+                };
+
             }
             return null;
         }
@@ -866,7 +881,7 @@ namespace Warframe_Progress_Tracker.Services
                     Id = reader.GetInt32(0),
                     Name = reader.GetString(1),
                     PasswordHash = reader.GetString(2),
-                    WarframeDisplayName = reader.IsDBNull(3) ? null : reader.GetString(3),
+                    WarframeDisplayName = reader.IsDBNull(3) ? null : AesEncryptionUtil.Decrypt(reader.GetString(3)),
                     WarframeAccountId = reader.IsDBNull(4) ? null : AesEncryptionUtil.Decrypt(reader.GetString(4)),
                     Platform = reader.IsDBNull(5) ? null : reader.GetString(5),
                     IsAdmin = reader.GetInt32(6) == 1
@@ -886,7 +901,7 @@ namespace Warframe_Progress_Tracker.Services
                     Platform = $platform
                 WHERE Id = $id;
             ";
-            cmd.Parameters.AddWithValue("$displayName", displayName);
+            cmd.Parameters.AddWithValue("$displayName", AesEncryptionUtil.Encrypt(displayName));
             cmd.Parameters.AddWithValue("$accountId", AesEncryptionUtil.Encrypt(accountId));
             cmd.Parameters.AddWithValue("$platform", platform);
             cmd.Parameters.AddWithValue("$id", userId);

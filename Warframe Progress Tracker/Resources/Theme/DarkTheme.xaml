@@ -21,15 +21,15 @@
     <Color x:Key="SuccessColor">#FF4CAF50</Color>
 
     <!-- Brushes -->
-    <SolidColorBrush x:Key="PrimaryBackgroundBrush"   Color="{DynamicResource PrimaryBackgroundColor}" />
+    <SolidColorBrush x:Key="PrimaryBackgroundBrush" Color="{DynamicResource PrimaryBackgroundColor}" />
     <SolidColorBrush x:Key="SecondaryBackgroundBrush" Color="{DynamicResource SecondaryBackgroundColor}" />
-    <SolidColorBrush x:Key="TertiaryBackgroundBrush"  Color="{DynamicResource TertiaryBackgroundColor}" />
-    <SolidColorBrush x:Key="PrimaryForegroundBrush"   Color="{DynamicResource PrimaryForegroundColor}" />
+    <SolidColorBrush x:Key="TertiaryBackgroundBrush" Color="{DynamicResource TertiaryBackgroundColor}" />
+    <SolidColorBrush x:Key="PrimaryForegroundBrush" Color="{DynamicResource PrimaryForegroundColor}" />
     <SolidColorBrush x:Key="SecondaryForegroundBrush" Color="{DynamicResource SecondaryForegroundColor}" />
-    <SolidColorBrush x:Key="AccentBrush"              Color="{DynamicResource AccentColor}" />
-    <SolidColorBrush x:Key="AccentHoverBrush"         Color="{DynamicResource AccentHoverColor}" />
-    <SolidColorBrush x:Key="BorderBrush"              Color="{DynamicResource BorderColor}" />
-    <SolidColorBrush x:Key="ErrorBrush"               Color="{DynamicResource ErrorColor}" />
-    <SolidColorBrush x:Key="SuccessBrush"             Color="{DynamicResource SuccessColor}" />
+    <SolidColorBrush x:Key="AccentBrush" Color="{DynamicResource AccentColor}" />
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="{DynamicResource AccentHoverColor}" />
+    <SolidColorBrush x:Key="BorderBrush" Color="{DynamicResource BorderColor}" />
+    <SolidColorBrush x:Key="ErrorBrush" Color="{DynamicResource ErrorColor}" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="{DynamicResource SuccessColor}" />
 
 </ResourceDictionary>

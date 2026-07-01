@@ -272,25 +272,22 @@ namespace Warframe_Progress_Tracker.ViewModel
         {
             lock (_cacheLock)
             {
-                var index = _allSummaries.IndexOf(oldEntry);
-                if (index >= 0)
-                {
-                    _allSummaries[index] = newEntry;
-                }
-                index = _sortedCache.IndexOf(oldEntry);
-                if (index >= 0)
-                {
-                    _sortedCache[index] = newEntry;
-                }
+                var idx = _allSummaries.IndexOf(oldEntry);
+                if (idx >= 0) _allSummaries[idx] = newEntry;
+
+                var sortedIdx = _sortedCache.IndexOf(oldEntry);
+                if (sortedIdx >= 0) _sortedCache[sortedIdx] = newEntry;
             }
-            var filteredIndex = FilteredEntries.IndexOf(oldEntry);
-            if (filteredIndex >= 0)
+
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                Application.Current.Dispatcher.Invoke(() =>
+                var filteredIdx = FilteredEntries.IndexOf(oldEntry);
+                if (filteredIdx >= 0)
                 {
-                    FilteredEntries[filteredIndex] = newEntry;
-                });
-            }
+                    FilteredEntries.RemoveAt(filteredIdx);
+                    FilteredEntries.Insert(filteredIdx, newEntry);
+                }
+            });
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

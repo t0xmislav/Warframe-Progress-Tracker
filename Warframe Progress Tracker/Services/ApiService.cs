@@ -286,7 +286,7 @@ namespace Warframe_Progress_Tracker.Services
             // Get total download size via HEAD requests for percentage tracking
             progress?.Report(("LoadingHeadRequestStr", new object[] { }));
             long totalBytes = 0;
-            var semaphore = new SemaphoreSlim(1);
+            var semaphore = new SemaphoreSlim(4);
             //var sw = Stopwatch.StartNew();
             var headTasks = itemsToProcess
                 .Where(i => i.imageUrl != null)
@@ -371,7 +371,6 @@ namespace Warframe_Progress_Tracker.Services
                 });
 
             await Task.WhenAll(downloadTasks);
-            sw.Stop();
 
 
             if (batch.Count > 0)

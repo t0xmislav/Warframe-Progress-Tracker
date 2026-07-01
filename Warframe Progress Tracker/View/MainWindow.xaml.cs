@@ -50,9 +50,10 @@ namespace Warframe_Progress_Tracker.View
         {
             
             var loginWindow = new LoginWindow();
+            Application.Current.MainWindow = loginWindow;
             loginWindow.Show();
             Application.Current.Windows.OfType<Window>().ToList().ForEach(w => {
-                if (w != loginWindow)
+                if (!w.Equals(loginWindow))
                     w.Close();
             });
         }
@@ -61,11 +62,7 @@ namespace Warframe_Progress_Tracker.View
         {
             MainContent.Content = new DashboardView(_currentUser);
         }
-        protected override void OnClosed(EventArgs e)
-        {
-            base.OnClosed(e);
-            Application.Current.Shutdown();
-        }
+
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
             Application.Current.Shutdown();
@@ -213,7 +210,7 @@ namespace Warframe_Progress_Tracker.View
             try
             {
                 var xml = XmlUtil.GenerateUserProgressXml(_currentUser);
-                var (success, pdfPath) = await RsaUtil.SignPorgressSnapshot(xml);
+                var (success, pdfPath) = await RsaUtil.SignPorgressSnapshot(xml, _currentUser.Name);
                 if (success)
                     MessageBox.Show($"Progress exported successfully:\n{pdfPath}", "Export Complete", MessageBoxButton.OK, MessageBoxImage.Information);
             }

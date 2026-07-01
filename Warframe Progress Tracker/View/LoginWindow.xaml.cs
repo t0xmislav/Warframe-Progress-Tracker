@@ -34,6 +34,7 @@ namespace Warframe_Progress_Tracker.View
                 MessageBox.Show(string.Format((string)Application.Current.Resources["WelcomeStr"], user.Name));
                 LoggerService.Log("User Login", $"User {user.Name} logged in");
                 var main = new MainWindow(user);
+                Application.Current.MainWindow = main;
                 main.Show();
                 this.Close();
             }

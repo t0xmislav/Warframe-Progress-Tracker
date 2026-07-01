@@ -84,7 +84,7 @@ namespace Warframe_Progress_Tracker.View
                 LoggerService.LogNodeChanges(_oldNode, _node, _currentUser);
             });
             MessageBox.Show((string)Application.Current.Resources["NodeUpdatedStr"]);
-            _onSaved?.Invoke(_node);
+            _onSaved?.Invoke(EditableNode);
             DialogResult = true;
             Close();
         }

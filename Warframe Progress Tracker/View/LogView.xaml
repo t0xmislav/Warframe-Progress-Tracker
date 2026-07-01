@@ -16,8 +16,8 @@
         <Grid>
         <DataGrid x:Name="LogDataGrid" AutoGenerateColumns="False" ItemsSource="{Binding Logs}" IsReadOnly="False" CanUserAddRows="False">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="{DynamicResource LogDateStr}" Binding="{Binding Path=Timestamp, StringFormat='{}{0:G}'}" IsReadOnly="True" Width="200"/>
-                <DataGridTextColumn Header="{DynamicResource LogActionStr}" Binding="{Binding Path=Action}" IsReadOnly="True" Width="*"/>
+                <DataGridTextColumn Header="{DynamicResource LogDateStr}" Binding="{Binding Path=Timestamp, StringFormat='{}{0:G}'}" IsReadOnly="True" Width="125"/>
+                <DataGridTextColumn Header="{DynamicResource LogActionStr}" Binding="{Binding Path=Action}" IsReadOnly="True" Width="2*"/>
                 <DataGridTextColumn Header="{DynamicResource LogDetailsStr}" Binding="{Binding Path=Details}" IsReadOnly="True" Width="2*"/>
                 <DataGridTemplateColumn Header="{DynamicResource LogNoteStr}" Width="2*">
                     <DataGridTemplateColumn.CellTemplate>
@@ -46,12 +46,12 @@
                 </DataGridTemplateColumn>
                 
                 <DataGridTextColumn Header="{DynamicResource LogModifiedDateStr}" Binding="{Binding Path=LastModified, StringFormat='{}{0:G}'}" IsReadOnly="True" Width="200"/>
-                <DataGridTemplateColumn Header="" Width="70">
+                <DataGridTemplateColumn Header="" Width="90">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button Content="{DynamicResource DeleteStr}" Command="{Binding DeleteCommand}" 
                             Visibility="{Binding DataContext.IsAdmin, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVis}}"
-                            Width="50"/>
+                            Width="70"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

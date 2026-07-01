@@ -30,8 +30,8 @@ namespace Warframe_Progress_Tracker.View
             _user = user;
             if (IniFileService.Exists)
             {
-                string savedName = IniFileService.Read("Account", "DisplayName", _user.WarframeDisplayName);
-                string savedPlatform = IniFileService.Read("Account", "Platform", _user.Platform);
+                string savedName = _user.WarframeDisplayName;
+                string savedPlatform = _user.Platform;
                 string savedLanguage = IniFileService.Read("Account", "Language", "en");
                 string savedTheme = IniFileService.Read("Account", "Theme", "Light");
                 string savedSpeedLimit = IniFileService.Read("Download", "SpeedLimit", "Unlimited");
@@ -74,7 +74,10 @@ namespace Warframe_Progress_Tracker.View
             }
 
             var success = await AuthService.LinkWarframeAccount(_user.Id, displayName, platform);
-
+            if (!success)
+            {
+                DbService.SetUserWfAccount(_user.Id, displayName, "0", platform);
+            }
             LanguageManager.SetLanguage(lang);
             ThemeManager.ApplyTheme(theme);
 

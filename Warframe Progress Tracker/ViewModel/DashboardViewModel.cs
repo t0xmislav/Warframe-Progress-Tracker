@@ -35,7 +35,7 @@ namespace Warframe_Progress_Tracker.ViewModel
 
         private CancellationTokenSource _cts = new();
 
-        private readonly TimeSpan _refreshInterval = TimeSpan.FromSeconds(10);
+        private readonly TimeSpan _refreshInterval = TimeSpan.FromSeconds(5);
         public DashboardViewModel(User currentUser) 
         {
             _currentUser = currentUser;
@@ -79,7 +79,6 @@ namespace Warframe_Progress_Tracker.ViewModel
         {
             var categories = DbService.GetCategories().Where(c => c.DisplayName != "Node").ToList();
             var nodes = DbService.GetAllNodes();
-
             int totalMasterdEntries = 0;
             int totalMasteryPoints = 0;
 
@@ -148,14 +147,16 @@ namespace Warframe_Progress_Tracker.ViewModel
             var sw = Stopwatch.StartNew();
             foreach(var task in tasks) await task;
             sw.Stop();
-            LoggerService.Log("Perf", $"Sequential progress calculation took {sw.ElapsedMilliseconds}ms");
+            Debug.WriteLine($"Sequential progress calculation took {sw.ElapsedMilliseconds}ms");
             */
             
             var sw2 = Stopwatch.StartNew();
             await Task.WhenAll(tasks);
             sw2.Stop();
+            Debug.WriteLine($"Parallel progress calculation took {sw2.ElapsedMilliseconds}ms");
             //LoggerService.Log("Perf", $"Parallel progress calculation took {sw2.ElapsedMilliseconds}ms");
-            
+
+
             Application.Current.Dispatcher.Invoke(() =>
             {
                 var rankInfo = MasteryCalculator.GetRankFromPoints(totalMasteryPoints);
@@ -169,11 +170,14 @@ namespace Warframe_Progress_Tracker.ViewModel
                 if(normalNodeProgress is not null) CategoryProgresses.Add(normalNodeProgress);
                 if(steelPathNodeProgress is not null) CategoryProgresses.Add(steelPathNodeProgress);
 
+                UserDisplayName = DbService.GetUserById(_currentUser.Id).WarframeDisplayName ?? _currentUser.Name;
+
                 TotalProgressPercentage = CategoryProgresses.Sum(c => c.TotalItems) > 0
                 ? (double)totalMasterdEntries / CategoryProgresses.Sum(c => c.TotalItems) : 0;
                 TotalProgressPercentageText = $"{TotalProgressPercentage*100:F2}%";
                 OnPropertyChanged(nameof(TotalProgressPercentageText));
                 OnPropertyChanged(nameof(TotalRankText));
+                OnPropertyChanged(nameof(UserDisplayName));
                 OnPropertyChanged(nameof(TotalProgressPercentage));
             });
         }
